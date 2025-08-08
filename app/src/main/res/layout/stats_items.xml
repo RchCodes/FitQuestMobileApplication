@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="#2D2D35">
+
+    <!-- PHYSIQUE -->
+    <TextView
+        android:id="@+id/physique_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="PHYSIQUE: 99"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        android:background="#1E3A8A"
+        android:padding="8dp" />
+
+    <!-- ARMS -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="ARMS"
+            android:textColor="@android:color/white" />
+
+        <ProgressBar
+            android:id="@+id/bar_arms"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="16dp"
+            android:max="20"
+            android:progress="10"
+            android:progressTint="@android:color/holo_blue_light" />
+
+        <Button
+            android:id="@+id/plus_arms"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+" />
+    </LinearLayout>
+
+    <!-- Repeat for LEGS, CHEST, BACK -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="LEGS"
+            android:textColor="@android:color/white" />
+
+        <ProgressBar
+            android:id="@+id/bar_legs"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="16dp"
+            android:max="20"
+            android:progress="10"
+            android:progressTint="@android:color/holo_blue_light" />
+
+        <Button
+            android:id="@+id/plus_legs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="CHEST"
+            android:textColor="@android:color/white" />
+
+        <ProgressBar
+            android:id="@+id/bar_chest" style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="16dp"
+            android:max="20"
+            android:progress="10"
+            android:progressTint="@android:color/holo_blue_light" />
+
+        <Button
+            android:id="@+id/plus_chest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="BACK"
+            android:textColor="@android:color/white" />
+
+        <ProgressBar
+            android:id="@+id/bar_back" style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="16dp"
+            android:max="20"
+            android:progress="10"
+            android:progressTint="@android:color/holo_blue_light" />
+
+        <Button
+            android:id="@+id/plus_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+" />
+    </LinearLayout>
+
+    <!-- ATTRIBUTES -->
+    <TextView
+        android:id="@+id/attributes_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ATTRIBUTES: 99"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        android:background="#1E3A8A"
+        android:padding="8dp"
+        android:layout_marginTop="16dp" />
+
+    <!-- Strength -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" android:padding="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="STRENGTH"
+            android:textColor="@android:color/white" />
+
+        <TextView
+            android:id="@+id/txt_strength"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5"
+            android:textColor="@android:color/white"
+            android:paddingEnd="8dp" />
+
+        <Button
+            android:id="@+id/plus_strength"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+" />
+    </LinearLayout>
+
+    <!-- Endurance -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="ENDURANCE"
+            android:textColor="@android:color/white" />
+
+        <TextView
+            android:id="@+id/txt_endurance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5"
+            android:textColor="@android:color/white"
+            android:paddingEnd="8dp" />
+
+        <Button
+            android:id="@+id/plus_endurance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+" />
+    </LinearLayout>
+
+    <!-- Agility -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="AGILITY"
+            android:textColor="@android:color/white" />
+
+        <TextView
+            android:id="@+id/txt_agility"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5"
+            android:textColor="@android:color/white"
+            android:paddingEnd="8dp" />
+
+        <Button
+            android:id="@+id/plus_agility"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+" />
+    </LinearLayout>
+
+    <!-- Flexibility -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="FLEXIBILITY"
+            android:textColor="@android:color/white" />
+
+        <TextView
+            android:id="@+id/txt_flexibility"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5"
+            android:textColor="@android:color/white"
+            android:paddingEnd="8dp" />
+
+        <Button
+            android:id="@+id/plus_flexibility"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+" />
+    </LinearLayout>
+
+    <!-- Stamina -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="STAMINA"
+            android:textColor="@android:color/white" />
+
+        <TextView
+            android:id="@+id/txt_stamina"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="5"
+            android:textColor="@android:color/white"
+            android:paddingEnd="8dp" />
+
+        <Button
+            android:id="@+id/plus_stamina"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/apply_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="APPLY"
+        android:backgroundTint="@android:color/holo_orange_light"
+        android:layout_marginTop="12dp" />
+
+</LinearLayout>

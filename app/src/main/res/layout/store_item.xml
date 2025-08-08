@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:layout_margin="4dp"
+    android:padding="4dp"
+    android:background="@android:color/white"
+    android:elevation="2dp">
+
+    <!-- Lock Icon -->
+    <ImageView
+        android:id="@+id/lock_icon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/lock"
+        android:contentDescription="Locked Item"
+        android:layout_gravity="center" />
+
+    <!-- Price with currency icon -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="4dp">
+
+        <ImageView
+            android:id="@+id/currency_icon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/currency"
+            android:contentDescription="Currency Icon"
+            android:layout_marginEnd="4dp" />
+
+        <TextView
+            android:id="@+id/item_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="999"
+            android:textSize="12sp"
+            android:textColor="@android:color/black" />
+    </LinearLayout>
+
+</LinearLayout>

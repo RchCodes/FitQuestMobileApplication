@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:background="#DCE9F9"
+    android:layout_marginBottom="8dp"
+    android:elevation="2dp">
+
+    <!-- Profile Icon -->
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/user"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="8dp" />
+
+    <!-- Name, Level, Team Info -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/friend_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TRIPPI"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="@android:color/black" />
+
+        <TextView
+            android:id="@+id/friend_level"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="LVL. 99"
+            android:textSize="12sp"
+            android:textColor="@android:color/black" />
+
+        <TextView
+            android:id="@+id/friend_team"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SPARTAN"
+            android:textSize="12sp"
+            android:textColor="@android:color/darker_gray" />
+    </LinearLayout>
+
+    <!-- Block Icon -->
+    <ImageView
+        android:id="@+id/block_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/block"
+        android:contentDescription="Block"
+        android:layout_marginEnd="12dp"
+        android:layout_gravity="center_vertical" />
+
+    <!-- Unfriend Icon -->
+    <ImageView
+        android:id="@+id/unfriend_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/unfriend"
+        android:contentDescription="Unfriend"
+        android:layout_gravity="center_vertical" />
+</LinearLayout>

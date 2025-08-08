@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    android:padding="12dp"
+    android:layout_marginBottom="8dp"
+    android:elevation="4dp"
+    android:layout_marginHorizontal="12dp"
+    android:backgroundTint="#E0F2F1">
+
+    <!-- Quest Title -->
+<TextView
+android:id="@+id/quest_title"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="Execute 10 Push-ups."
+android:textColor="#000000"
+android:textStyle="bold"
+android:textSize="14sp" />
+
+    <!-- Progress and Action Row -->
+<LinearLayout
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:orientation="horizontal"
+android:gravity="center_vertical"
+android:layout_marginTop="6dp">
+
+<!-- Progress Text -->
+<TextView
+    android:id="@+id/progress_text"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="0/10"
+    android:textColor="#000000"
+    android:layout_marginEnd="8dp" />
+
+<!-- ProgressBar -->
+<ProgressBar
+    android:id="@+id/quest_progress_bar"
+    style="?android:attr/progressBarStyleHorizontal"
+    android:layout_width="0dp"
+    android:layout_weight="1"
+    android:layout_height="10dp"
+    android:max="10"
+    android:progress="0"
+    android:progressTint="@android:color/holo_green_dark" />
+
+<!-- XP Icon -->
+<ImageView
+    android:id="@+id/xp_icon"
+    android:layout_width="24dp"
+    android:layout_height="24dp"
+    android:src="@drawable/exp"
+    android:layout_marginStart="8dp"
+    android:contentDescription="XP Icon" />
+
+<!-- Do It Button -->
+<Button
+    android:id="@+id/do_it_button"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Do It"
+    android:textSize="12sp"
+    android:layout_marginStart="8dp"
+    android:backgroundTint="@android:color/holo_blue_dark"
+    android:textColor="@android:color/white" />
+</LinearLayout>
+    </LinearLayout>

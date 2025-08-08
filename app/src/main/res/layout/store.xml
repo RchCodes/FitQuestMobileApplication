@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@android:color/white"
+    android:elevation="8dp"
+    android:layout_gravity="center"
+    android:minWidth="320dp">
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="STORE"
+        android:textAlignment="center"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:padding="8dp"
+        android:background="@android:color/holo_blue_light" />
+
+    <!-- Store content container -->
+    <LinearLayout
+        android:id="@+id/store_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <!-- Items Grid -->
+
+        <!-- Character Preview -->
+
+        <GridView
+            android:id="@+id/item_grid"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:horizontalSpacing="4dp"
+            android:numColumns="3"
+            android:stretchMode="columnWidth"
+            android:verticalSpacing="8dp" />
+
+        <ImageView
+            android:id="@+id/character_preview"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:src="@drawable/male2"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <!-- Tabs -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="12dp">
+
+        <Button
+            android:id="@+id/tab_weapon"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="WEAPON"
+            android:background="#007ACC"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/tab_armor"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="ARMOR"
+            android:background="#007ACC"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/tab_pants"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="PANTS"
+            android:background="#007ACC"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/tab_boots"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="BOOTS"
+            android:background="#007ACC"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/tab_accessories"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="ACCESSORIES"
+            android:background="#007ACC"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+</LinearLayout>

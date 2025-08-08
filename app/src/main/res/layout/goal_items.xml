@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="12dp"
+    android:background="@android:color/holo_blue_light"
+    android:layout_marginBottom="8dp"
+    android:elevation="2dp">
+
+    <!-- Goal Description -->
+    <TextView
+        android:id="@+id/goal_description"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:text="Reach 1000 Steps"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <!-- XP Icon -->
+    <ImageView
+        android:id="@+id/goal_xp_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/exp"
+        android:layout_marginStart="8dp"
+        android:contentDescription="XP Icon" />
+
+    <!-- Claim Button -->
+    <Button
+        android:id="@+id/claim_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Claim"
+        android:textSize="12sp"
+        android:layout_marginStart="8dp"
+        android:backgroundTint="@android:color/darker_gray"
+        android:textColor="@android:color/white" />
+</LinearLayout>

@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#80000000"> <!-- semi-transparent dim background -->
+
+    <!-- Popup Card -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:padding="24dp">
+
+        <LinearLayout
+            android:id="@+id/profile_card"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_profile_card"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:elevation="6dp">
+
+            <!-- Your entire content stays the same from here down -->
+            <!-- Title -->
+            <TextView
+                android:id="@+id/title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="PROFILE"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:background="@android:color/holo_blue_dark"
+                android:textColor="@android:color/white"
+                android:gravity="center"
+                android:padding="8dp"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Profile Picture & Info -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <ImageView
+                    android:id="@+id/profile_image"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/user"
+                    android:background="@color/cardview_dark_background"
+                    android:contentDescription="Profile Picture"
+                    android:layout_marginEnd="12dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/username"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CHIAN 🖊️"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/black" />
+
+                    <TextView
+                        android:id="@+id/clan"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="SPARTAN"
+                        android:textColor="@android:color/darker_gray"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Level Bar -->
+            <TextView
+                android:id="@+id/level"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LV. 99"
+                android:textColor="@android:color/black"
+                android:textSize="14sp"
+                android:layout_marginBottom="4dp" />
+
+            <ProgressBar
+                android:id="@+id/exp_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="16dp"
+                android:max="10000"
+                android:progress="5000"
+                android:progressTint="@android:color/holo_green_light"
+                android:layout_marginBottom="12dp" />
+
+            <!-- ID -->
+            <TextView
+                android:id="@+id/player_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ID: 16976531"
+                android:textColor="@android:color/black"
+                android:layout_marginBottom="4dp" />
+
+            <!-- Rank Section -->
+            <TextView
+                android:id="@+id/current_rank_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Current Rank:"
+                android:textColor="@android:color/black"
+                android:layout_marginTop="8dp" />
+
+            <ImageView
+                android:id="@+id/rank_icon"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_gravity="center_horizontal"
+                android:src="@drawable/highest_rank"
+                android:layout_marginTop="4dp"
+                android:contentDescription="Rank Icon" />
+
+            <TextView
+                android:id="@+id/rank_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CHAMPION"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/holo_purple"
+                android:gravity="center"
+                android:layout_marginTop="4dp"
+                android:layout_gravity="center_horizontal" />
+
+            <!-- Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="12dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/bind_button"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Bind Account"
+                    android:backgroundTint="@android:color/holo_orange_light" />
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/switch_button"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:text="Switch Account"
+                    android:backgroundTint="@android:color/holo_orange_light" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>

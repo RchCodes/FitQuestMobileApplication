@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/popup_stats_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"> <!-- Semi-transparent background -->
+
+    <!-- POPUP CARD -->
+    <LinearLayout
+        android:layout_width="320dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:elevation="8dp"
+        android:clipToPadding="false">
+
+        <!-- HEADER -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#B91C1C"
+            android:padding="10dp"
+            android:gravity="center">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="STATS"
+                android:textColor="@android:color/white"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- SCROLLABLE CONTENT SECTION -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#1E40AF"
+            android:padding="10dp">
+
+            <!-- The actual stats layout -->
+            <include layout="@layout/stats_items" />
+        </ScrollView>
+
+        <!-- FOOTER / CLOSE BUTTON -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#444444"
+            android:gravity="end"
+            android:padding="8dp">
+
+            <Button
+                android:id="@+id/close_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CLOSE"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#EF4444" />
+        </LinearLayout>
+
+    </LinearLayout>
+</FrameLayout>
