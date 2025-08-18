@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Background Image -->
+    <ImageView
+        android:id="@+id/bg_castle"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/background"
+        android:scaleType="centerCrop" />
+
+    <!-- Overlay for inputs -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="24dp">
+
+        <!-- Username Label -->
+        <TextView
+            android:id="@+id/label_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Username"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp"
+            android:background="@android:color/transparent" />
+
+        <!-- Username Input -->
+        <EditText
+            android:id="@+id/edit_username"
+            android:layout_width="250dp"
+            android:layout_height="50dp"
+            android:background="@drawable/username_input_bg"
+            android:padding="10dp"
+            android:hint="Enter username"
+            android:textColor="@android:color/black"
+            android:textSize="16sp"
+            android:inputType="textPersonName" />
+
+        <!-- Confirm Button -->
+        <ImageView
+            android:id="@+id/btn_confirm"
+            android:layout_width="150dp"
+            android:layout_height="48dp"
+            android:src="@drawable/button_confirm"
+            android:contentDescription="Confirm"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="8dp" />
+
+    </LinearLayout>
+
+</RelativeLayout>
