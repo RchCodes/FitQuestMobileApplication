@@ -6,4 +6,7 @@
     </style>
 
     <style name="Theme.FitQuest" parent="Base.Theme.FitQuest" />
+    
+    <!-- No Action Bar theme for full-screen activities -->
+    <style name="Theme.FitQuest.NoActionBar" parent="Base.Theme.FitQuest" />
 </resources>

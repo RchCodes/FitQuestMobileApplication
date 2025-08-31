@@ -3,23 +3,40 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@android:color/white"
-    android:elevation="8dp"
+    android:padding="0dp"
+    android:background="@drawable/quest_background"
+    android:elevation="12dp"
     android:layout_gravity="center"
-    android:minWidth="300dp">
+    android:minWidth="350dp"
+    android:maxWidth="400dp">
 
-    <!-- Title -->
-    <TextView
+    <!-- Title Header -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="QUEST"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/black"
-        android:padding="8dp"
-        android:background="@android:color/holo_blue_light" />
+        android:orientation="vertical"
+        android:background="@drawable/quest_header_background"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🏆 QUESTS"
+            android:textAlignment="center"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Complete challenges to earn rewards!"
+            android:textAlignment="center"
+            android:textSize="12sp"
+            android:textColor="@android:color/white"
+            android:alpha="0.8"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
 
     <!-- Tab Buttons -->
     <LinearLayout
@@ -27,42 +44,58 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
-        android:layout_marginTop="8dp">
+        android:padding="8dp"
+        android:background="@android:color/white">
 
         <Button
             android:id="@+id/daily_button"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="DAILY"
-            android:background="#007ACC"
-            android:textColor="@android:color/white" />
+            android:layout_height="40dp"
+            android:text="📅 DAILY"
+            android:textSize="12sp"
+            android:background="@drawable/tab_button_background"
+            android:textColor="@android:color/white"
+            android:layout_marginEnd="4dp" />
 
         <Button
             android:id="@+id/weekly_button"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="WEEKLY"
-            android:background="#007ACC"
-            android:textColor="@android:color/white" />
+            android:layout_height="40dp"
+            android:text="📊 WEEKLY"
+            android:textSize="12sp"
+            android:background="@drawable/tab_button_background"
+            android:textColor="@android:color/white"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp" />
 
         <Button
             android:id="@+id/monthly_button"
             android:layout_width="0dp"
             android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="MONTHLY"
-            android:background="#007ACC"
-            android:textColor="@android:color/white" />
+            android:layout_height="40dp"
+            android:text="📈 MONTHLY"
+            android:textSize="12sp"
+            android:background="@drawable/tab_button_background"
+            android:textColor="@android:color/white"
+            android:layout_marginStart="4dp" />
     </LinearLayout>
 
-    <!-- Quest List -->
-    <LinearLayout
-        android:id="@+id/quest_list"
+    <!-- Quest List Container -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="12dp" />
+        android:maxHeight="400dp"
+        android:background="@android:color/white">
+
+        <LinearLayout
+            android:id="@+id/quest_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp" />
+
+    </ScrollView>
 
 </LinearLayout>
