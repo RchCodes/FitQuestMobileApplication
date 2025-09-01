@@ -11,6 +11,12 @@
         android:layout_height="match_parent"
         android:scaleType="fitCenter" />
 
+    <!-- Pose Overlay for Joint Visualization -->
+    <com.example.fitquest.PoseOverlayView
+        android:id="@+id/poseOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <!-- Permission Request Button (initially visible) -->
     <LinearLayout
         android:id="@+id/permission_layout"
@@ -51,32 +57,65 @@
 
     </LinearLayout>
 
-    <!-- Overlay for Reps -->
+    <!-- Exercise Instructions -->
+    <TextView
+        android:id="@+id/instructionText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Exercise Instructions"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:background="#80000000"
+        android:padding="12dp"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_margin="16dp"
+        android:maxWidth="300dp"
+        android:gravity="center" />
+
+    <!-- Rep Counter -->
     <TextView
         android:id="@+id/repCounter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Reps: 0"
+        android:text="Reps: 0/10"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@android:color/white"
         android:background="#80000000"
-        android:padding="8dp"
-        android:layout_gravity="top|center_horizontal"
-        android:layout_margin="16dp"/>
+        android:padding="12dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="120dp"/>
 
-    <!-- Overlay for Angle Display -->
+    <!-- Timer Display (for plank) -->
     <TextView
-        android:id="@+id/angleDisplay"
+        android:id="@+id/timerText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Angle: 0°"
+        android:text="Plank Time: 0s"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:background="#80000000"
+        android:padding="12dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="120dp"
+        android:visibility="gone"/>
+
+    <!-- Feedback Text -->
+    <TextView
+        android:id="@+id/feedbackText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ready to start!"
         android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="@android:color/white"
         android:background="#80000000"
-        android:padding="8dp"
-        android:layout_gravity="top|center_horizontal"
-        android:layout_marginTop="80dp"/>
+        android:padding="12dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_margin="16dp"
+        android:maxWidth="300dp"
+        android:gravity="center" />
 
 </FrameLayout>
