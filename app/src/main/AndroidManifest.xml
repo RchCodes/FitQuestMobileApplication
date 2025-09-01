@@ -6,6 +6,7 @@
     <uses-feature android:name="android.hardware.camera.any" android:required="true" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" /> <!-- Optional if you'll sync data online -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" /> <!-- For voice activation -->
 
     <application
         android:allowBackup="true"
@@ -30,5 +31,10 @@
             android:name=".ExerciseTrackingActivity"
             android:exported="false"
             android:theme="@style/Theme.FitQuest.NoActionBar" />
+
+        <!-- Settings Activity to tweak level/difficulty -->
+        <activity
+            android:name=".UserSettingsActivity"
+            android:exported="false" />
     </application>
 </manifest>

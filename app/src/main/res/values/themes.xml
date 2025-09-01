@@ -1,12 +1,25 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+
+    <!-- Base application theme -->
     <style name="Base.Theme.FitQuest" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <!-- Turn off default button tint -->
+        <item name="android:colorButtonNormal">@null</item>
+        <item name="colorButtonNormal">@null</item>
+        <item name="materialButtonStyle">@style/Widget.CustomButton</item>
     </style>
 
     <style name="Theme.FitQuest" parent="Base.Theme.FitQuest" />
-    
+
     <!-- No Action Bar theme for full-screen activities -->
     <style name="Theme.FitQuest.NoActionBar" parent="Base.Theme.FitQuest" />
+
+    <!-- Custom button style -->
+    <style name="Widget.CustomButton" parent="android:Widget.Button">
+        <item name="android:background">@drawable/custom_button1</item>
+        <item name="android:textColor">@color/custom_button1_color</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:elevation">12dp</item>
+    </style>
+
 </resources>

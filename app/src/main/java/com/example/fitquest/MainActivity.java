@@ -1,5 +1,6 @@
 package com.example.fitquest;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
@@ -63,6 +64,11 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.arena_button).setOnClickListener(v ->
                 new Arena(MainActivity.this).show()
+        );
+
+        // New: Open UserSettingsActivity to tweak user level/difficulty
+        findViewById(R.id.user_settings_activity_button).setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, UserSettingsActivity.class))
         );
     }
 }

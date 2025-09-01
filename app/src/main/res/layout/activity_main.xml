@@ -162,6 +162,15 @@
             android:text="SETTINGS"
             android:textSize="9dp"
             android:layout_marginTop="12dp" />
+
+        <!-- New: User Level Settings Activity -->
+        <Button
+            android:id="@+id/user_settings_activity_button"
+            android:layout_width="95dp"
+            android:layout_height="60dp"
+            android:text="USER LEVEL"
+            android:textSize="9dp"
+            android:layout_marginTop="12dp" />
     </LinearLayout>
 
     <!-- CHALLENGE BUTTON -->
@@ -170,6 +179,8 @@
         android:layout_width="160dp"
         android:layout_height="60dp"
         android:text="CHALLENGE"
+        android:background="@drawable/custom_button1"
+        android:textColor="@color/custom_button1_color"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="50dp" />
