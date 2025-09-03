@@ -18,8 +18,14 @@ public class PoseOverlayView extends View {
     private Paint landmarkPaint;
     private Paint connectionPaint;
     private Paint textPaint;
-    private float scaleX = 1.0f;
-    private float scaleY = 1.0f;
+
+    // Frame and transform info
+    private int imageWidth = 0;
+    private int imageHeight = 0;
+    private int rotationDegrees = 0;
+    private boolean isFrontFacing = true;
+    private int viewWidth = 0;
+    private int viewHeight = 0;
 
     public PoseOverlayView(Context context) {
         super(context);
@@ -33,18 +39,18 @@ public class PoseOverlayView extends View {
 
     private void init() {
         landmarkPaint = new Paint();
-        landmarkPaint.setColor(Color.RED);
+        landmarkPaint.setColor(Color.WHITE); // Changed to white to match the image
         landmarkPaint.setStyle(Paint.Style.FILL);
         landmarkPaint.setStrokeWidth(8f);
 
         connectionPaint = new Paint();
-        connectionPaint.setColor(Color.GREEN);
+        connectionPaint.setColor(Color.WHITE); // Changed to white to match the image
         connectionPaint.setStyle(Paint.Style.STROKE);
         connectionPaint.setStrokeWidth(4f);
 
         textPaint = new Paint();
         textPaint.setColor(Color.WHITE);
-        textPaint.setTextSize(30f);
+        textPaint.setTextSize(20f); // Smaller text to avoid clutter
         textPaint.setStyle(Paint.Style.FILL);
     }
 
@@ -53,64 +59,70 @@ public class PoseOverlayView extends View {
         invalidate();
     }
 
-    public void setScale(float scaleX, float scaleY) {
-        this.scaleX = scaleX;
-        this.scaleY = scaleY;
+    public void setFrameInfo(int imageWidth, int imageHeight, int rotationDegrees, boolean isFrontFacing, int viewWidth, int viewHeight) {
+        this.imageWidth = imageWidth;
+        this.imageHeight = imageHeight;
+        this.rotationDegrees = rotationDegrees;
+        this.isFrontFacing = isFrontFacing;
+        this.viewWidth = viewWidth;
+        this.viewHeight = viewHeight;
+        invalidate();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         
-        if (pose == null) return;
+        if (pose == null || imageWidth == 0 || imageHeight == 0) return;
 
         List<PoseLandmark> landmarks = pose.getAllPoseLandmarks();
+        
+        // Draw connections first
+        drawConnections(canvas);
         
         // Draw landmarks
         for (PoseLandmark landmark : landmarks) {
             if (landmark.getInFrameLikelihood() > 0.5f) {
-                PointF point = landmark.getPosition();
-                float x = point.x * scaleX;
-                float y = point.y * scaleY;
-                
-                // Draw landmark circle
-                canvas.drawCircle(x, y, 8f, landmarkPaint);
-                
-                // Draw landmark name
-                String landmarkName = getLandmarkName(landmark.getLandmarkType());
-                canvas.drawText(landmarkName, x + 15, y - 15, textPaint);
+                PointF mappedPoint = mapPoint(landmark.getPosition());
+                canvas.drawCircle(mappedPoint.x, mappedPoint.y, 6f, landmarkPaint);
             }
         }
-
-        // Draw connections
-        drawConnections(canvas);
     }
 
-    private String getLandmarkName(int landmarkType) {
-        switch (landmarkType) {
-            case PoseLandmark.NOSE: return "Nose";
-            case PoseLandmark.LEFT_EYE: return "LEye";
-            case PoseLandmark.RIGHT_EYE: return "REye";
-            case PoseLandmark.LEFT_EAR: return "LEar";
-            case PoseLandmark.RIGHT_EAR: return "REar";
-            case PoseLandmark.LEFT_SHOULDER: return "LShoulder";
-            case PoseLandmark.RIGHT_SHOULDER: return "RShoulder";
-            case PoseLandmark.LEFT_ELBOW: return "LElbow";
-            case PoseLandmark.RIGHT_ELBOW: return "RElbow";
-            case PoseLandmark.LEFT_WRIST: return "LWrist";
-            case PoseLandmark.RIGHT_WRIST: return "RWrist";
-            case PoseLandmark.LEFT_HIP: return "LHip";
-            case PoseLandmark.RIGHT_HIP: return "RHip";
-            case PoseLandmark.LEFT_KNEE: return "LKnee";
-            case PoseLandmark.RIGHT_KNEE: return "RKnee";
-            case PoseLandmark.LEFT_ANKLE: return "LAnkle";
-            case PoseLandmark.RIGHT_ANKLE: return "RAnkle";
-            default: return "";
+    private PointF mapPoint(PointF imagePoint) {
+        if (imageWidth == 0 || imageHeight == 0 || viewWidth == 0 || viewHeight == 0) {
+            return imagePoint;
         }
+
+        float x = imagePoint.x;
+        float y = imagePoint.y;
+
+        // For front camera, mirror horizontally
+        if (isFrontFacing) {
+            x = imageWidth - x;
+        }
+
+        // Calculate scale factors for fitCenter
+        float scaleX = (float) viewWidth / imageWidth;
+        float scaleY = (float) viewHeight / imageHeight;
+        float scale = Math.min(scaleX, scaleY);
+
+        // Calculate offsets to center the image
+        float scaledWidth = imageWidth * scale;
+        float scaledHeight = imageHeight * scale;
+        float offsetX = (viewWidth - scaledWidth) / 2f;
+        float offsetY = (viewHeight - scaledHeight) / 2f;
+
+        // Apply scaling and centering
+        float mappedX = x * scale + offsetX;
+        float mappedY = y * scale + offsetY;
+
+        return new PointF(mappedX, mappedY);
     }
 
     private void drawConnections(Canvas canvas) {
-        // Define connections between landmarks
+        if (pose == null) return;
+
         int[][] connections = {
             // Face
             {PoseLandmark.LEFT_EYE, PoseLandmark.RIGHT_EYE},
@@ -146,15 +158,10 @@ public class PoseOverlayView extends View {
                 first.getInFrameLikelihood() > 0.5f && 
                 second.getInFrameLikelihood() > 0.5f) {
                 
-                PointF firstPoint = first.getPosition();
-                PointF secondPoint = second.getPosition();
+                PointF firstPoint = mapPoint(first.getPosition());
+                PointF secondPoint = mapPoint(second.getPosition());
                 
-                float x1 = firstPoint.x * scaleX;
-                float y1 = firstPoint.y * scaleY;
-                float x2 = secondPoint.x * scaleX;
-                float y2 = secondPoint.y * scaleY;
-                
-                canvas.drawLine(x1, y1, x2, y2, connectionPaint);
+                canvas.drawLine(firstPoint.x, firstPoint.y, secondPoint.x, secondPoint.y, connectionPaint);
             }
         }
     }

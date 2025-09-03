@@ -2,6 +2,7 @@ package com.example.fitquest;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -10,6 +11,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class Store {
+
+    private static final String PREF_NAME = "FitQuestPrefs";
+    private static final String KEY_GENDER = "gender"; // "male" or "female"
 
     private final Dialog dialog;
 
@@ -31,6 +35,13 @@ public class Store {
         dialog.setContentView(view);
         dialog.setCancelable(true);
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+        // Character preview based on gender
+        ImageView characterPreview = view.findViewById(R.id.character_preview);
+        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        String gender = prefs.getString(KEY_GENDER, "male");
+        int drawableId = "female".equalsIgnoreCase(gender) ? R.drawable.female : R.drawable.male2;
+        characterPreview.setImageResource(drawableId);
 
         // Populate store items
         LinearLayout storeItemsContainer = view.findViewById(R.id.store_container);

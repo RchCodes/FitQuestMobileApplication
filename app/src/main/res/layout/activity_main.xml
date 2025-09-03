@@ -171,6 +171,15 @@
             android:text="USER LEVEL"
             android:textSize="9dp"
             android:layout_marginTop="12dp" />
+
+        <!-- New: Reset Account Button for testing -->
+        <Button
+            android:id="@+id/reset_account_button"
+            android:layout_width="95dp"
+            android:layout_height="60dp"
+            android:text="RESET"
+            android:textSize="9dp"
+            android:layout_marginTop="12dp" />
     </LinearLayout>
 
     <!-- CHALLENGE BUTTON -->

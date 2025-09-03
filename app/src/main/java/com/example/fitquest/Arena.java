@@ -2,6 +2,7 @@ package com.example.fitquest;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -12,6 +13,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 public class Arena {
+
+    private static final String PREF_NAME = "FitQuestPrefs";
+    private static final String KEY_USERNAME = "username";
+    private static final String KEY_GENDER = "gender"; // "male" or "female"
 
     private final Dialog dialog;
 
@@ -34,9 +39,15 @@ public class Arena {
         TextView rankLabel = popupView.findViewById(R.id.rank_label);
         Button startCombat = popupView.findViewById(R.id.start_combat);
 
-        // Optional: Set default values
-        playerName.setText("CHIAN");
-        playerLevel.setText("LV. 99");
+        // Load saved data
+        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        String username = prefs.getString(KEY_USERNAME, "Player");
+        String gender = prefs.getString(KEY_GENDER, "male");
+
+        // Set values
+        playerName.setText(username);
+        int drawableId = "female".equalsIgnoreCase(gender) ? R.drawable.female : R.drawable.male2;
+        avatarImage.setImageResource(drawableId);
         rankLabel.setText("CHAMPION");
 
         startCombat.setOnClickListener(v ->

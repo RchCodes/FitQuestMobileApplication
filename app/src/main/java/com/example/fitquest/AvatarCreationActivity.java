@@ -1,5 +1,7 @@
 package com.example.fitquest;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.GridLayout;
@@ -10,6 +12,10 @@ import androidx.annotation.DrawableRes;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class AvatarCreationActivity extends AppCompatActivity {
+
+    private static final String PREF_NAME = "FitQuestPrefs";
+    private static final String KEY_AVATAR_CREATED = "avatar_created";
+    private static final String KEY_GENDER = "gender"; // "male" or "female"
 
     // Character overlays
     private ImageView baseBody;
@@ -47,14 +53,26 @@ public class AvatarCreationActivity extends AppCompatActivity {
         btnRogue = findViewById(R.id.btn_rogue);
         btnTank = findViewById(R.id.btn_tank);
 
+        // Default gender selection if none saved
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        String savedGender = prefs.getString(KEY_GENDER, null);
+        if (savedGender == null || savedGender.equals("male")) {
+            baseBody.setImageResource(R.drawable.male2);
+            prefs.edit().putString(KEY_GENDER, "male").apply();
+        } else {
+            baseBody.setImageResource(R.drawable.female);
+        }
+
         // Gender toggle
         maleIcon.setOnClickListener(v -> {
             baseBody.setImageResource(R.drawable.male2);
+            getSharedPreferences(PREF_NAME, MODE_PRIVATE).edit().putString(KEY_GENDER, "male").apply();
             showToast("Male selected");
         });
 
         femaleIcon.setOnClickListener(v -> {
             baseBody.setImageResource(R.drawable.female);
+            getSharedPreferences(PREF_NAME, MODE_PRIVATE).edit().putString(KEY_GENDER, "female").apply();
             showToast("Female selected");
         });
 
@@ -72,8 +90,23 @@ public class AvatarCreationActivity extends AppCompatActivity {
         wireGridItems(gridLips, Category.LIPS);
 
         // Create button
-        findViewById(R.id.btn_create).setOnClickListener(v ->
-                showToast("Create clicked — implement save logic"));
+        findViewById(R.id.btn_create).setOnClickListener(v -> {
+            // Save avatar creation status
+            SharedPreferences p = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+            SharedPreferences.Editor editor = p.edit();
+            editor.putBoolean(KEY_AVATAR_CREATED, true);
+            if (p.getString(KEY_GENDER, null) == null) {
+                editor.putString(KEY_GENDER, "male");
+            }
+            editor.apply();
+
+            showToast("Avatar created successfully!");
+            
+            // Go to Main Activity
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        });
     }
 
     private void setSelectedClass(ImageView btn) {

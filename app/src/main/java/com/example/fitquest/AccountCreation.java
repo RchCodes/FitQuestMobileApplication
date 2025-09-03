@@ -1,6 +1,7 @@
 package com.example.fitquest;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -9,6 +10,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class AccountCreation extends AppCompatActivity {
+
+    private static final String PREF_NAME = "FitQuestPrefs";
+    private static final String KEY_USERNAME = "username";
 
     private EditText editUsername;
     private ImageView btnConfirm; // Changed from Button to ImageView
@@ -28,11 +32,16 @@ public class AccountCreation extends AppCompatActivity {
                 if (username.isEmpty()) {
                     Toast.makeText(AccountCreation.this, "Please enter a username", Toast.LENGTH_SHORT).show();
                 } else {
-                    // Save username (could be SharedPreferences, Database, etc.)
+                    // Save username to SharedPreferences
+                    SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString(KEY_USERNAME, username);
+                    editor.apply();
+
                     Toast.makeText(AccountCreation.this, "Account created: " + username, Toast.LENGTH_SHORT).show();
 
-                    // Example: Go to Main Activity
-                    Intent intent = new Intent(AccountCreation.this, MainActivity.class);
+                    // Go to Avatar Creation
+                    Intent intent = new Intent(AccountCreation.this, AvatarCreationActivity.class);
                     startActivity(intent);
                     finish();
                 }

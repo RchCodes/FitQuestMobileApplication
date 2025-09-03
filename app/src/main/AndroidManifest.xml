@@ -18,13 +18,23 @@
 
         <!-- Main entry point -->
         <activity
-            android:name=".AccountCreation"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Account Creation Activity -->
+        <activity
+            android:name=".AccountCreation"
+            android:exported="false" />
+
+        <!-- Avatar Creation Activity -->
+        <activity
+            android:name=".AvatarCreationActivity"
+            android:exported="false" />
 
         <!-- Exercise Tracking Activity -->
         <activity

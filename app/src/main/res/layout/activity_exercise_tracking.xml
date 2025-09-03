@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Permission Request Button (initially visible) -->
+    <!-- Permission Request Button (overlay) -->
     <LinearLayout
         android:id="@+id/permission_layout"
         android:layout_width="match_parent"
@@ -30,7 +30,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Camera Permission Required"
+            android:text="Permissions Required"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="@android:color/white"
@@ -39,7 +39,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="This app needs camera access to track your exercises"
+            android:text="Camera and microphone access are needed for tracking and voice control"
             android:textSize="16sp"
             android:textColor="@android:color/white"
             android:layout_marginBottom="24dp"
@@ -49,7 +49,7 @@
             android:id="@+id/request_permission_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Grant Camera Permission"
+            android:text="Grant Permissions"
             android:textSize="16sp"
             android:background="@android:color/holo_blue_dark"
             android:textColor="@android:color/white"
@@ -57,7 +57,7 @@
 
     </LinearLayout>
 
-    <!-- Exercise Instructions -->
+    <!-- Exercise Instructions (top center) -->
     <TextView
         android:id="@+id/instructionText"
         android:layout_width="wrap_content"
@@ -73,36 +73,38 @@
         android:maxWidth="300dp"
         android:gravity="center" />
 
-    <!-- Rep Counter -->
+    <!-- Rep Counter (top-right) -->
     <TextView
         android:id="@+id/repCounter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Reps: 0/10"
-        android:textSize="24sp"
+        android:textSize="20sp"
         android:textStyle="bold"
         android:textColor="@android:color/white"
         android:background="#80000000"
-        android:padding="12dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="120dp"/>
+        android:padding="10dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"/>
 
-    <!-- Timer Display (for plank) -->
+    <!-- Timer Display (for plank, below rep counter) -->
     <TextView
         android:id="@+id/timerText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Plank Time: 0s"
-        android:textSize="24sp"
+        android:textSize="18sp"
         android:textStyle="bold"
         android:textColor="@android:color/white"
         android:background="#80000000"
-        android:padding="12dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="120dp"
+        android:padding="10dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="64dp"
+        android:layout_marginEnd="16dp"
         android:visibility="gone"/>
 
-    <!-- Feedback Text -->
+    <!-- Feedback Text (bottom center) -->
     <TextView
         android:id="@+id/feedbackText"
         android:layout_width="wrap_content"

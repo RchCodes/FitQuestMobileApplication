@@ -176,6 +176,8 @@ public class Quest {
 		quests.add(new QuestItem(formatTitle("pushups", 10), 10, "pushups", 0, User.getDifficultyLevel(context)));
 		quests.add(new QuestItem(formatTitle("plank", 30), 30, "plank", 0, User.getDifficultyLevel(context))); // seconds
 		quests.add(new QuestItem(formatTitle("squats", 15), 15, "squats", 0, User.getDifficultyLevel(context)));
+		quests.add(new QuestItem(formatTitle("crunches", 20), 20, "crunches", 0, User.getDifficultyLevel(context)));
+		quests.add(new QuestItem(formatTitle("lunges", 12), 12, "lunges", 0, User.getDifficultyLevel(context)));
 		return quests;
 	}
 
@@ -208,6 +210,12 @@ public class Quest {
 		}
 		if ("squats".equals(exerciseType)) {
 			return "Execute " + amount + " Squats";
+		}
+		if ("crunches".equals(exerciseType)) {
+			return "Complete " + amount + " Crunches";
+		}
+		if ("lunges".equals(exerciseType)) {
+			return "Execute " + amount + " Lunges";
 		}
 		return exerciseType + ": " + amount;
 	}
