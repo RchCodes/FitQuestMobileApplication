@@ -18,7 +18,7 @@
 
         <!-- Main entry point -->
         <activity
-            android:name=".MainActivity"
+            android:name=".AccountCreation"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
