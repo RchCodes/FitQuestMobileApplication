@@ -1,7 +1,9 @@
 package com.example.fitquest;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -22,8 +24,14 @@ public class AvatarCreationActivity extends AppCompatActivity {
     private ImageView btnWarrior, btnRogue, btnTank;
     private ImageView selectedClassIcon = null;
 
+    // Username field
+    private EditText editAvatarUsername;
+
     // Grids
     private GridLayout gridHead, gridHair, gridEyes, gridNose, gridLips;
+
+    // Tabs
+    private ImageView tabHead, tabHair, tabEyes, tabNose, tabLips;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +46,9 @@ public class AvatarCreationActivity extends AppCompatActivity {
         overlayNose = findViewById(R.id.noseLayer);
         overlayLips = findViewById(R.id.lipsLayer);
 
+        // username field
+        editAvatarUsername = findViewById(R.id.edit_avatar_username);
+
         // gender icons
         maleIcon = findViewById(R.id.male_icon);
         femaleIcon = findViewById(R.id.female_icon);
@@ -46,6 +57,18 @@ public class AvatarCreationActivity extends AppCompatActivity {
         btnWarrior = findViewById(R.id.btn_warrior);
         btnRogue = findViewById(R.id.btn_rogue);
         btnTank = findViewById(R.id.btn_tank);
+
+        // tabs
+        tabHead = findViewById(R.id.tab_head);
+        tabHair = findViewById(R.id.tab_hair);
+        tabEyes = findViewById(R.id.tab_eyes);
+        tabNose = findViewById(R.id.tab_nose);
+        tabLips = findViewById(R.id.tab_lips);
+
+        // grids
+        gridHead = findViewById(R.id.grid_head_group);
+        gridEyes = findViewById(R.id.gridEyes);
+        // (optional: define gridHair, gridNose, gridLips if you add them later)
 
         // Gender toggle
         maleIcon.setOnClickListener(v -> {
@@ -64,16 +87,65 @@ public class AvatarCreationActivity extends AppCompatActivity {
         btnRogue.setOnClickListener(classClick);
         btnTank.setOnClickListener(classClick);
 
-        // Wire grids
+        // Tab clicks
+        tabHead.setOnClickListener(v -> showGrid(gridHead));
+        tabEyes.setOnClickListener(v -> {
+            showGrid(gridEyes);
+            setupEyeColors(gridEyes); // fill with color boxes
+        });
+
+        // Wire head grid only (others optional)
         wireGridItems(gridHead, Category.HEAD);
-        wireGridItems(gridHair, Category.HAIR);
-        wireGridItems(gridEyes, Category.EYES);
-        wireGridItems(gridNose, Category.NOSE);
-        wireGridItems(gridLips, Category.LIPS);
 
         // Create button
-        findViewById(R.id.btn_create).setOnClickListener(v ->
-                showToast("Create clicked — implement save logic"));
+        findViewById(R.id.btn_create).setOnClickListener(v -> {
+            String username = editAvatarUsername.getText().toString().trim();
+
+            if (username.isEmpty()) {
+                showToast("Please enter a username");
+            } else {
+                showToast("Avatar created for: " + username);
+            }
+        });
+    }
+
+    /** Show only the selected grid, hide others */
+    private void showGrid(GridLayout target) {
+        if (gridHead != null) gridHead.setVisibility(View.GONE);
+        if (gridEyes != null) gridEyes.setVisibility(View.GONE);
+        // (later: hide gridHair, gridNose, gridLips too)
+
+        if (target != null) target.setVisibility(View.VISIBLE);
+    }
+
+    /** Create eye color boxes dynamically */
+    private void setupEyeColors(GridLayout grid) {
+        grid.removeAllViews(); // clear before adding
+
+        int[] colors = {
+                Color.BLUE, Color.GREEN, Color.BLACK,
+                Color.DKGRAY, Color.GRAY, Color.CYAN,
+                Color.MAGENTA, Color.RED
+        };
+
+        int size = (int) getResources().getDimensionPixelSize(R.dimen.eye_color_box);
+
+        for (int color : colors) {
+            View box = new View(this);
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+            params.width = size;
+            params.height = size;
+            params.setMargins(8, 8, 8, 8);
+            box.setLayoutParams(params);
+            box.setBackgroundColor(color);
+
+            box.setOnClickListener(v -> {
+                overlayEyes.setColorFilter(color); // apply tint
+                showToast("Eye color changed");
+            });
+
+            grid.addView(box);
+        }
     }
 
     private void setSelectedClass(ImageView btn) {
