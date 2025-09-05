@@ -15,7 +15,7 @@ public class AvatarCreationActivity extends AppCompatActivity {
 
     // Character overlays
     private ImageView baseBody;
-    private ImageView overlayHead, overlayHair, overlayEyes, overlayNose, overlayLips;
+    private ImageView overlayHair, overlayEyes, overlayNose, overlayLips;
 
     // Gender icons
     private ImageView maleIcon, femaleIcon;
@@ -28,10 +28,10 @@ public class AvatarCreationActivity extends AppCompatActivity {
     private EditText editAvatarUsername;
 
     // Grids
-    private GridLayout gridHead, gridHair, gridEyes, gridNose, gridLips;
+    private GridLayout gridHair, gridEyes, gridNose, gridLips;
 
     // Tabs
-    private ImageView tabHead, tabHair, tabEyes, tabNose, tabLips;
+    private ImageView tabHair, tabEyes, tabNose, tabLips;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +40,6 @@ public class AvatarCreationActivity extends AppCompatActivity {
 
         // base + overlays
         baseBody = findViewById(R.id.baseBody);
-        overlayHead = findViewById(R.id.headLayer);
         overlayHair = findViewById(R.id.hairLayer);
         overlayEyes = findViewById(R.id.eyesLayer);
         overlayNose = findViewById(R.id.noseLayer);
@@ -59,16 +58,16 @@ public class AvatarCreationActivity extends AppCompatActivity {
         btnTank = findViewById(R.id.btn_tank);
 
         // tabs
-        tabHead = findViewById(R.id.tab_head);
         tabHair = findViewById(R.id.tab_hair);
         tabEyes = findViewById(R.id.tab_eyes);
         tabNose = findViewById(R.id.tab_nose);
         tabLips = findViewById(R.id.tab_lips);
 
         // grids
-        gridHead = findViewById(R.id.grid_head_group);
+        gridHair = findViewById(R.id.gridHair);
         gridEyes = findViewById(R.id.gridEyes);
-        // (optional: define gridHair, gridNose, gridLips if you add them later)
+        gridNose = findViewById(R.id.gridNose);
+        gridLips = findViewById(R.id.gridLips);
 
         // Gender toggle
         maleIcon.setOnClickListener(v -> {
@@ -88,14 +87,16 @@ public class AvatarCreationActivity extends AppCompatActivity {
         btnTank.setOnClickListener(classClick);
 
         // Tab clicks
-        tabHead.setOnClickListener(v -> showGrid(gridHead));
+        tabHair.setOnClickListener(v -> showGrid(gridHair));
         tabEyes.setOnClickListener(v -> {
             showGrid(gridEyes);
             setupEyeColors(gridEyes); // fill with color boxes
         });
+        tabNose.setOnClickListener(v -> showGrid(gridNose));
+        tabLips.setOnClickListener(v -> showGrid(gridLips));
 
-        // Wire head grid only (others optional)
-        wireGridItems(gridHead, Category.HEAD);
+        // Wire sample grid
+        wireGridItems(gridHair, Category.HAIR);
 
         // Create button
         findViewById(R.id.btn_create).setOnClickListener(v -> {
@@ -111,9 +112,10 @@ public class AvatarCreationActivity extends AppCompatActivity {
 
     /** Show only the selected grid, hide others */
     private void showGrid(GridLayout target) {
-        if (gridHead != null) gridHead.setVisibility(View.GONE);
+        if (gridHair != null) gridHair.setVisibility(View.GONE);
         if (gridEyes != null) gridEyes.setVisibility(View.GONE);
-        // (later: hide gridHair, gridNose, gridLips too)
+        if (gridNose != null) gridNose.setVisibility(View.GONE);
+        if (gridLips != null) gridLips.setVisibility(View.GONE);
 
         if (target != null) target.setVisibility(View.VISIBLE);
     }
@@ -174,7 +176,6 @@ public class AvatarCreationActivity extends AppCompatActivity {
                 iv.setOnClickListener(v -> {
                     if (resId != 0) {
                         switch (category) {
-                            case HEAD: applyHead(resId); break;
                             case HAIR: applyHair(resId); break;
                             case EYES: applyEyes(resId); break;
                             case NOSE: applyNose(resId); break;
@@ -190,14 +191,9 @@ public class AvatarCreationActivity extends AppCompatActivity {
         Object tag = iv.getTag();
         if (tag instanceof String) {
             String tagStr = (String) tag;
-            int id = getResources().getIdentifier(tagStr, "drawable", getPackageName());
-            return id;
+            return getResources().getIdentifier(tagStr, "drawable", getPackageName());
         }
         return 0;
-    }
-
-    private void applyHead(@DrawableRes int resId) {
-        overlayHead.setImageResource(resId);
     }
 
     private void applyHair(@DrawableRes int resId) {
@@ -220,5 +216,5 @@ public class AvatarCreationActivity extends AppCompatActivity {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 
-    private enum Category { HEAD, HAIR, EYES, NOSE, LIPS }
+    private enum Category { HAIR, EYES, NOSE, LIPS }
 }
