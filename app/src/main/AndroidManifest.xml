@@ -2,11 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Permissions -->
-    <!-- Optional: prevent camera use on devices without one -->
     <uses-feature android:name="android.hardware.camera.any" android:required="true" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.INTERNET" /> <!-- Optional if you'll sync data online -->
-    <uses-permission android:name="android.permission.RECORD_AUDIO" /> <!-- For voice activation -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:allowBackup="true"
@@ -16,9 +15,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FitQuest">
 
-        <!-- Main entry point -->
+        <!-- Login Activity (set as LAUNCHER) -->
         <activity
-            android:name=".MainActivity"
+            android:name=".Login"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -42,9 +41,15 @@
             android:exported="false"
             android:theme="@style/Theme.FitQuest.NoActionBar" />
 
-        <!-- Settings Activity to tweak level/difficulty -->
+        <!-- Settings Activity -->
         <activity
             android:name=".UserSettingsActivity"
             android:exported="false" />
+
+        <!-- Optional: Keep MainActivity if you use it for testing -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+
     </application>
 </manifest>
