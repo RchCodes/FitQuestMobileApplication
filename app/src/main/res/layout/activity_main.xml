@@ -80,13 +80,38 @@
         android:progressDrawable="@android:color/holo_green_light" />
 
     <!-- CHARACTER VIEW -->
-    <ImageView
-        android:id="@+id/character_view"
-        android:layout_width="200dp"
-        android:layout_height="400dp"
-        android:src="@drawable/male2"
-        android:layout_marginTop="300dp"
-        android:layout_centerHorizontal="true"/>
+    <FrameLayout
+        android:id="@+id/character_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/base_body_layer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:id="@+id/hair_layer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:id="@+id/eyes_layer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:id="@+id/nose_layer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:id="@+id/lips_layer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </FrameLayout>
+
 
     <!-- LEFT SIDE BUTTONS -->
     <LinearLayout

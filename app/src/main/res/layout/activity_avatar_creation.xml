@@ -221,13 +221,22 @@
                 android:background="?attr/selectableItemBackgroundBorderless"/>
         </LinearLayout>
 
-        <!-- RecyclerView container (replaces multiple GridLayouts) -->
+        <!-- RecyclerView container -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerOptions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
             android:overScrollMode="never" />
+
+        <!-- Color palette (only shown for Hair + Eyes) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerColors"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="8dp"
+            android:visibility="gone"
+            android:overScrollMode="never"/>
 
         <!-- CREATE button -->
         <ImageView

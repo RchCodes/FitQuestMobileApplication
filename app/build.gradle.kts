@@ -54,6 +54,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-livedata:2.8.4")
     implementation("androidx.lifecycle:lifecycle-viewmodel:2.8.4")
 
+    implementation("com.google.code.gson:gson:2.10.1")
+
     // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

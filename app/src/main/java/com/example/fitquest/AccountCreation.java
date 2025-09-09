@@ -47,7 +47,8 @@ public class AccountCreation extends AppCompatActivity {
                     Toast.makeText(AccountCreation.this, "Account created: " + username, Toast.LENGTH_SHORT).show();
 
                     // Redirect to AvatarCreationActivity
-                    Intent intent = new Intent(AccountCreation.this, AvatarCreationActivity.class);
+                    Intent intent;
+                    intent = new Intent(AccountCreation.this, AvatarCreationActivity.class);
                     startActivity(intent);
                     finish();
                 }

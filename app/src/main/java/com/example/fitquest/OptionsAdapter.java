@@ -1,6 +1,5 @@
 package com.example.fitquest;
 
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +14,7 @@ import java.util.List;
 public class OptionsAdapter extends RecyclerView.Adapter<OptionsAdapter.ViewHolder> {
 
     public interface OnOptionClickListener {
-        void onOptionClick(int option, AvatarCreationActivity.Category category);
+        void onOptionClick(int drawableRes, AvatarCreationActivity.Category category);
     }
 
     private List<Integer> options = new ArrayList<>();
@@ -26,8 +25,8 @@ public class OptionsAdapter extends RecyclerView.Adapter<OptionsAdapter.ViewHold
         this.listener = listener;
     }
 
-    public void setOptions(List<Integer> newOptions, AvatarCreationActivity.Category category) {
-        this.options = newOptions;
+    public void setOptions(List<Integer> options, AvatarCreationActivity.Category category) {
+        this.options = options;
         this.currentCategory = category;
         notifyDataSetChanged();
     }
@@ -35,25 +34,21 @@ public class OptionsAdapter extends RecyclerView.Adapter<OptionsAdapter.ViewHold
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_customization, parent, false);
-        return new ViewHolder(view);
+        ImageView iv = (ImageView) LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_option_image, parent, false)
+                .findViewById(R.id.image_option);
+        return new ViewHolder(iv);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        int option = options.get(position);
-
-        if (currentCategory == AvatarCreationActivity.Category.EYES) {
-            // Example: eye colors as solid colors
-            holder.icon.setBackgroundColor(option);
-            holder.icon.setImageDrawable(null);
-        } else {
-            holder.icon.setBackgroundColor(Color.TRANSPARENT);
-            holder.icon.setImageResource(option);
-        }
-
-        holder.itemView.setOnClickListener(v -> listener.onOptionClick(option, currentCategory));
+        int resId = options.get(position);
+        holder.imageView.setImageResource(resId);
+        holder.imageView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onOptionClick(resId, currentCategory);
+            }
+        });
     }
 
     @Override
@@ -62,11 +57,11 @@ public class OptionsAdapter extends RecyclerView.Adapter<OptionsAdapter.ViewHold
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView icon;
+        ImageView imageView;
 
-        ViewHolder(View itemView) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            icon = itemView.findViewById(R.id.customization_icon);
+            imageView = (ImageView) itemView;
         }
     }
 }
