@@ -1,5 +1,6 @@
 package com.example.fitquest;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -81,11 +82,13 @@ public class AvatarCreationActivity extends AppCompatActivity {
             isMale = true;
             updateBaseBody();
             loadOptions(currentCategory);
+            setDefaultFeatures(); // reset for male
         });
         findViewById(R.id.female_icon).setOnClickListener(v -> {
             isMale = false;
             updateBaseBody();
             loadOptions(currentCategory);
+            setDefaultFeatures(); // reset for female
         });
 
         // Class buttons
@@ -120,8 +123,14 @@ public class AvatarCreationActivity extends AppCompatActivity {
             loadOptions(Category.LIPS);
         });
 
-        // ✅ Create button
-        btn_create.setOnClickListener(v -> saveAvatar());
+        // Create button
+        btn_create.setOnClickListener(v -> {
+            saveAvatar(); // still saves the avatar
+            Intent intent = new Intent(AvatarCreationActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish(); // close AvatarCreation so user can’t go back to it
+        });
+
 
         // Load defaults
         updateBaseBody();
@@ -130,11 +139,18 @@ public class AvatarCreationActivity extends AppCompatActivity {
     }
 
     private void updateBaseBody() {
-        int resId = R.drawable.warrior_male;
+        int resId;
         switch (chosenClass) {
-            case "rogue": resId = isMale ? R.drawable.rogue_male : R.drawable.rogue_female; break;
-            case "tank": resId = isMale ? R.drawable.tank_male : R.drawable.tank_female; break;
-            case "warrior": default: resId = isMale ? R.drawable.warrior_male : R.drawable.warrior_female; break;
+            case "rogue":
+                resId = isMale ? R.drawable.rogue_male : R.drawable.rogue_female;
+                break;
+            case "tank":
+                resId = isMale ? R.drawable.tank_male : R.drawable.tank_female;
+                break;
+            case "warrior":
+            default:
+                resId = isMale ? R.drawable.warrior_male : R.drawable.warrior_female;
+                break;
         }
         baseBody.setImageResource(resId);
     }
@@ -201,33 +217,37 @@ public class AvatarCreationActivity extends AppCompatActivity {
         }
     }
 
-    // ✅ Assign default features
     private void setDefaultFeatures() {
         if (isMale) {
+            // Male defaults
             hairLayer.setImageResource(R.drawable.hair_male_1);
             hairLayer.setTag(R.drawable.hair_male_1);
 
             eyesLayer.setImageResource(R.drawable.eyes_male_1);
             eyesLayer.setTag(R.drawable.eyes_male_1);
-
-            noseLayer.setImageResource(R.drawable.nose_1);
-            noseLayer.setTag(R.drawable.nose_1);
-
-            lipsLayer.setImageResource(R.drawable.lips_1);
-            lipsLayer.setTag(R.drawable.lips_1);
         } else {
+            // Female defaults
             hairLayer.setImageResource(R.drawable.hair_female_1);
             hairLayer.setTag(R.drawable.hair_female_1);
 
             eyesLayer.setImageResource(R.drawable.eyes_female_1);
             eyesLayer.setTag(R.drawable.eyes_female_1);
-
-            noseLayer.setImageResource(R.drawable.nose_1);
-            noseLayer.setTag(R.drawable.nose_1);
-
-            lipsLayer.setImageResource(R.drawable.lips_1);
-            lipsLayer.setTag(R.drawable.lips_1);
         }
+
+        // Nose & lips are unisex
+        noseLayer.setImageResource(R.drawable.nose_1);
+        noseLayer.setTag(R.drawable.nose_1);
+
+        lipsLayer.setImageResource(R.drawable.lips_1);
+        lipsLayer.setTag(R.drawable.lips_1);
+
+        // Reset colors
+        currentHairColor = -1;
+        currentEyesColor = -1;
+        currentLipsColor = -1;
+        hairLayer.clearColorFilter();
+        eyesLayer.clearColorFilter();
+        lipsLayer.clearColorFilter();
     }
 
     private void saveAvatar() {
@@ -235,7 +255,7 @@ public class AvatarCreationActivity extends AppCompatActivity {
         avatar.isMale = isMale;
         avatar.chosenClass = chosenClass;
 
-        // Features (default already assigned)
+        // Features
         avatar.hairOutlineRes = (Integer) hairLayer.getTag();
         avatar.hairFillRes = (Integer) hairLayer.getTag();
         avatar.eyesOutlineRes = (Integer) eyesLayer.getTag();
@@ -255,16 +275,17 @@ public class AvatarCreationActivity extends AppCompatActivity {
             return;
         }
 
-        // Save using GsonHelper
+        // Save with Gson
         SharedPreferences prefs = getSharedPreferences("avatar_pref", MODE_PRIVATE);
         String avatarJson = GsonHelper.toJson(avatar);
         prefs.edit().putString("saved_avatar", avatarJson).apply();
 
-        // Mark avatar as created
+        // Mark as created
         SharedPreferences gamePrefs = getSharedPreferences("FitQuestPrefs", MODE_PRIVATE);
         gamePrefs.edit().putBoolean("avatar_created", true).apply();
 
         Toast.makeText(this, "Avatar created successfully!", Toast.LENGTH_SHORT).show();
         finish();
     }
+
 }

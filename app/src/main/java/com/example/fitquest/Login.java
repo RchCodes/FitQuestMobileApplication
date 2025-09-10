@@ -3,12 +3,15 @@ package com.example.fitquest;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.auth.FirebaseUser;
 
 public class Login extends AppCompatActivity {
 
@@ -33,7 +36,7 @@ public class Login extends AppCompatActivity {
         textForgotPassword = findViewById(R.id.text_forgot_password);
 
         // LOGIN button → check saved account
-        buttonLogin.setOnClickListener(new View.OnClickListener() {
+        /*buttonLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String username = editUsername.getText().toString().trim();
@@ -41,6 +44,11 @@ public class Login extends AppCompatActivity {
 
                 if (username.isEmpty() || password.isEmpty()) {
                     Toast.makeText(Login.this, "Please enter username and password", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (!Patterns.EMAIL_ADDRESS.matcher(username).matches()) {
+                    Toast.makeText(Login.this, "Invalid email address", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -58,7 +66,32 @@ public class Login extends AppCompatActivity {
                     Toast.makeText(Login.this, "Invalid username or password", Toast.LENGTH_SHORT).show();
                 }
             }
+        });*/
+        buttonLogin.setOnClickListener(v -> {
+            String email = editUsername.getText().toString().trim(); // Use email for Firebase login
+            String password = editPassword.getText().toString().trim();
+
+            if (email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(Login.this, "Please enter email and password", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            AuthManager authManager = new AuthManager();
+            authManager.login(email, password, Login.this, new AuthManager.AuthCallback() {
+                @Override
+                public void onSuccess(FirebaseUser user) {
+                    Toast.makeText(Login.this, "Login successful!", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(Login.this, AvatarCreationActivity.class));
+                    finish();
+                }
+
+                @Override
+                public void onFailure(String errorMessage) {
+                    Toast.makeText(Login.this, "Login failed: " + errorMessage, Toast.LENGTH_LONG).show();
+                }
+            });
         });
+
 
         // SIGN UP button → AccountCreation
         buttonSignup.setOnClickListener(new View.OnClickListener() {

@@ -1,5 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
+    //id("com.android.application")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -41,13 +43,13 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
 
-    // ✅ CameraX (needed for live camera feed)
+    // CameraX (needed for live camera feed)
     implementation("androidx.camera:camera-core:1.3.3")
     implementation("androidx.camera:camera-camera2:1.3.3")
     implementation("androidx.camera:camera-lifecycle:1.3.3")
     implementation("androidx.camera:camera-view:1.3.3")
 
-    // ✅ ML Kit Pose Detection
+    // ML Kit Pose Detection
     implementation("com.google.mlkit:pose-detection:18.0.0-beta4")
 
     // Lifecycle
@@ -60,4 +62,13 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:34.2.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth:23.0.0")
+    implementation("com.google.firebase:firebase-database:21.0.0")
+    implementation("com.google.firebase:firebase-firestore:25.0.0")
+    implementation("com.google.firebase:firebase-storage:21.0.0")
+
 }

@@ -34,21 +34,29 @@ public class OptionsAdapter extends RecyclerView.Adapter<OptionsAdapter.ViewHold
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ImageView iv = (ImageView) LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_option_image, parent, false)
-                .findViewById(R.id.image_option);
-        return new ViewHolder(iv);
+        ImageView imageView = new ImageView(parent.getContext());
+
+        int size = (int) (96 * parent.getContext().getResources().getDisplayMetrics().density / 2); // ~96dp
+        RecyclerView.LayoutParams params = new RecyclerView.LayoutParams(size, size);
+        params.setMargins(8, 8, 8, 8);
+
+        imageView.setLayoutParams(params);
+        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+        // Background grid (gray checkerboard)
+        imageView.setBackgroundResource(R.drawable.grid_background);
+
+        return new ViewHolder(imageView);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        int resId = options.get(position);
-        holder.imageView.setImageResource(resId);
-        holder.imageView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onOptionClick(resId, currentCategory);
-            }
-        });
+        int drawableRes = options.get(position);
+        holder.imageView.setImageResource(drawableRes);
+
+        holder.imageView.setOnClickListener(v ->
+                listener.onOptionClick(drawableRes, currentCategory)
+        );
     }
 
     @Override
@@ -59,9 +67,10 @@ public class OptionsAdapter extends RecyclerView.Adapter<OptionsAdapter.ViewHold
     static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
 
-        public ViewHolder(@NonNull View itemView) {
+        ViewHolder(@NonNull ImageView itemView) {
             super(itemView);
-            imageView = (ImageView) itemView;
+            imageView = itemView;
         }
     }
 }
+

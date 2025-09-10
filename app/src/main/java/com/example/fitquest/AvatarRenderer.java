@@ -66,7 +66,7 @@ public class AvatarRenderer {
             // Tint fill
             fill = fill.mutate();
             if (tintColor != -1) {
-                fill.setColorFilter(new PorterDuffColorFilter(tintColor, PorterDuff.Mode.MULTIPLY));
+                fill.setColorFilter(new PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_IN));
             }
             fill.setBounds(0, 0, w, h);
             outline.setBounds(0, 0, w, h);
@@ -95,7 +95,7 @@ public class AvatarRenderer {
 
         d = d.mutate();
         if (tintColor != -1) {
-            d.setColorFilter(new PorterDuffColorFilter(tintColor, PorterDuff.Mode.MULTIPLY));
+            d.setColorFilter(new PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_IN));
         }
 
         Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
