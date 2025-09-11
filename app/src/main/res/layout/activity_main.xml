@@ -1,32 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/main"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/background"
-    tools:context="com.example.fitquest.MainActivity">
+    android:padding="12dp">
 
-    <!-- PROFILE SECTION (Clickable) -->
+    <!-- PROFILE (top-left) -->
     <LinearLayout
         android:id="@+id/profile_section"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="8dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:gravity="center_vertical"
+        android:background="#CC111111"
         android:clickable="true"
-        android:focusable="true"
-        android:background="#1F1F1F">
+        android:focusable="true">
 
         <ImageView
             android:id="@+id/user_icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:src="@drawable/user"
-            android:background="#1F1F1F"
             android:contentDescription="User Icon"
             android:scaleType="centerCrop"
             android:layout_marginEnd="8dp" />
@@ -55,123 +53,164 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- COINS (top-right) -->
+    <!-- SETTINGS (top-right) -->
+    <ImageView
+        android:id="@+id/settings_button"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/b_settings"
+        android:contentDescription="Settings"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_marginEnd="12dp"
+        android:layout_marginTop="8dp" />
+
+    <!-- COINS badge near top-right (left of settings) -->
     <TextView
         android:id="@+id/coins"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="💰 999M"
+        android:text="999M"
         android:textColor="@android:color/white"
-        android:textSize="16sp"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp" />
+        android:textSize="14sp"
+        android:layout_alignTop="@id/settings_button"
+        android:layout_toStartOf="@id/settings_button"
+        android:layout_marginEnd="12dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp" />
 
-    <!-- EXP BAR -->
+    <!-- EXP bar under profile -->
     <ProgressBar
         android:id="@+id/exp_bar"
         style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="120dp"
+        android:layout_width="140dp"
         android:layout_height="12dp"
         android:layout_below="@id/profile_section"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="6dp"
         android:max="10000"
         android:progress="5000"
-        android:progressDrawable="@android:color/holo_green_light" />
+        android:progressTint="@android:color/holo_green_light" />
 
-    <!-- CHARACTER VIEW -->
+    <!-- CHARACTER (center area) -->
     <ImageView
         android:id="@+id/character_view"
-        android:layout_width="200dp"
-        android:layout_height="400dp"
+        android:layout_width="220dp"
+        android:layout_height="420dp"
         android:src="@drawable/male2"
-        android:layout_marginTop="300dp"
-        android:layout_centerHorizontal="true"/>
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="36dp"
+        android:layout_below="@id/exp_bar"
+        android:contentDescription="Character" />
 
-    <!-- LEFT SIDE BUTTONS -->
+    <!-- LEFT vertical icons (stacked, centered vertically) -->
     <LinearLayout
+        android:id="@+id/left_buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="4dp"
         android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
-        android:orientation="vertical"
-        android:padding="8dp">
+        android:layout_centerVertical="true">
 
-        <Button
+        <ImageView
             android:id="@+id/stats_button"
-            android:layout_width="95dp"
-            android:layout_height="60dp"
-            android:text="STATS" />
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/b_stats"
+            android:contentDescription="Stats"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginBottom="12dp" />
 
-        <Button
+        <ImageView
             android:id="@+id/gear_button"
-            android:layout_width="95dp"
-            android:layout_height="60dp"
-            android:text="GEAR"
-            android:layout_marginTop="12dp" />
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/b_gear"
+            android:contentDescription="Gear"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginBottom="12dp" />
 
-        <Button
+        <ImageView
             android:id="@+id/arena_button"
-            android:layout_width="95dp"
-            android:layout_height="60dp"
-            android:text="ARENA"
-            android:layout_marginTop="12dp" />
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/b_arena"
+            android:contentDescription="Arena"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginBottom="12dp" />
     </LinearLayout>
 
-    <!-- RIGHT SIDE BUTTONS -->
+    <!-- RIGHT vertical icons (stacked, centered vertically) -->
     <LinearLayout
+        android:id="@+id/right_buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:gravity="center"
+        android:padding="4dp"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true">
 
-        <Button
+        <ImageView
             android:id="@+id/quest_button"
-            android:layout_width="95dp"
-            android:layout_height="60dp"
-            android:text="QUEST" />
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/b_quest"
+            android:contentDescription="Quest"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginBottom="12dp" />
 
-        <Button
+        <ImageView
             android:id="@+id/goals_button"
-            android:layout_width="95dp"
-            android:layout_height="60dp"
-            android:text="GOALS"
-            android:layout_marginTop="12dp" />
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/b_goal"
+            android:contentDescription="Goals"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginBottom="12dp" />
 
-        <Button
+        <ImageView
             android:id="@+id/store_button"
-            android:layout_width="95dp"
-            android:layout_height="60dp"
-            android:text="STORE"
-            android:layout_marginTop="12dp" />
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/b_store"
+            android:contentDescription="Store"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginBottom="12dp" />
 
-        <Button
+        <ImageView
             android:id="@+id/friends_button"
-            android:layout_width="95dp"
-            android:layout_height="60dp"
-            android:text="FRIENDS"
-            android:textSize="11dp"
-            android:layout_marginTop="12dp" />
-
-        <Button
-            android:id="@+id/settings_button"
-            android:layout_width="95dp"
-            android:layout_height="60dp"
-            android:text="SETTINGS"
-            android:textSize="9dp"
-            android:layout_marginTop="12dp" />
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/b_friends"
+            android:contentDescription="Friends"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginBottom="12dp" />
     </LinearLayout>
 
-    <!-- CHALLENGE BUTTON -->
-    <Button
+    <!-- CHALLENGE (big, bottom center) -->
+    <ImageView
         android:id="@+id/challenge_button"
-        android:layout_width="160dp"
-        android:layout_height="60dp"
-        android:text="CHALLENGE"
+        android:layout_width="180dp"
+        android:layout_height="64dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="50dp" />
+        android:layout_marginBottom="40dp"
+        android:src="@drawable/b_challenge"
+        android:contentDescription="Challenge"
+        android:clickable="true"
+        android:focusable="true" />
 
 </RelativeLayout>

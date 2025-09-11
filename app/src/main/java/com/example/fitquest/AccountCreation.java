@@ -3,6 +3,7 @@ package com.example.fitquest;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button; // Added import for Button
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -11,7 +12,8 @@ import androidx.appcompat.app.AppCompatActivity;
 public class AccountCreation extends AppCompatActivity {
 
     private EditText etEmail, etUser, etPassword, etConfirmPassword;
-    private ImageView btnSignUp, btnFacebook, btnGoogle;
+    private Button btnSignUp; // Changed from ImageView to Button
+    private ImageView btnFacebook, btnGoogle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

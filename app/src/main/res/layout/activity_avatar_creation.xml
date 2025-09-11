@@ -1,360 +1,308 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/scroll_avatar"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="@drawable/background">
+    android:background="@drawable/background"
+    android:padding="16dp">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <!-- Username Label -->
+    <TextView
+        android:id="@+id/tvUsernameLabel"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/etUsername"
+        android:layout_marginTop="130dp"
+        android:layout_marginLeft="55dp"
+        android:text="Username"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        android:textStyle="bold" />
 
-        <!-- Top row: CLASS buttons on the left + Avatar on the right -->
+    <!-- Username Input -->
+    <EditText
+        android:id="@+id/etUsername"
+        android:layout_width="190dp"
+        android:layout_height="50dp"
+        android:layout_below="@id/tvUsernameLabel"
+        android:layout_alignStart="@+id/imgCharacter"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_username_edittext_target"
+        android:gravity="center"
+        android:textColor="@android:color/black"
+        android:textSize="16sp"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:singleLine="true" />
+
+    <!-- Character Image -->
+    <ImageView
+        android:id="@+id/imgCharacter"
+        android:layout_width="220dp"
+        android:layout_height="378dp"
+        android:layout_below="@id/etUsername"
+        android:layout_alignParentStart="true"
+        android:scaleType="fitCenter"
+        android:src="@drawable/char_warrior" />
+
+    <!-- Right Panel (Class, Gender, Customization) -->
+    <LinearLayout
+        android:id="@+id/rightPanel"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="100dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_right_panel_target"
+        android:padding="10dp">
+
+        <!-- Class Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CLASS"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:layout_gravity="center" />
+
+        <Button
+            android:id="@+id/btnWarrior"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_marginTop="6dp"
+            android:drawableLeft="@drawable/icon_warrior"
+            android:text="WARRIOR"
+            android:textSize="11dp"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            app:backgroundTint="@null"
+            android:background="@drawable/bg_btn_warrior_selector" />
+
+        <Button
+            android:id="@+id/btnRogue"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_marginTop="6dp"
+            android:drawableLeft="@drawable/icon_rogue"
+            android:text="ROGUE"
+            android:textSize="11dp"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            app:backgroundTint="@null"
+            android:background="@drawable/bg_btn_rogue" />
+
+        <Button
+            android:id="@+id/btnTank"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_marginTop="6dp"
+            android:drawableLeft="@drawable/icon_tank"
+            android:text="TANK"
+            android:textSize="11dp"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            app:backgroundTint="@null"
+            android:background="@drawable/bg_btn_tank" />
+
+        <!-- Gender Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="GENDER"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:layout_marginTop="12dp"
+            android:layout_gravity="center" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="24dp">
+            android:gravity="center"
+            android:layout_marginTop="6dp">
 
-            <!-- CLASS column -->
-            <LinearLayout
+            <Button
+                android:id="@+id/btnMale"
                 android:layout_width="0dp"
-                android:layout_height="match_parent"
+                android:layout_height="50dp"
                 android:layout_weight="1"
-                android:gravity="center_horizontal"
-                android:orientation="vertical"
-                android:paddingEnd="8dp"
-                android:layout_marginTop="70dp">
+                android:drawableTop="@drawable/icon_male"
+                app:backgroundTint="@null"
+                android:background="@drawable/bg_btn_gender_male"
+                android:padding="8dp" />
+
+            <Space
+                android:layout_width="10dp"
+                android:layout_height="wrap_content" />
+
+            <Button
+                android:id="@+id/btnFemale"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1"
+                android:drawableTop="@drawable/icon_female"
+                app:backgroundTint="@null"
+                android:background="@drawable/bg_btn_gender_female"
+                android:padding="8dp" />
+        </LinearLayout>
+
+
+        <!-- Customization Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:orientation="vertical">
+
+            <!-- Hair -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageButton
+                    android:id="@+id/btnHairLeft"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:src="@drawable/ic_arrow_left"
+                    android:background="@android:color/transparent" />
 
                 <TextView
-                    android:id="@+id/class_label"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/tvHair"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:text="CLASS:"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:gravity="center"
+                    android:text="Hair #1"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp" />
 
-                <ImageView
-                    android:id="@+id/btn_warrior"
-                    android:layout_width="150dp"
-                    android:layout_height="48dp"
-                    android:src="@drawable/class_warrior"
-                    android:contentDescription="Warrior Class"
-                    android:layout_marginBottom="5dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
-
-                <ImageView
-                    android:id="@+id/btn_rogue"
-                    android:layout_width="150dp"
-                    android:layout_height="48dp"
-                    android:src="@drawable/class_rouge"
-                    android:contentDescription="Rogue Class"
-                    android:layout_marginBottom="5dp"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
-
-                <ImageView
-                    android:id="@+id/btn_tank"
-                    android:layout_width="150dp"
-                    android:layout_height="48dp"
-                    android:src="@drawable/class_tank"
-                    android:contentDescription="Tank Class"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackgroundBorderless"/>
-
-                <!-- Gender icons under avatar -->
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_horizontal"
-                    android:layout_marginTop="24dp">
-
-                    <ImageView
-                        android:id="@+id/male_icon"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/male_icon"
-                        android:contentDescription="Male"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:layout_marginEnd="20dp" />
-
-                    <ImageView
-                        android:id="@+id/female_icon"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:src="@drawable/female_icon"
-                        android:contentDescription="Female"
-                        android:clickable="true"
-                        android:focusable="true" />
-                </LinearLayout>
+                <ImageButton
+                    android:id="@+id/btnHairRight"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:src="@drawable/ic_arrow_right"
+                    android:background="@android:color/transparent" />
             </LinearLayout>
 
-            <!-- Avatar stack with Username field above -->
+            <!-- Eyes -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1.2"
-                android:orientation="vertical"
-                android:gravity="center_horizontal">
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-                <!-- Username input above character -->
-                <EditText
-                    android:id="@+id/edit_avatar_username"
-                    android:layout_width="200dp"
-                    android:layout_height="48dp"
-                    android:hint="Enter Username"
-                    android:background="@drawable/edittext_bg"
-                    android:padding="8dp"
-                    android:textColor="#000"
-                    android:textColorHint="#666"
-                    android:layout_marginBottom="12dp"
-                    android:gravity="center"/>
+                <ImageButton
+                    android:id="@+id/btnEyesLeft"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:src="@drawable/ic_arrow_left"
+                    android:background="@android:color/transparent" />
 
-                <!-- Frame for layered avatar images -->
-                <FrameLayout
-                    android:id="@+id/avatar_frame"
-                    android:layout_width="180dp"
-                    android:layout_height="280dp"
-                    android:foregroundGravity="center">
+                <TextView
+                    android:id="@+id/tvEyes"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Eyes #1"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp" />
 
-                    <!-- base body -->
-                    <ImageView
-                        android:id="@+id/baseBody"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:src="@drawable/male2"
-                        android:contentDescription="Base body"
-                        android:scaleType="fitCenter" />
-
-                    <!-- Layers (initially empty src; will be set by Java) -->
-                    <ImageView
-                        android:id="@+id/hairLayer"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="Hair overlay"
-                        android:scaleType="fitCenter" />
-
-                    <ImageView
-                        android:id="@+id/eyesLayer"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="Eyes overlay"
-                        android:scaleType="fitCenter" />
-
-                    <ImageView
-                        android:id="@+id/noseLayer"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="Nose overlay"
-                        android:scaleType="fitCenter" />
-
-                    <ImageView
-                        android:id="@+id/lipsLayer"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="Lips overlay"
-                        android:scaleType="fitCenter" />
-
-                </FrameLayout>
+                <ImageButton
+                    android:id="@+id/btnEyesRight"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:src="@drawable/ic_arrow_right"
+                    android:background="@android:color/transparent" />
             </LinearLayout>
 
+            <!-- Nose -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageButton
+                    android:id="@+id/btnNoseLeft"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:src="@drawable/ic_arrow_left"
+                    android:background="@android:color/transparent" />
+
+                <TextView
+                    android:id="@+id/tvNose"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Nose #1"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/btnNoseRight"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:src="@drawable/ic_arrow_right"
+                    android:background="@android:color/transparent" />
+            </LinearLayout>
+
+            <!-- Lips -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageButton
+                    android:id="@+id/btnLipsLeft"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:src="@drawable/ic_arrow_left"
+                    android:background="@android:color/transparent" />
+
+                <TextView
+                    android:id="@+id/tvLips"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Lips #1"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp" />
+
+                <ImageButton
+                    android:id="@+id/btnLipsRight"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:src="@drawable/ic_arrow_right"
+                    android:background="@android:color/transparent" />
+            </LinearLayout>
         </LinearLayout>
-
-        <!-- TABS (HAIR / EYES / NOSE / LIPS) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:orientation="horizontal"
-            android:gravity="center">
-
-            <ImageView
-                android:id="@+id/tab_hair"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:src="@drawable/creation_hair"
-                android:contentDescription="Hair Grid"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless"/>
-
-            <ImageView
-                android:id="@+id/tab_eyes"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:src="@drawable/creation_eyes"
-                android:contentDescription="Eyes Grid"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless"/>
-
-            <ImageView
-                android:id="@+id/tab_nose"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:src="@drawable/creation_nose"
-                android:contentDescription="Nose Grid"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless"/>
-
-            <ImageView
-                android:id="@+id/tab_lips"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                android:src="@drawable/creation_lips"
-                android:contentDescription="Lips Grid"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless"/>
-        </LinearLayout>
-
-        <!-- Grid: HAIR -->
-        <GridLayout
-            android:id="@+id/gridHair"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:columnCount="4"
-            android:rowCount="3"
-            android:orientation="horizontal"
-            android:useDefaultMargins="true"
-            android:layout_marginTop="10dp">
-
-            <!-- Example head items -->
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/hair_icon_1" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/hair_icon_2" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/hair_icon_3" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/hair_icon_4" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/hair_icon_5" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/hair_icon_6" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/hair_icon_7" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/hair_icon_8" />
-        </GridLayout>
-
-        <!-- Grid: EYES COLOR OPTIONS -->
-        <GridLayout
-            android:id="@+id/gridEyes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:columnCount="4"
-            android:rowCount="2"
-            android:orientation="horizontal"
-            android:useDefaultMargins="true"
-            android:layout_marginTop="10dp"
-            android:visibility="gone"/>
-
-        <!-- Grid: NOSE -->
-        <GridLayout
-            android:id="@+id/gridNose"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:columnCount="4"
-            android:rowCount="3"
-            android:orientation="horizontal"
-            android:useDefaultMargins="true"
-            android:layout_marginTop="10dp"
-            android:visibility="gone">
-
-            <!-- Example head items -->
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/nose_icon_1" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/nose_icon_2" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/nose_icon_3" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/nose_icon_4" />
-        </GridLayout>
-
-        <!-- Grid: LIPS -->
-        <GridLayout
-            android:id="@+id/gridLips"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:columnCount="4"
-            android:rowCount="3"
-            android:orientation="horizontal"
-            android:useDefaultMargins="true"
-            android:layout_marginTop="10dp"
-            android:visibility="gone">
-
-            <!-- Example head items -->
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/lips_icon_1" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/lips_icon_2" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/lips_icon_3" />
-            <include layout="@layout/item_customization_icon"
-                android:layout_width="85dp"
-                android:layout_height="85dp"
-                android:id="@+id/lips_icon_4" />
-        </GridLayout>
-
-        <!-- CREATE button -->
-        <ImageView
-            android:id="@+id/btn_create"
-            android:layout_width="150dp"
-            android:layout_height="48dp"
-            android:src="@drawable/button_create"
-            android:contentDescription="Create"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_gravity="center_horizontal"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:layout_marginTop="16dp"/>
     </LinearLayout>
-</ScrollView>
+
+    <!-- Create Button -->
+    <Button
+        android:id="@+id/btnCreate"
+        android:layout_width="140dp"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="32dp"
+        android:text="CREATE"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="@android:color/black"
+        app:backgroundTint="@null"
+        android:background="@drawable/button_style" />
+
+</RelativeLayout>

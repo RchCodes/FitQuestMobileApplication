@@ -2,6 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="#80000000"> <!-- semi-transparent dim background -->
 
     <!-- Popup Card -->
@@ -146,11 +147,16 @@
 
                 <Button
                     android:id="@+id/bind_button"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
+                    android:layout_width="150dp"
+                    android:layout_height="50dp"
+                    android:layout_below="@id/social_login_row"
+                    android:layout_centerHorizontal="true"
                     android:text="Bind Account"
-                    android:backgroundTint="@android:color/holo_orange_light" />
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="@android:color/black"
+                    app:backgroundTint="@null"
+                    android:background="@drawable/button_style"/>
 
                 <View
                     android:layout_width="8dp"
@@ -158,11 +164,16 @@
 
                 <Button
                     android:id="@+id/switch_button"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
+                    android:layout_width="150dp"
+                    android:layout_height="50dp"
+                    android:layout_below="@id/social_login_row"
+                    android:layout_centerHorizontal="true"
                     android:text="Switch Account"
-                    android:backgroundTint="@android:color/holo_orange_light" />
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="@android:color/black"
+                    app:backgroundTint="@null"
+                    android:background="@drawable/button_style"/>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
