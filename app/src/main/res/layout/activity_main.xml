@@ -98,13 +98,13 @@
     <!-- CHARACTER (center area) -->
     <ImageView
         android:id="@+id/character_view"
-        android:layout_width="220dp"
-        android:layout_height="420dp"
-        android:src="@drawable/male2"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="36dp"
+        android:layout_width="254dp"
+        android:layout_height="457dp"
         android:layout_below="@id/exp_bar"
-        android:contentDescription="Character" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="84dp"
+        android:contentDescription="Character"
+        android:src="@drawable/char_warrior" />
 
     <!-- LEFT vertical icons (stacked, centered vertically) -->
     <LinearLayout
@@ -119,9 +119,9 @@
 
         <ImageView
             android:id="@+id/stats_button"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/b_stats"
+            android:layout_width="85dp"
+            android:layout_height="85dp"
+            android:src="@drawable/b_stats2"
             android:contentDescription="Stats"
             android:clickable="true"
             android:focusable="true"
@@ -129,9 +129,9 @@
 
         <ImageView
             android:id="@+id/gear_button"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/b_gear"
+            android:layout_width="85dp"
+            android:layout_height="85dp"
+            android:src="@drawable/b_gear2"
             android:contentDescription="Gear"
             android:clickable="true"
             android:focusable="true"
@@ -139,8 +139,8 @@
 
         <ImageView
             android:id="@+id/arena_button"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
             android:src="@drawable/b_arena"
             android:contentDescription="Arena"
             android:clickable="true"
@@ -161,9 +161,9 @@
 
         <ImageView
             android:id="@+id/quest_button"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/b_quest"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:src="@drawable/b_quest2"
             android:contentDescription="Quest"
             android:clickable="true"
             android:focusable="true"
@@ -171,9 +171,9 @@
 
         <ImageView
             android:id="@+id/goals_button"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/b_goal"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:src="@drawable/b_goal2"
             android:contentDescription="Goals"
             android:clickable="true"
             android:focusable="true"
@@ -181,9 +181,9 @@
 
         <ImageView
             android:id="@+id/store_button"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/b_store"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:src="@drawable/b_store2"
             android:contentDescription="Store"
             android:clickable="true"
             android:focusable="true"
@@ -191,9 +191,9 @@
 
         <ImageView
             android:id="@+id/friends_button"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/b_friends"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:src="@drawable/b_friends2"
             android:contentDescription="Friends"
             android:clickable="true"
             android:focusable="true"
