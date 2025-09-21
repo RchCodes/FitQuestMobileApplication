@@ -1,19 +1,46 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="100dp"
-    android:height="113dp"
-    android:viewportWidth="100"
-    android:viewportHeight="113">
-  <path
-      android:pathData="M50,1.5L50,1.5A48.5,48.5 0,0 1,98.5 50L98.5,50A48.5,48.5 0,0 1,50 98.5L50,98.5A48.5,48.5 0,0 1,1.5 50L1.5,50A48.5,48.5 0,0 1,50 1.5z"
-      android:fillColor="#4C3201"/>
-  <path
-      android:pathData="M50,1.5L50,1.5A48.5,48.5 0,0 1,98.5 50L98.5,50A48.5,48.5 0,0 1,50 98.5L50,98.5A48.5,48.5 0,0 1,1.5 50L1.5,50A48.5,48.5 0,0 1,50 1.5z"
-      android:strokeWidth="3"
-      android:fillColor="#00000000"
-      android:strokeColor="#7D634A"/>
+        xmlns:aapt="http://schemas.android.com/aapt"
+        android:width="100dp"
+        android:height="113dp"
+        android:viewportWidth="100"
+        android:viewportHeight="113">
+    <!-- Shadow ellipse -->
+    <path
+            android:pathData="M50,105a40,8 0 1,0 0.1,0z"
+            android:fillColor="#000000"
+            android:fillAlpha="0.18"/>
+    <!-- Button base with radial gradient -->
+    <path
+            android:pathData="M50,1.5A48.5,48.5 0,1 1,1.5 50A48.5,48.5 0,0 1,50 1.5z"
+            android:fillType="evenOdd">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="50"
+                android:centerY="50"
+                android:gradientRadius="48.5"
+                android:startColor="#FFD966"
+                android:endColor="#B8860B"
+                android:useLevel="false"/>
+        </aapt:attr>
+    </path>
+    <!-- Button border -->
+    <path
+            android:pathData="M50,1.5A48.5,48.5 0,1 1,1.5 50A48.5,48.5 0,0 1,50 1.5z"
+            android:strokeWidth="3"
+            android:fillColor="#00000000"
+            android:strokeColor="#7D634A"/>
+    <!-- Top highlight gloss -->
+    <path
+            android:pathData="M50,8A40,18 0 1,1,10,38"
+            android:strokeColor="#FFFFFF"
+            android:strokeWidth="4"
+            android:fillColor="#00000000"
+            android:strokeAlpha="0.35"/>
   <path
       android:pathData="M41.78,10.29L38.88,21.91L20.97,24.47L50.5,31.85L80.03,24.47L62.13,21.91L59.22,10.29L54.27,13.59L52.09,22.31H48.91L46.73,13.59L41.78,10.29ZM16.6,26.75L6.91,36.45L15.63,48.07L20.31,43.39L25.14,28.88L16.6,26.75ZM84.4,26.75L75.86,28.88L80.69,43.39L85.38,48.07L94.09,36.44L84.4,26.75ZM28.32,29.68L24.67,40.64L27.18,50.68L48.87,62.73V34.82L28.32,29.68ZM72.68,29.68L52.13,34.82V62.73L73.82,50.68L76.33,40.64L72.68,29.68ZM30.16,56.08V66.3L48.87,71.87V66.47L30.16,56.08ZM70.84,56.08L52.13,66.47V71.87L70.84,66.3V56.08ZM30.16,69.8V80.04L48.87,82.71V75.36L30.16,69.8ZM70.84,69.8L52.13,75.36V82.71L70.84,80.04V69.8Z"
       android:fillColor="#ffffff"/>
+  <!-- ...existing code... -->
   <group>
     <clip-path
         android:pathData="M12,85L89,85A10,10 0,0 1,99 95L99,103A10,10 0,0 1,89 113L12,113A10,10 0,0 1,2 103L2,95A10,10 0,0 1,12 85z"/>
