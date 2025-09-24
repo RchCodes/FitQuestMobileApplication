@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -201,16 +202,24 @@
     </LinearLayout>
 
     <!-- CHALLENGE (big, bottom center) -->
-    <ImageView
+    <Button
         android:id="@+id/challenge_button"
-        android:layout_width="180dp"
-        android:layout_height="64dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/b_challenge2"
+        android:drawableLeft="@drawable/icon_skull"
+        android:drawablePadding="4dp"
+        android:text="CHALLENGE"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="#5b4513"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="40dp"
-        android:src="@drawable/b_challenge"
-        android:contentDescription="Challenge"
-        android:clickable="true"
-        android:focusable="true" />
+        app:backgroundTint="@null"/>
 
 </RelativeLayout>
