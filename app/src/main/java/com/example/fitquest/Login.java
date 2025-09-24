@@ -10,9 +10,14 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class Login extends AppCompatActivity {
 
@@ -50,7 +55,6 @@ public class Login extends AppCompatActivity {
                 Toast.makeText(this, "Please enter both username and password", Toast.LENGTH_SHORT).show();
                 return;
             }
-            // Check if username looks like an email
             if (!Patterns.EMAIL_ADDRESS.matcher(username).matches()) {
                 Toast.makeText(this, "Invalid email address", Toast.LENGTH_SHORT).show();
                 return;
@@ -58,16 +62,33 @@ public class Login extends AppCompatActivity {
 
             progressOverlay.setVisibility(View.VISIBLE);
 
-            // Firebase login
             authManager.login(username, password, new AuthManager.AuthCallback() {
                 @Override
                 public void onSuccess(FirebaseUser user) {
-                    progressOverlay.setVisibility(View.GONE);
-                    Toast.makeText(Login.this, "Login successful!", Toast.LENGTH_SHORT).show();
+                    // Check if user has an avatar
+                    FirebaseDatabase.getInstance().getReference("users")
+                            .child(user.getUid())
+                            .child("avatar")
+                            .addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                    progressOverlay.setVisibility(View.GONE);
+                                    if (snapshot.exists()) {
+                                        // Avatar exists → go to MainActivity
+                                        startActivity(new Intent(Login.this, MainActivity.class));
+                                    } else {
+                                        // No avatar → force creation
+                                        startActivity(new Intent(Login.this, AvatarCreationActivity.class));
+                                    }
+                                    finish();
+                                }
 
-                    // Go to main app screen
-                    startActivity(new Intent(Login.this, MainActivity.class));
-                    finish();
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+                                    progressOverlay.setVisibility(View.GONE);
+                                    Toast.makeText(Login.this, "Failed to check avatar: " + error.getMessage(), Toast.LENGTH_LONG).show();
+                                }
+                            });
                 }
 
                 @Override

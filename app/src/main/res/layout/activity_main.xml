@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -14,11 +16,11 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:padding="8dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
         android:background="#CC111111"
         android:clickable="true"
-        android:focusable="true">
+        android:focusable="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
             android:id="@+id/user_icon"
@@ -27,7 +29,7 @@
             android:src="@drawable/user"
             android:contentDescription="User Icon"
             android:scaleType="centerCrop"
-            android:layout_marginEnd="8dp" />
+            android:layout_marginEnd="8dp"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -41,7 +43,7 @@
                 android:text="CHIAN"
                 android:textStyle="bold"
                 android:textColor="@android:color/white"
-                android:textSize="14sp" />
+                android:textSize="14sp"/>
 
             <TextView
                 android:id="@+id/player_level"
@@ -49,7 +51,7 @@
                 android:layout_height="wrap_content"
                 android:text="LV. 99"
                 android:textColor="@android:color/white"
-                android:textSize="12sp" />
+                android:textSize="12sp"/>
         </LinearLayout>
     </LinearLayout>
 
@@ -58,16 +60,16 @@
         android:id="@+id/settings_button"
         android:layout_width="44dp"
         android:layout_height="44dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentTop="true"
         android:src="@drawable/b_settings"
         android:contentDescription="Settings"
         android:clickable="true"
         android:focusable="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginEnd="12dp"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"/>
 
-    <!-- COINS badge near top-right (left of settings) -->
+    <!-- COINS badge (left of settings) -->
     <TextView
         android:id="@+id/coins"
         android:layout_width="wrap_content"
@@ -75,13 +77,10 @@
         android:text="999M"
         android:textColor="@android:color/white"
         android:textSize="14sp"
-        android:layout_alignTop="@id/settings_button"
-        android:layout_toStartOf="@id/settings_button"
-        android:layout_marginEnd="12dp"
-        android:paddingLeft="8dp"
-        android:paddingRight="8dp"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp" />
+        android:padding="4dp"
+        app:layout_constraintEnd_toStartOf="@id/settings_button"
+        app:layout_constraintTop_toTopOf="@id/settings_button"
+        android:layout_marginEnd="12dp"/>
 
     <!-- EXP bar under profile -->
     <ProgressBar
@@ -89,128 +88,172 @@
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="140dp"
         android:layout_height="12dp"
-        android:layout_below="@id/profile_section"
-        android:layout_marginTop="6dp"
         android:max="10000"
         android:progress="5000"
-        android:progressTint="@android:color/holo_green_light" />
+        android:progressTint="@android:color/holo_green_light"
+        app:layout_constraintTop_toBottomOf="@id/profile_section"
+        app:layout_constraintStart_toStartOf="@id/profile_section"
+        android:layout_marginTop="6dp"/>
 
-    <!-- CHARACTER (center area) -->
-    <ImageView
-        android:id="@+id/character_view"
-        android:layout_width="254dp"
-        android:layout_height="457dp"
-        android:layout_below="@id/exp_bar"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="84dp"
-        android:contentDescription="Character"
-        android:src="@drawable/char_warrior" />
+    <!-- Avatar layers stacked in FrameLayout -->
+    <FrameLayout
+        android:id="@+id/avatar_frame"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/exp_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintDimensionRatio="254:457"
+        app:layout_constraintBottom_toTopOf="@id/challenge_button">
 
-    <!-- LEFT vertical icons (stacked, centered vertically) -->
+        <ImageView
+            android:id="@+id/baseBodyLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/body_male"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/outfitLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/weaponLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/hairOutlineLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/hairFillLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/eyesOutlineLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/eyesFillLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/noseLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/lipsLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+    </FrameLayout>
+
+
+    <!-- LEFT vertical buttons -->
     <LinearLayout
         android:id="@+id/left_buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center"
-        android:padding="4dp"
-        android:layout_alignParentStart="true"
-        android:layout_centerVertical="true">
+        android:gravity="left"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-        <ImageView
-            android:id="@+id/stats_button"
+        <ImageView android:id="@+id/stats_button"
             android:layout_width="85dp"
             android:layout_height="85dp"
             android:src="@drawable/b_stats2"
-            android:contentDescription="Stats"
+            android:layout_marginBottom="12dp"
             android:clickable="true"
-            android:focusable="true"
-            android:layout_marginBottom="12dp" />
+            android:focusable="true"/>
 
-        <ImageView
-            android:id="@+id/gear_button"
+        <ImageView android:id="@+id/gear_button"
             android:layout_width="85dp"
             android:layout_height="85dp"
             android:src="@drawable/b_gear2"
-            android:contentDescription="Gear"
+            android:layout_marginBottom="12dp"
             android:clickable="true"
-            android:focusable="true"
-            android:layout_marginBottom="12dp" />
+            android:focusable="true"/>
 
-        <ImageView
-            android:id="@+id/arena_button"
+        <ImageView android:id="@+id/arena_button"
             android:layout_width="120dp"
             android:layout_height="120dp"
             android:src="@drawable/b_arena"
-            android:contentDescription="Arena"
+            android:layout_marginBottom="12dp"
             android:clickable="true"
-            android:focusable="true"
-            android:layout_marginBottom="12dp" />
+            android:focusable="true"/>
     </LinearLayout>
 
-    <!-- RIGHT vertical icons (stacked, centered vertically) -->
+    <!-- RIGHT vertical buttons -->
     <LinearLayout
         android:id="@+id/right_buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center"
-        android:padding="4dp"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true">
+        android:gravity="right"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-        <ImageView
-            android:id="@+id/quest_button"
+        <ImageView android:id="@+id/quest_button"
             android:layout_width="70dp"
             android:layout_height="70dp"
+            android:layout_marginBottom="12dp"
             android:src="@drawable/b_quest2"
-            android:contentDescription="Quest"
             android:clickable="true"
-            android:focusable="true"
-            android:layout_marginBottom="12dp" />
+            android:focusable="true"/>
 
-        <ImageView
-            android:id="@+id/goals_button"
+        <ImageView android:id="@+id/goals_button"
             android:layout_width="70dp"
             android:layout_height="70dp"
+            android:layout_marginBottom="12dp"
             android:src="@drawable/b_goal2"
-            android:contentDescription="Goals"
             android:clickable="true"
-            android:focusable="true"
-            android:layout_marginBottom="12dp" />
+            android:focusable="true"/>
 
-        <ImageView
-            android:id="@+id/store_button"
+        <ImageView android:id="@+id/store_button"
             android:layout_width="70dp"
             android:layout_height="70dp"
+            android:layout_marginBottom="12dp"
             android:src="@drawable/b_store2"
-            android:contentDescription="Store"
             android:clickable="true"
-            android:focusable="true"
-            android:layout_marginBottom="12dp" />
+            android:focusable="true"/>
 
-        <ImageView
-            android:id="@+id/friends_button"
+        <ImageView android:id="@+id/friends_button"
             android:layout_width="70dp"
             android:layout_height="70dp"
+            android:layout_marginBottom="12dp"
             android:src="@drawable/b_friends2"
-            android:contentDescription="Friends"
             android:clickable="true"
-            android:focusable="true"
-            android:layout_marginBottom="12dp" />
+            android:focusable="true"/>
     </LinearLayout>
 
-    <!-- CHALLENGE (big, bottom center) -->
+    <!-- CHALLENGE button bottom-center -->
     <ImageView
         android:id="@+id/challenge_button"
         android:layout_width="180dp"
         android:layout_height="64dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="40dp"
         android:src="@drawable/b_challenge"
-        android:contentDescription="Challenge"
         android:clickable="true"
-        android:focusable="true" />
+        android:focusable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="40dp"/>
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

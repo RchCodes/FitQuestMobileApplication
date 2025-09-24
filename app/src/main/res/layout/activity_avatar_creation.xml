@@ -1,308 +1,394 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/background"
-    android:padding="16dp">
+    android:padding="8dp">
 
-    <!-- Username Label -->
-    <TextView
-        android:id="@+id/tvUsernameLabel"
+    <!-- Guideline at 50% for half-width elements -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_half"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignStart="@+id/etUsername"
-        android:layout_marginTop="130dp"
-        android:layout_marginLeft="55dp"
-        android:text="Username"
-        android:textColor="@android:color/black"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
+
+    <!-- Username Label -->
 
     <!-- Username Input -->
+    <TextView
+        android:id="@+id/tvUsernameLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:text="Avatar Name"
+        android:textColor="@android:color/black"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@id/guideline_half"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:gravity="center" />
+
     <EditText
-        android:id="@+id/etUsername"
-        android:layout_width="190dp"
+        android:id="@+id/etAvatarName"
+        android:layout_width="0dp"
         android:layout_height="50dp"
-        android:layout_below="@id/tvUsernameLabel"
-        android:layout_alignStart="@+id/imgCharacter"
-        android:layout_marginTop="8dp"
         android:background="@drawable/bg_username_edittext_target"
         android:gravity="center"
         android:textColor="@android:color/black"
         android:textSize="16sp"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:singleLine="true" />
+        android:singleLine="true"
+        app:layout_constraintTop_toBottomOf="@id/tvUsernameLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/guideline_half"
+        android:layout_marginTop="8dp"
+        android:layout_marginRight="4dp"/>
 
-    <!-- Character Image -->
-    <ImageView
-        android:id="@+id/imgCharacter"
-        android:layout_width="220dp"
-        android:layout_height="378dp"
-        android:layout_below="@id/etUsername"
-        android:layout_alignParentStart="true"
-        android:scaleType="fitCenter"
-        android:src="@drawable/char_warrior" />
+    <!-- Avatar Panel -->
+    <FrameLayout
+        android:id="@+id/avatar_frame"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:foregroundGravity="center"
+        app:layout_constraintTop_toBottomOf="@+id/etAvatarName"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/guideline_half"
+        app:layout_constraintBottom_toTopOf="@id/btnCreate"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="30dp">
 
-    <!-- Right Panel (Class, Gender, Customization) -->
-    <LinearLayout
-        android:id="@+id/rightPanel"
-        android:layout_width="180dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="100dp"
-        android:orientation="vertical"
-        android:background="@drawable/bg_right_panel_target"
-        android:padding="10dp">
-
-        <!-- Class Section -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="CLASS"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:layout_gravity="center" />
-
-        <Button
-            android:id="@+id/btnWarrior"
+        <ImageView
+            android:id="@+id/baseBody"
             android:layout_width="match_parent"
-            android:layout_height="45dp"
-            android:layout_marginTop="6dp"
-            android:drawableLeft="@drawable/icon_warrior"
-            android:text="WARRIOR"
-            android:textSize="11dp"
-            android:textColor="@android:color/white"
-            android:textStyle="bold"
-            app:backgroundTint="@null"
-            android:background="@drawable/bg_btn_warrior_selector" />
+            android:layout_height="match_parent"
+            android:src="@drawable/body_male"
+            android:contentDescription="Base body"
+            android:scaleType="fitCenter" />
 
-        <Button
-            android:id="@+id/btnRogue"
+        <ImageView
+            android:id="@+id/classOutfit"
             android:layout_width="match_parent"
-            android:layout_height="45dp"
-            android:layout_marginTop="6dp"
-            android:drawableLeft="@drawable/icon_rogue"
-            android:text="ROGUE"
-            android:textSize="11dp"
-            android:textColor="@android:color/white"
-            android:textStyle="bold"
-            app:backgroundTint="@null"
-            android:background="@drawable/bg_btn_rogue" />
+            android:layout_height="match_parent"
+            android:src="@drawable/outfit_male_warrior"
+            android:contentDescription="Class Outfit"
+            android:scaleType="fitCenter" />
 
-        <Button
-            android:id="@+id/btnTank"
+        <ImageView
+            android:id="@+id/hairOutlineLayer"
             android:layout_width="match_parent"
-            android:layout_height="45dp"
-            android:layout_marginTop="6dp"
-            android:drawableLeft="@drawable/icon_tank"
-            android:text="TANK"
-            android:textSize="11dp"
-            android:textColor="@android:color/white"
-            android:textStyle="bold"
-            app:backgroundTint="@null"
-            android:background="@drawable/bg_btn_tank" />
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter" />
 
-        <!-- Gender Section -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="GENDER"
-            android:textStyle="bold"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:layout_marginTop="12dp"
-            android:layout_gravity="center" />
+        <ImageView
+            android:id="@+id/hairFillLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/eyesOutlineLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/eyesFillLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/noseLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/lipsLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter" />
+
+    </FrameLayout>
+
+    <!-- Right Panel -->
+    <ScrollView
+        android:id="@+id/rightPanelScroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline_half"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/btnCreate"
+        android:layout_marginTop="70dp"
+        android:layout_marginBottom="30dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginTop="6dp">
+            android:orientation="vertical"
+            android:padding="10dp"
+            android:background="@drawable/bg_right_panel_target">
+
+            <!-- Class Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CLASS"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_gravity="center" />
 
             <Button
-                android:id="@+id/btnMale"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:layout_weight="1"
-                android:drawableTop="@drawable/icon_male"
-                app:backgroundTint="@null"
-                android:background="@drawable/bg_btn_gender_male"
-                android:padding="8dp" />
-
-            <Space
-                android:layout_width="10dp"
-                android:layout_height="wrap_content" />
+                android:id="@+id/btnWarrior"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:layout_marginTop="6dp"
+                android:drawableLeft="@drawable/icon_warrior"
+                android:text="WARRIOR"
+                android:textSize="11dp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:background="@drawable/bg_btn_warrior_selector" />
 
             <Button
-                android:id="@+id/btnFemale"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:layout_weight="1"
-                android:drawableTop="@drawable/icon_female"
-                app:backgroundTint="@null"
-                android:background="@drawable/bg_btn_gender_female"
-                android:padding="8dp" />
+                android:id="@+id/btnRogue"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:layout_marginTop="6dp"
+                android:drawableLeft="@drawable/icon_rogue"
+                android:text="ROGUE"
+                android:textSize="11dp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:background="@drawable/bg_btn_rogue" />
+
+            <Button
+                android:id="@+id/btnTank"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:layout_marginTop="6dp"
+                android:drawableLeft="@drawable/icon_tank"
+                android:text="TANK"
+                android:textSize="11dp"
+                android:textColor="@android:color/white"
+                android:textStyle="bold"
+                android:background="@drawable/bg_btn_tank" />
+
+            <!-- Gender Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="GENDER"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_marginTop="12dp"
+                android:layout_gravity="center" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="6dp">
+
+                <Button
+                    android:id="@+id/btnMale"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:drawableTop="@drawable/icon_male"
+                    android:background="@drawable/bg_btn_gender_male"
+                    android:padding="8dp" />
+
+                <Space
+                    android:layout_width="10dp"
+                    android:layout_height="wrap_content" />
+
+                <Button
+                    android:id="@+id/btnFemale"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:drawableTop="@drawable/icon_female"
+                    android:background="@drawable/bg_btn_gender_female"
+                    android:padding="8dp" />
+            </LinearLayout>
+
+            <!-- Customization Section -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="12dp">
+
+                <!-- Hair -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageButton
+                        android:id="@+id/btnHairLeft"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:src="@drawable/ic_arrow_left"
+                        android:background="@android:color/transparent"/>
+
+                    <TextView
+                        android:id="@+id/tvHair"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="Hair #1"
+                        android:textColor="@android:color/white"
+                        android:textSize="14sp"/>
+
+                    <ImageButton
+                        android:id="@+id/btnHairRight"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:src="@drawable/ic_arrow_right"
+                        android:background="@android:color/transparent"/>
+                </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvHairOptions"
+                    android:layout_width="match_parent"
+                    android:layout_height="32dp"
+                    android:layout_marginTop="12dp"
+                    android:overScrollMode="never"/>
+
+                <!-- Eyes -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageButton
+                        android:id="@+id/btnEyesLeft"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:src="@drawable/ic_arrow_left"
+                        android:background="@android:color/transparent"/>
+
+                    <TextView
+                        android:id="@+id/tvEyes"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="Eyes #1"
+                        android:textColor="@android:color/white"
+                        android:textSize="14sp"/>
+
+                    <ImageButton
+                        android:id="@+id/btnEyesRight"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:src="@drawable/ic_arrow_right"
+                        android:background="@android:color/transparent"/>
+                </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvEyeOptions"
+                    android:layout_width="match_parent"
+                    android:layout_height="32dp"
+                    android:layout_marginTop="12dp"
+                    android:overScrollMode="never"/>
+
+                <!-- Nose -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageButton
+                        android:id="@+id/btnNoseLeft"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:src="@drawable/ic_arrow_left"
+                        android:background="@android:color/transparent"/>
+
+                    <TextView
+                        android:id="@+id/tvNose"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="Nose #1"
+                        android:textColor="@android:color/white"
+                        android:textSize="14sp"/>
+
+                    <ImageButton
+                        android:id="@+id/btnNoseRight"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:src="@drawable/ic_arrow_right"
+                        android:background="@android:color/transparent"/>
+                </LinearLayout>
+
+                <!-- Lips -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageButton
+                        android:id="@+id/btnLipsLeft"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:src="@drawable/ic_arrow_left"
+                        android:background="@android:color/transparent"/>
+
+                    <TextView
+                        android:id="@+id/tvLips"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="Lips #1"
+                        android:textColor="@android:color/white"
+                        android:textSize="14sp"/>
+
+                    <ImageButton
+                        android:id="@+id/btnLipsRight"
+                        android:layout_width="35dp"
+                        android:layout_height="35dp"
+                        android:src="@drawable/ic_arrow_right"
+                        android:background="@android:color/transparent"/>
+                </LinearLayout>
+            </LinearLayout>
         </LinearLayout>
-
-
-        <!-- Customization Section -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="vertical">
-
-            <!-- Hair -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <ImageButton
-                    android:id="@+id/btnHairLeft"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:src="@drawable/ic_arrow_left"
-                    android:background="@android:color/transparent" />
-
-                <TextView
-                    android:id="@+id/tvHair"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="Hair #1"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp" />
-
-                <ImageButton
-                    android:id="@+id/btnHairRight"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:src="@drawable/ic_arrow_right"
-                    android:background="@android:color/transparent" />
-            </LinearLayout>
-
-            <!-- Eyes -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <ImageButton
-                    android:id="@+id/btnEyesLeft"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:src="@drawable/ic_arrow_left"
-                    android:background="@android:color/transparent" />
-
-                <TextView
-                    android:id="@+id/tvEyes"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="Eyes #1"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp" />
-
-                <ImageButton
-                    android:id="@+id/btnEyesRight"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:src="@drawable/ic_arrow_right"
-                    android:background="@android:color/transparent" />
-            </LinearLayout>
-
-            <!-- Nose -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <ImageButton
-                    android:id="@+id/btnNoseLeft"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:src="@drawable/ic_arrow_left"
-                    android:background="@android:color/transparent" />
-
-                <TextView
-                    android:id="@+id/tvNose"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="Nose #1"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp" />
-
-                <ImageButton
-                    android:id="@+id/btnNoseRight"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:src="@drawable/ic_arrow_right"
-                    android:background="@android:color/transparent" />
-            </LinearLayout>
-
-            <!-- Lips -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-
-                <ImageButton
-                    android:id="@+id/btnLipsLeft"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:src="@drawable/ic_arrow_left"
-                    android:background="@android:color/transparent" />
-
-                <TextView
-                    android:id="@+id/tvLips"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="Lips #1"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp" />
-
-                <ImageButton
-                    android:id="@+id/btnLipsRight"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:src="@drawable/ic_arrow_right"
-                    android:background="@android:color/transparent" />
-            </LinearLayout>
-        </LinearLayout>
-    </LinearLayout>
+    </ScrollView>
 
     <!-- Create Button -->
     <Button
         android:id="@+id/btnCreate"
         android:layout_width="140dp"
         android:layout_height="50dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="32dp"
         android:text="CREATE"
         android:textStyle="bold"
         android:textSize="16sp"
         android:textColor="@android:color/black"
-        app:backgroundTint="@null"
-        android:background="@drawable/button_style" />
-
-</RelativeLayout>
+        android:background="@drawable/button_style"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,33 +2,35 @@ package com.example.fitquest;
 
 public class AvatarModel {
 
-    private String username;     // Player's chosen username
-    private String gender;       // "male" or "female"
-    private String playerClass;  // "warrior", "rogue", "tank"
+    private String username;
+    private String gender;
+    private String playerClass;
 
-    // Base body (depends on gender + class)
-    private String bodyStyle;    // e.g., "body_male_warrior"
+    private String bodyStyle;
+    private String outfit;
+    private String weapon;
 
-    // Hair
-    private String hairOutline;  // drawable name for outline (e.g., "hair_male_1_outline")
-    private String hairFill;     // drawable name for fill (e.g., "hair_male_1_fill")
-    private String hairColor;    // hex color (e.g., "#FF0000")
+    private String hairOutline;
+    private String hairFill;
+    private String hairColor;
 
-    // Eyes
-    private String eyesOutline;  // drawable name (e.g., "eyes_1_outline")
-    private String eyesFill;     // drawable name (e.g., "eyes_1_fill")
-    private String eyesColor;    // hex color (e.g., "#0000FF")
+    private String eyesOutline;
+    private String eyesFill;
+    private String eyesColor;
 
-    // Nose & Lips (no color)
-    private String nose;         // drawable name (e.g., "nose_2")
-    private String lips;         // drawable name (e.g., "lips_3")
+    private String nose;
+    private String lips;
+
+    // NEW fields
+    private int coins;           // total coins
+    private int xp;              // experience points
+    private int level;           // player level
 
     // Required empty constructor for Firebase
-    public AvatarModel() {
-    }
+    public AvatarModel() {}
 
     public AvatarModel(String username, String gender, String playerClass,
-                       String bodyStyle,
+                       String bodyStyle, String outfit, String weapon,
                        String hairOutline, String hairFill, String hairColor,
                        String eyesOutline, String eyesFill, String eyesColor,
                        String nose, String lips) {
@@ -36,6 +38,8 @@ public class AvatarModel {
         this.gender = gender;
         this.playerClass = playerClass;
         this.bodyStyle = bodyStyle;
+        this.outfit = outfit;
+        this.weapon = weapon;
         this.hairOutline = hairOutline;
         this.hairFill = hairFill;
         this.hairColor = hairColor;
@@ -44,103 +48,63 @@ public class AvatarModel {
         this.eyesColor = eyesColor;
         this.nose = nose;
         this.lips = lips;
+
+        // Initialize coins, XP, level
+        this.coins = 0;
+        this.xp = 0;
+        this.level = 1; // start at level 1
     }
 
-    // Getters and Setters (needed for Firebase & Gson)
+    // --- Getters and Setters ---
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
-    public String getUsername() {
-        return username;
-    }
+    public String getGender() { return gender; }
+    public void setGender(String gender) { this.gender = gender; }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    public String getPlayerClass() { return playerClass; }
+    public void setPlayerClass(String playerClass) { this.playerClass = playerClass; }
 
-    public String getGender() {
-        return gender;
-    }
+    public String getBodyStyle() { return bodyStyle; }
+    public void setBodyStyle(String bodyStyle) { this.bodyStyle = bodyStyle; }
 
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
+    public String getOutfit() { return outfit; }
+    public void setOutfit(String outfit) { this.outfit = outfit; }
 
-    public String getPlayerClass() {
-        return playerClass;
-    }
+    public String getWeapon() { return weapon; }
+    public void setWeapon(String weapon) { this.weapon = weapon; }
 
-    public void setPlayerClass(String playerClass) {
-        this.playerClass = playerClass;
-    }
+    public String getHairOutline() { return hairOutline; }
+    public void setHairOutline(String hairOutline) { this.hairOutline = hairOutline; }
 
-    public String getBodyStyle() {
-        return bodyStyle;
-    }
+    public String getHairFill() { return hairFill; }
+    public void setHairFill(String hairFill) { this.hairFill = hairFill; }
 
-    public void setBodyStyle(String bodyStyle) {
-        this.bodyStyle = bodyStyle;
-    }
+    public String getHairColor() { return hairColor; }
+    public void setHairColor(String hairColor) { this.hairColor = hairColor; }
 
-    public String getHairOutline() {
-        return hairOutline;
-    }
+    public String getEyesOutline() { return eyesOutline; }
+    public void setEyesOutline(String eyesOutline) { this.eyesOutline = eyesOutline; }
 
-    public void setHairOutline(String hairOutline) {
-        this.hairOutline = hairOutline;
-    }
+    public String getEyesFill() { return eyesFill; }
+    public void setEyesFill(String eyesFill) { this.eyesFill = eyesFill; }
 
-    public String getHairFill() {
-        return hairFill;
-    }
+    public String getEyesColor() { return eyesColor; }
+    public void setEyesColor(String eyesColor) { this.eyesColor = eyesColor; }
 
-    public void setHairFill(String hairFill) {
-        this.hairFill = hairFill;
-    }
+    public String getNose() { return nose; }
+    public void setNose(String nose) { this.nose = nose; }
 
-    public String getHairColor() {
-        return hairColor;
-    }
+    public String getLips() { return lips; }
+    public void setLips(String lips) { this.lips = lips; }
 
-    public void setHairColor(String hairColor) {
-        this.hairColor = hairColor;
-    }
+    // --- NEW setters/getters ---
+    public int getCoins() { return coins; }
+    public void setCoins(int coins) { this.coins = coins; }
 
-    public String getEyesOutline() {
-        return eyesOutline;
-    }
+    public int getXp() { return xp; }
+    public void setXp(int xp) { this.xp = xp; }
 
-    public void setEyesOutline(String eyesOutline) {
-        this.eyesOutline = eyesOutline;
-    }
-
-    public String getEyesFill() {
-        return eyesFill;
-    }
-
-    public void setEyesFill(String eyesFill) {
-        this.eyesFill = eyesFill;
-    }
-
-    public String getEyesColor() {
-        return eyesColor;
-    }
-
-    public void setEyesColor(String eyesColor) {
-        this.eyesColor = eyesColor;
-    }
-
-    public String getNose() {
-        return nose;
-    }
-
-    public void setNose(String nose) {
-        this.nose = nose;
-    }
-
-    public String getLips() {
-        return lips;
-    }
-
-    public void setLips(String lips) {
-        this.lips = lips;
-    }
+    public int getLevel() { return level; }
+    public void setLevel(int level) { this.level = level; }
 }

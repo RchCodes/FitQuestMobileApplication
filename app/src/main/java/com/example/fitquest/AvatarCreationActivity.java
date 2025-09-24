@@ -1,7 +1,9 @@
 package com.example.fitquest;
 
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -9,314 +11,429 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-// import androidx.annotation.DrawableRes; // Keep if direct drawable manipulation is re-added
 import androidx.appcompat.app.AppCompatActivity;
-
-// import android.graphics.Color; // No longer used by setupEyeColors
-// import android.widget.GridLayout; // No longer used
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class AvatarCreationActivity extends AppCompatActivity {
 
-    // Character Image
-    private ImageView imgCharacter;
-    // private ImageView overlayHair, overlayEyes, overlayNose, overlayLips; // Old overlay system
+    // Texts for current selection
+    private TextView tvHair, tvEyes, tvNose, tvLips;
 
-    // Gender Buttons
-    private Button btnMale, btnFemale;
+    private EditText etAvatarName;
 
-    // Class Buttons
-    private Button btnWarrior, btnRogue, btnTank;
-    private Button selectedClassButton = null; // Changed from ImageView
+    // Arrows
+    private ImageButton btnHairLeft, btnHairRight,
+            btnEyesLeft, btnEyesRight,
+            btnNoseLeft, btnNoseRight,
+            btnLipsLeft, btnLipsRight;
 
-    // Username field
-    private EditText etUsername; // Renamed from editAvatarUsername
+    // RecyclerViews for colors
+    private RecyclerView rvHairOptions, rvEyeOptions;
 
-    // New Customization UI Elements
-    private ImageButton btnHairLeft, btnHairRight;
-    private TextView tvHair;
-    private ImageButton btnEyesLeft, btnEyesRight;
-    private TextView tvEyes;
-    private ImageButton btnNoseLeft, btnNoseRight;
-    private TextView tvNose;
-    private ImageButton btnLipsLeft, btnLipsRight;
-    private TextView tvLips;
+    // Avatar preview layers
+    private ImageView ivBody, ivOutfit, ivHairOutline, ivHairFill, ivEyesOutline, ivEyesIris, ivNose, ivLips;
 
-    // Grids - No longer in the new XML
-    // private GridLayout gridHair, gridEyes, gridNose, gridLips;
+    // Class buttons
+    private Button btnWarrior, btnRogue, btnTank, btnMale, btnFemale;
 
-    // Tabs - No longer in the new XML
-    // private ImageView tabHair, tabEyes, tabNose, tabLips;
-
-    // Sample data for customization cycling (you'll need to expand this)
-    private String[] hairStyles = {"Hair #1", "Hair #2", "Hair #3"};
-    // Add arrays for eyes, nose, lips styles and corresponding drawables if needed
+    // Index trackers
     private int currentHairIndex = 0;
-    // Add indices for eyes, nose, lips
+    private int currentEyesIndex = 0;
+    private int currentNoseIndex = 0;
+    private int currentLipsIndex = 0;
+
+    // Gender
+    private boolean isMale = true;
+
+    // Resource arrays
+    private int[] maleHairOutlines = {
+            R.drawable.hair_male_1, R.drawable.hair_male_2,
+            R.drawable.hair_male_3, R.drawable.hair_male_4};
+    private int[] maleHairFills = {
+            R.drawable.hair_male_fill_1, R.drawable.hair_male_fill_2,
+            R.drawable.hair_male_fill_3, R.drawable.hair_male_fill_4};
+
+    private int[] femaleHairOutlines = {
+            R.drawable.hair_female_1, R.drawable.hair_female_2,
+            R.drawable.hair_female_3, R.drawable.hair_female_4};
+    private int[] femaleHairFills = {
+            R.drawable.hair_female_fill_1, R.drawable.hair_female_fill_2,
+            R.drawable.hair_female_fill_3, R.drawable.hair_female_fill_4};
+
+    private int[] eyesOutlines = {
+            R.drawable.eyes_1, R.drawable.eyes_2,
+            R.drawable.eyes_3, R.drawable.eyes_4, R.drawable.eyes_5};
+    private int[] eyesIrises = {
+            R.drawable.eyes_iris_1, R.drawable.eyes_iris_2,
+            R.drawable.eyes_iris_3, R.drawable.eyes_iris_4, R.drawable.eyes_iris_5};
+
+    private int[] noses = {
+            R.drawable.nose_1, R.drawable.nose_2,
+            R.drawable.nose_3, R.drawable.nose_4,
+            R.drawable.nose_5, R.drawable.nose_6,
+            R.drawable.nose_7, R.drawable.nose_8};
+
+    private int[] lips = {
+            R.drawable.lips_1, R.drawable.lips_2,
+            R.drawable.lips_3, R.drawable.lips_4,
+            R.drawable.lips_5, R.drawable.lips_6,
+            R.drawable.lips_7, R.drawable.lips_8};
+
+    private int[] maleOutfits = {
+            R.drawable.outfit_male_warrior,
+            R.drawable.outfit_male_rogue,
+            R.drawable.outfit_male_tank};
+    private int[] femaleOutfits = {
+            R.drawable.outfit_female_warrior,
+            R.drawable.outfit_female_rogue,
+            R.drawable.outfit_female_tank};
+
+    // Currently selected class index (0 = warrior, 1 = rogue, 2 = tank)
+    private int currentClassIndex = 0;
+
+    private int currentHairColor = Color.WHITE; // default hair color
+    private int currentEyesColor = Color.WHITE; // default eyes color
+
+
+    // Color palette (8 fixed colors)
+    private final int[] colors = {
+            Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW,
+            Color.CYAN, Color.MAGENTA, Color.WHITE, Color.BLACK
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_avatar_creation);
 
-        // Character Image
-        imgCharacter = findViewById(R.id.imgCharacter); // Renamed from baseBody
-        // overlayHair = findViewById(R.id.hairLayer); // Old
-        // overlayEyes = findViewById(R.id.eyesLayer); // Old
-        // overlayNose = findViewById(R.id.noseLayer); // Old
-        // overlayLips = findViewById(R.id.lipsLayer); // Old
+        bindViews();
+        setupArrows();
+        setupColorPickers();
+        setupClassButtons();
+        setupGenderButtons();
 
-        // Username field
-        etUsername = findViewById(R.id.etUsername); // Renamed
+        updateHair();
+        updateEyes();
+        updateNose();
+        updateLips();
+        updateOutfit();
+        updateBody();
+    }
 
-        // Gender Buttons
-        btnMale = findViewById(R.id.btnMale);       // Renamed and type changed
-        btnFemale = findViewById(R.id.btnFemale);   // Renamed and type changed
+    private void bindViews() {
 
-        // Class Buttons
-        btnWarrior = findViewById(R.id.btnWarrior); // Type changed
-        btnRogue = findViewById(R.id.btnRogue);   // Type changed
-        btnTank = findViewById(R.id.btnTank);     // Type changed
-
-        // New Customization UI Elements
-        btnHairLeft = findViewById(R.id.btnHairLeft);
-        btnHairRight = findViewById(R.id.btnHairRight);
+        etAvatarName = findViewById(R.id.etAvatarName);
+        // TextViews
         tvHair = findViewById(R.id.tvHair);
-
-        btnEyesLeft = findViewById(R.id.btnEyesLeft);
-        btnEyesRight = findViewById(R.id.btnEyesRight);
         tvEyes = findViewById(R.id.tvEyes);
-
-        btnNoseLeft = findViewById(R.id.btnNoseLeft);
-        btnNoseRight = findViewById(R.id.btnNoseRight);
         tvNose = findViewById(R.id.tvNose);
-
-        btnLipsLeft = findViewById(R.id.btnLipsLeft);
-        btnLipsRight = findViewById(R.id.btnLipsRight);
         tvLips = findViewById(R.id.tvLips);
 
+        // Buttons
+        btnHairLeft = findViewById(R.id.btnHairLeft);
+        btnHairRight = findViewById(R.id.btnHairRight);
+        btnEyesLeft = findViewById(R.id.btnEyesLeft);
+        btnEyesRight = findViewById(R.id.btnEyesRight);
+        btnNoseLeft = findViewById(R.id.btnNoseLeft);
+        btnNoseRight = findViewById(R.id.btnNoseRight);
+        btnLipsLeft = findViewById(R.id.btnLipsLeft);
+        btnLipsRight = findViewById(R.id.btnLipsRight);
 
-        // Tabs - No longer in the new XML
-        // tabHair = findViewById(R.id.tab_hair);
-        // ...
+        btnWarrior = findViewById(R.id.btnWarrior);
+        btnRogue = findViewById(R.id.btnRogue);
+        btnTank = findViewById(R.id.btnTank);
+        btnMale = findViewById(R.id.btnMale);
+        btnFemale = findViewById(R.id.btnFemale);
 
-        // Grids - No longer in the new XML
-        // gridHair = findViewById(R.id.gridHair);
-        // ...
+        // RecyclerViews
+        rvHairOptions = findViewById(R.id.rvHairOptions);
+        rvEyeOptions = findViewById(R.id.rvEyeOptions);
 
-        // Gender toggle
-        btnMale.setOnClickListener(v -> {
-            // imgCharacter.setImageResource(R.drawable.male_base_drawable); // Example: if you have a male base
-            showToast("Male selected");
-            // Potentially update character appearance or a data model
-        });
-
-        btnFemale.setOnClickListener(v -> {
-            // imgCharacter.setImageResource(R.drawable.female_base_drawable); // Example: if you have a female base
-            showToast("Female selected");
-            // Potentially update character appearance or a data model
-        });
-
-        // Class selection
-        View.OnClickListener classClickListener = v -> setSelectedClass((Button) v); // Type cast to Button
-        btnWarrior.setOnClickListener(classClickListener);
-        btnRogue.setOnClickListener(classClickListener);
-        btnTank.setOnClickListener(classClickListener);
-
-        // Tab clicks - No longer in the new XML
-        // tabHair.setOnClickListener(v -> showGrid(gridHair));
-        // ...
-
-        // Wire sample grid - No longer in the new XML
-        // wireGridItems(gridHair, Category.HAIR);
-
-        // Setup for new customization UI
-        setupCustomizationControls();
-
-
-        // Create button
-        findViewById(R.id.btnCreate).setOnClickListener(v -> { // ID updated
-            String username = etUsername.getText().toString().trim();
-
-            if (username.isEmpty()) {
-                showToast("Please enter a username");
-            } else {
-                // TODO: Save avatar data (username, class, gender, customizations)
-                showToast("Avatar created for: " + username);
-                // Example: Intent to next activity or finish
-            }
-        });
-
-        // Initialize display for customization text
-        updateCustomizationText();
+        // Avatar preview layers
+        ivBody = findViewById(R.id.baseBody);
+        ivOutfit = findViewById(R.id.classOutfit);
+        ivHairOutline = findViewById(R.id.hairOutlineLayer);
+        ivHairFill = findViewById(R.id.hairFillLayer);
+        ivEyesOutline = findViewById(R.id.eyesOutlineLayer);
+        ivEyesIris = findViewById(R.id.eyesFillLayer);
+        ivNose = findViewById(R.id.noseLayer);
+        ivLips = findViewById(R.id.lipsLayer);
     }
 
-    private void setupCustomizationControls() {
-        // Hair
+    private void setupArrows() {
         btnHairLeft.setOnClickListener(v -> {
-            currentHairIndex = (currentHairIndex - 1 + hairStyles.length) % hairStyles.length;
-            updateCustomizationText();
-            // TODO: Update character hair appearance (e.g., imgCharacter.setHairDrawable(hairDrawables[currentHairIndex]))
-            showToast("Hair: " + hairStyles[currentHairIndex]);
+            currentHairIndex = (currentHairIndex - 1 + 4) % 4;
+            updateHair();
         });
         btnHairRight.setOnClickListener(v -> {
-            currentHairIndex = (currentHairIndex + 1) % hairStyles.length;
-            updateCustomizationText();
-            // TODO: Update character hair appearance
-            showToast("Hair: " + hairStyles[currentHairIndex]);
+            currentHairIndex = (currentHairIndex + 1) % 4;
+            updateHair();
         });
 
-        // Eyes - Placeholder listeners
-        btnEyesLeft.setOnClickListener(v -> showToast("Eyes Left Clicked"));
-        btnEyesRight.setOnClickListener(v -> showToast("Eyes Right Clicked"));
+        btnEyesLeft.setOnClickListener(v -> {
+            currentEyesIndex = (currentEyesIndex - 1 + 5) % 5;
+            updateEyes();
+        });
+        btnEyesRight.setOnClickListener(v -> {
+            currentEyesIndex = (currentEyesIndex + 1) % 5;
+            updateEyes();
+        });
 
-        // Nose - Placeholder listeners
-        btnNoseLeft.setOnClickListener(v -> showToast("Nose Left Clicked"));
-        btnNoseRight.setOnClickListener(v -> showToast("Nose Right Clicked"));
+        btnNoseLeft.setOnClickListener(v -> {
+            currentNoseIndex = (currentNoseIndex - 1 + 8) % 8;
+            updateNose();
+        });
+        btnNoseRight.setOnClickListener(v -> {
+            currentNoseIndex = (currentNoseIndex + 1) % 8;
+            updateNose();
+        });
 
-        // Lips - Placeholder listeners
-        btnLipsLeft.setOnClickListener(v -> showToast("Lips Left Clicked"));
-        btnLipsRight.setOnClickListener(v -> showToast("Lips Right Clicked"));
-    }
+        btnLipsLeft.setOnClickListener(v -> {
+            currentLipsIndex = (currentLipsIndex - 1 + 8) % 8;
+            updateLips();
+        });
+        btnLipsRight.setOnClickListener(v -> {
+            currentLipsIndex = (currentLipsIndex + 1) % 8;
+            updateLips();
+        });
 
-    private void updateCustomizationText() {
-        if (tvHair != null && hairStyles.length > 0) {
-            tvHair.setText(hairStyles[currentHairIndex]);
-        }
-        // tvEyes.setText(eyeStyles[currentEyeIndex]); // etc. for other categories
-    }
+        // Inside AvatarCreationActivity.java
 
-
-    /** Show only the selected grid, hide others - No longer used by new XML */
-    /*
-    private void showGrid(GridLayout target) {
-        if (gridHair != null) gridHair.setVisibility(View.GONE);
-        if (gridEyes != null) gridEyes.setVisibility(View.GONE);
-        if (gridNose != null) gridNose.setVisibility(View.GONE);
-        if (gridLips != null) gridLips.setVisibility(View.GONE);
-
-        if (target != null) target.setVisibility(View.VISIBLE);
-    }
-    */
-
-    /** Create eye color boxes dynamically - No longer used by new XML */
-    /*
-    private void setupEyeColors(GridLayout grid) {
-        grid.removeAllViews(); // clear before adding
-
-        int[] colors = {
-                Color.BLUE, Color.GREEN, Color.BLACK,
-                Color.DKGRAY, Color.GRAY, Color.CYAN,
-                Color.MAGENTA, Color.RED
-        };
-
-        int size = (int) getResources().getDimensionPixelSize(R.dimen.eye_color_box);
-
-        for (int color : colors) {
-            View box = new View(this);
-            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.width = size;
-            params.height = size;
-            params.setMargins(8, 8, 8, 8);
-            box.setLayoutParams(params);
-            box.setBackgroundColor(color);
-
-            box.setOnClickListener(v -> {
-                // overlayEyes.setColorFilter(color); // apply tint // Old
-                showToast("Eye color changed");
-            });
-
-            grid.addView(box);
-        }
-    }
-    */
-
-    private void setSelectedClass(Button btn) { // Parameter type changed to Button
-        if (selectedClassButton != null) {
-            selectedClassButton.setAlpha(1.0f); // Reset previous selection
-        }
-        selectedClassButton = btn;
-        if (selectedClassButton != null) {
-            selectedClassButton.setAlpha(0.6f); // Indicate current selection
-            // You might want to use a more robust selection indication, e.g., changing background via selector
-            String selectedClassName = btn.getText().toString(); // Get class name from button text
-            showToast(selectedClassName + " class selected");
-
-            // Example of how you might change the character image based on class:
-            // if (btn.getId() == R.id.btnWarrior) {
-            //     imgCharacter.setImageResource(R.drawable.char_warrior);
-            // } else if (btn.getId() == R.id.btnRogue) {
-            //     imgCharacter.setImageResource(R.drawable.char_rogue); // Assuming you have these drawables
-            // } else if (btn.getId() == R.id.btnTank) {
-            //     imgCharacter.setImageResource(R.drawable.char_tank);   // Assuming you have these drawables
-            // }
-        }
-    }
-
-    /** Wires click listeners to items in a grid - No longer used by new XML */
-    /*
-    private enum Category { HAIR, EYES, NOSE, LIPS } // Old enum
-
-    private void wireGridItems(GridLayout grid, Category category) {
-        if (grid == null) return;
-
-        int childCount = grid.getChildCount();
-        for (int i = 0; i < childCount; i++) {
-            View child = grid.getChildAt(i);
-            ImageView iv = child.findViewById(R.id.customization_icon);
-
-            if (iv == null && child instanceof ImageView) {
-                iv = (ImageView) child;
+        Button btnCreate = findViewById(R.id.btnCreate);
+        btnCreate.setOnClickListener(v -> {
+            String username = etAvatarName.getText().toString().trim();
+            if (username.isEmpty()) {
+                Toast.makeText(this, "Please enter a name for your avatar", Toast.LENGTH_SHORT).show();
+                return;
             }
 
-            if (iv != null) {
-                final int resId = getDrawableIdFromImageView(iv);
-                iv.setOnClickListener(v -> {
-                    if (resId != 0) {
-                        switch (category) {
-                            case HAIR: applyHair(resId); break;
-                            case EYES: applyEyes(resId); break;
-                            case NOSE: applyNose(resId); break;
-                            case LIPS: applyLips(resId); break;
-                        }
-                    }
-                });
+            // Determine body style, outfit & weapon based on gender & class
+            String bodyStyle = isMale ? "body_male" : "body_female";
+            String outfit = getOutfitResourceName(isMale, currentClassIndex);
+            String weapon = getWeaponResourceName(isMale, currentClassIndex);
+
+            AvatarModel avatar = new AvatarModel(
+                    username,
+                    isMale ? "male" : "female",
+                    getClassName(currentClassIndex), // "warrior", "rogue", "tank"
+                    bodyStyle,
+                    outfit,
+                    weapon,
+                    getHairOutlineResName(isMale, currentHairIndex),
+                    getHairFillResName(isMale, currentHairIndex),
+                    getHairColorHex(),
+                    getEyesOutlineResName(currentEyesIndex),
+                    getEyesFillResName(currentEyesIndex),
+                    getEyesColorHex(),
+                    getNoseResName(currentNoseIndex),
+                    getLipsResName(currentLipsIndex)
+            );
+
+            // Initialize default stats
+            avatar.setCoins(0);
+            avatar.setXp(0);
+            avatar.setLevel(1);
+
+            // Save offline & online
+            AvatarManager.saveAvatarOffline(this, avatar);
+            AvatarManager.saveAvatarOnline(avatar);
+
+            // Save username to SharedPreferences
+            getSharedPreferences("FitQuestPrefs", MODE_PRIVATE)
+                    .edit()
+                    .putString("username", username)
+                    .apply();
+
+            // Go to MainActivity
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+        });
+
+
+
+    }
+
+    private void setupColorPickers() {
+        // Hair color
+        rvHairOptions.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        rvHairOptions.setAdapter(new ColorAdapter(colors, color -> {
+            currentHairColor = color; // save selected hair color
+            ivHairFill.setColorFilter(color);
+        }));
+
+        // Eye color
+        rvEyeOptions.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        rvEyeOptions.setAdapter(new ColorAdapter(colors, color -> {
+            currentEyesColor = color; // save selected eye color
+            ivEyesIris.setColorFilter(color);
+        }));
+    }
+
+
+    private void setupClassButtons() {
+        btnWarrior.setOnClickListener(v -> {
+            currentClassIndex = 0;
+            updateOutfit();
+        });
+        btnRogue.setOnClickListener(v -> {
+            currentClassIndex = 1;
+            updateOutfit();
+        });
+        btnTank.setOnClickListener(v -> {
+            currentClassIndex = 2;
+            updateOutfit();
+        });
+    }
+
+    private void setupGenderButtons() {
+        btnMale.setOnClickListener(v -> {
+            isMale = true;
+            updateBody();
+            updateHair();
+            updateOutfit();
+        });
+        btnFemale.setOnClickListener(v -> {
+            isMale = false;
+            updateBody();
+            updateHair();
+            updateOutfit();
+        });
+    }
+
+    private void updateHair() {
+        tvHair.setText("Hair #" + (currentHairIndex + 1));
+        if (isMale) {
+            ivHairOutline.setImageResource(maleHairOutlines[currentHairIndex]);
+            ivHairFill.setImageResource(maleHairFills[currentHairIndex]);
+        } else {
+            ivHairOutline.setImageResource(femaleHairOutlines[currentHairIndex]);
+            ivHairFill.setImageResource(femaleHairFills[currentHairIndex]);
+        }
+    }
+
+    private void updateEyes() {
+        tvEyes.setText("Eyes #" + (currentEyesIndex + 1));
+        ivEyesOutline.setImageResource(eyesOutlines[currentEyesIndex]);
+        ivEyesIris.setImageResource(eyesIrises[currentEyesIndex]);
+    }
+
+    private void updateNose() {
+        tvNose.setText("Nose #" + (currentNoseIndex + 1));
+        ivNose.setImageResource(noses[currentNoseIndex]);
+    }
+
+    private void updateLips() {
+        tvLips.setText("Lips #" + (currentLipsIndex + 1));
+        ivLips.setImageResource(lips[currentLipsIndex]);
+    }
+
+    private void updateOutfit() {
+        if (isMale) {
+            ivOutfit.setImageResource(maleOutfits[currentClassIndex]);
+        } else {
+            ivOutfit.setImageResource(femaleOutfits[currentClassIndex]);
+        }
+    }
+
+    private void updateBody() {
+        if (isMale) {
+            ivBody.setImageResource(R.drawable.body_male);
+        } else {
+            ivBody.setImageResource(R.drawable.body_female);
+        }
+    }
+
+
+    // Utility method to get drawable resource name
+    private String getDrawableName(int resId) {
+        return getResources().getResourceEntryName(resId);
+    }
+
+    // Map currentClassIndex to class name
+    private String getClassName(int index) {
+        switch (index) {
+            case 0: return "warrior";
+            case 1: return "rogue";
+            case 2: return "tank";
+            default: return "warrior";
+        }
+    }
+
+    // Outfit resource name based on gender and class
+    private String getOutfitResourceName(boolean isMale, int classIndex) {
+        if (isMale) {
+            switch (classIndex) {
+                case 0: return "outfit_male_warrior";
+                case 1: return "outfit_male_rogue";
+                case 2: return "outfit_male_tank";
+            }
+        } else {
+            switch (classIndex) {
+                case 0: return "outfit_female_warrior";
+                case 1: return "outfit_female_rogue";
+                case 2: return "outfit_female_tank";
             }
         }
+        return isMale ? "outfit_male_warrior" : "outfit_female_warrior";
     }
-    */
 
-    /** Gets drawable ID from ImageView tag - Potentially no longer needed */
-    /*
-    private int getDrawableIdFromImageView(ImageView iv) {
-        Object tag = iv.getTag();
-        if (tag instanceof String) {
-            String tagStr = (String) tag;
-            return getResources().getIdentifier(tagStr, "drawable", getPackageName());
+    // Weapon resource name based on gender and class
+    private String getWeaponResourceName(boolean isMale, int classIndex) {
+        if (isMale) {
+            switch (classIndex) {
+                case 0: return "weapon_male_sword";
+                case 1: return "weapon_male_dagger";
+                case 2: return "weapon_male_hammer";
+            }
+        } else {
+            switch (classIndex) {
+                case 0: return "weapon_female_sword";
+                case 1: return "weapon_female_dagger";
+                case 2: return "weapon_female_hammer";
+            }
         }
-        return 0;
-    }
-    */
-
-    /** Apply cosmetic changes - No longer used with new XML structure */
-    /*
-    private void applyHair(@DrawableRes int resId) {
-        // overlayHair.setImageResource(resId); // Old
+        return isMale ? "weapon_male_sword" : "weapon_female_sword";
     }
 
-    private void applyEyes(@DrawableRes int resId) {
-        // overlayEyes.setImageResource(resId); // Old
+    // Hair drawable names
+    private String getHairOutlineResName(boolean isMale, int hairIndex) {
+        if (isMale) return "hair_male_" + (hairIndex + 1) + "_outline";
+        else return "hair_female_" + (hairIndex + 1) + "_outline";
     }
 
-    private void applyNose(@DrawableRes int resId) {
-        // overlayNose.setImageResource(resId); // Old
+    private String getHairFillResName(boolean isMale, int hairIndex) {
+        if (isMale) return "hair_male_fill_" + (hairIndex + 1);
+        else return "hair_female_fill_" + (hairIndex + 1);
     }
 
-    private void applyLips(@DrawableRes int resId) {
-        // overlayLips.setImageResource(resId); // Old
+    // Hair color in HEX
+    private String getHairColorHex() {
+        return String.format("#%06X", (0xFFFFFF & currentHairColor));
     }
-    */
 
-    private void showToast(CharSequence msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    // Hair color in HEX
+    private String getEyesColorHex() {
+        return String.format("#%06X", (0xFFFFFF & currentEyesColor));
     }
+
+
+    // Eyes drawable names
+    private String getEyesOutlineResName(int index) {
+        return "eyes_" + (index + 1) + "_outline";
+    }
+
+    private String getEyesFillResName(int index) {
+        return "eyes_iris_" + (index + 1);
+    }
+
+    // Nose & Lips
+    private String getNoseResName(int index) {
+        return "nose_" + (index + 1);
+    }
+
+    private String getLipsResName(int index) {
+        return "lips_" + (index + 1);
+    }
+
 }

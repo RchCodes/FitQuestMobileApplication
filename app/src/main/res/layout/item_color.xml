@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/image_color"
-    android:layout_width="40dp"
-    android:layout_height="40dp"
-    android:layout_margin="4dp"
-    android:background="@android:color/darker_gray"
-    android:scaleType="centerCrop"
-    android:clickable="true"
-    android:focusable="true"/>
+<View xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/viewColor"
+    android:layout_width="30dp"
+    android:layout_height="30dp"
+    android:layout_margin="1dp"
+    android:background="@drawable/bg_color_circle" />
