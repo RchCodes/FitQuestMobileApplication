@@ -1,11 +1,21 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const pvp = require("./pvp");
 
 admin.initializeApp();
 const db = admin.firestore();
 
 // Keep Firestore clean (ignores undefined props)
 db.settings({ ignoreUndefinedProperties: true });
+
+// Combat validation constants
+const MATCH_EXPIRY_HOURS = 24;
+const MAX_COMBAT_TURNS = 30;
+const MIN_COMBAT_TURNS = 1;
+
+// Export PvP functions
+exports.createPvPMatch = pvp.createPvPMatch;
+exports.submitPvPResult = pvp.submitPvPResult;
 
 /**
  * Cloud Function: submitExercise

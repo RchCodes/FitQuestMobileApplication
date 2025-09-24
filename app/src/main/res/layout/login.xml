@@ -12,7 +12,8 @@
         android:layout_height="48dp"
         android:layout_marginTop="80dp"
         android:background="@drawable/edittext_bg"
-        android:hint="User"
+        android:hint="Email"
+        android:inputType="textEmailAddress"
         android:padding="10dp"
         android:textColor="#000"
         android:textColorHint="#444" />
@@ -117,5 +118,20 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="16dp"
         android:text="SIGN UP" />
+
+    <!-- 🔹 Progress Overlay -->
+    <FrameLayout
+        android:id="@+id/progressOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            style="?android:attr/progressBarStyleLarge" />
+    </FrameLayout>
 
 </RelativeLayout>

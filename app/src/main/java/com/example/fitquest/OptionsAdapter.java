@@ -1,5 +1,6 @@
 package com.example.fitquest;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,55 +9,49 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
+import com.example.fitquest.R;
+
 import java.util.List;
 
-public class OptionsAdapter extends RecyclerView.Adapter<OptionsAdapter.ViewHolder> {
+public class OptionsAdapter extends RecyclerView.Adapter<OptionsAdapter.OptionViewHolder> {
 
     public interface OnOptionClickListener {
-        void onOptionClick(int drawableRes, AvatarCreationActivity.Category category);
+        void onOptionSelected(String outline, String fill);
     }
 
-    private List<Integer> options = new ArrayList<>();
-    private AvatarCreationActivity.Category currentCategory;
+    private final Context context;
+    private final List<String[]> options;
+    // Each entry: {outlineName, fillName} OR {singleDrawable, null}
+
     private final OnOptionClickListener listener;
 
-    public OptionsAdapter(OnOptionClickListener listener) {
-        this.listener = listener;
-    }
-
-    public void setOptions(List<Integer> options, AvatarCreationActivity.Category category) {
+    public OptionsAdapter(Context context, List<String[]> options, OnOptionClickListener listener) {
+        this.context = context;
         this.options = options;
-        this.currentCategory = category;
-        notifyDataSetChanged();
+        this.listener = listener;
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ImageView imageView = new ImageView(parent.getContext());
-
-        int size = (int) (96 * parent.getContext().getResources().getDisplayMetrics().density / 2); // ~96dp
-        RecyclerView.LayoutParams params = new RecyclerView.LayoutParams(size, size);
-        params.setMargins(8, 8, 8, 8);
-
-        imageView.setLayoutParams(params);
-        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-
-        // Background grid (gray checkerboard)
-        imageView.setBackgroundResource(R.drawable.grid_background);
-
-        return new ViewHolder(imageView);
+    public OptionViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(context).inflate(R.layout.item_option, parent, false);
+        return new OptionViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        int drawableRes = options.get(position);
-        holder.imageView.setImageResource(drawableRes);
+    public void onBindViewHolder(@NonNull OptionViewHolder holder, int position) {
+        String[] option = options.get(position);
 
-        holder.imageView.setOnClickListener(v ->
-                listener.onOptionClick(drawableRes, currentCategory)
-        );
+        // Load preview image (use outline if available, else single drawable)
+        String previewName = option[0];
+        int resId = context.getResources().getIdentifier(previewName, "drawable", context.getPackageName());
+        holder.optionImage.setImageResource(resId);
+
+        holder.itemView.setOnClickListener(v -> {
+            String outline = option[0];
+            String fill = option.length > 1 ? option[1] : null;
+            listener.onOptionSelected(outline, fill);
+        });
     }
 
     @Override
@@ -64,13 +59,12 @@ public class OptionsAdapter extends RecyclerView.Adapter<OptionsAdapter.ViewHold
         return options.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView imageView;
+    static class OptionViewHolder extends RecyclerView.ViewHolder {
+        ImageView optionImage;
 
-        ViewHolder(@NonNull ImageView itemView) {
+        public OptionViewHolder(@NonNull View itemView) {
             super(itemView);
-            imageView = itemView;
+            optionImage = itemView.findViewById(R.id.option_image);
         }
     }
 }
-

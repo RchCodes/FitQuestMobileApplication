@@ -22,6 +22,9 @@ public class MainActivity extends AppCompatActivity {
 
     private ImageView baseBodyLayer, hairLayer, eyesLayer, noseLayer, lipsLayer;
 
+    /**
+     * Called when the activity is first created. Sets up the UI and listeners.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -168,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
         findViewById(R.id.stats_button).setOnClickListener(v ->
-                new Stats(MainActivity.this).show()
+                new CharacterStats(MainActivity.this).show()
         );
 
         findViewById(R.id.gear_button).setOnClickListener(v ->

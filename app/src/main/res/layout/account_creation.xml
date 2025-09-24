@@ -14,7 +14,8 @@
         android:background="@drawable/edittext_bg"
         android:padding="10dp"
         android:layout_marginTop="100dp"
-        android:inputType="textEmailAddress" />
+        android:inputType="textEmailAddress"
+        android:textColor="@color/black"/>
 
     <!-- Username -->
     <EditText
@@ -26,7 +27,8 @@
         android:padding="10dp"
         android:layout_below="@id/etEmail"
         android:layout_marginTop="10dp"
-        android:inputType="textPersonName" />
+        android:inputType="textPersonName"
+        android:textColor="@color/black"/>
 
     <!-- Password -->
     <EditText
@@ -38,7 +40,8 @@
         android:padding="10dp"
         android:layout_below="@id/etUser"
         android:layout_marginTop="10dp"
-        android:inputType="textPassword" />
+        android:inputType="textPassword"
+        android:textColor="@color/black"/>
 
     <!-- Confirm Password -->
     <EditText
@@ -50,7 +53,8 @@
         android:padding="10dp"
         android:layout_below="@id/etPassword"
         android:layout_marginTop="10dp"
-        android:inputType="textPassword" />
+        android:inputType="textPassword"
+        android:textColor="@color/black"/>
 
     <!-- Sign Up Button (Image) -->
     <ImageView
@@ -92,5 +96,20 @@
         android:layout_centerHorizontal="true"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:layout_below="@id/btnFacebook"/>
+
+    <!-- Progress Overlay -->
+    <FrameLayout
+        android:id="@+id/progressOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+    </FrameLayout>
 
 </RelativeLayout>

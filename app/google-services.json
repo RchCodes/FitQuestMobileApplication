@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "685429381478",
+    "firebase_url": "https://fitquest-6fb1b-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "fitquest-6fb1b",
     "storage_bucket": "fitquest-6fb1b.firebasestorage.app"
   },
@@ -12,7 +13,20 @@
           "package_name": "com.example.fitquest"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "685429381478-0b7oab5g83vob9hksmg0ikvnme4ntr6s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.fitquest",
+            "certificate_hash": "a4b0cb0f2d8c6bfa0ddf23b9e76f2cb4e02e4cc9"
+          }
+        },
+        {
+          "client_id": "685429381478-eaak59aer1ngn50ue089etstv2ac9ddl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD0lR8GxJVKQaMHaujkKDKRexH6pQzVS5I"
@@ -20,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "685429381478-eaak59aer1ngn50ue089etstv2ac9ddl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -1,121 +1,95 @@
 package com.example.fitquest;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseUser;
 
 public class Login extends AppCompatActivity {
 
-    private Button buttonLogin, buttonSignup;
-    private EditText editUsername, editPassword;
-    private TextView textForgotPassword;
+    private EditText etUsername, etPassword;
+    private Button btnLogin, btnSignup;
+    private ImageView btnFacebook, btnGoogle;
+    private FrameLayout progressOverlay;
+
+    private AuthManager authManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
 
-        // Input fields
-        editUsername = findViewById(R.id.edit_username);
-        editPassword = findViewById(R.id.edit_password);
+        // 🔹 Match with new XML IDs
+        etUsername = findViewById(R.id.edit_username);
+        etPassword = findViewById(R.id.edit_password);
 
-        // Buttons
-        buttonLogin = findViewById(R.id.button_login);
-        buttonSignup = findViewById(R.id.button_signup);
+        btnLogin = findViewById(R.id.button_login);
+        btnSignup = findViewById(R.id.button_signup);
+        btnFacebook = findViewById(R.id.fb_icon);
+        btnGoogle = findViewById(R.id.google_icon);
+        progressOverlay = findViewById(R.id.progressOverlay);
 
-        // Forgot password text
-        textForgotPassword = findViewById(R.id.text_forgot_password);
+        authManager = new AuthManager();
 
-        // LOGIN button → check saved account
-        /*buttonLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String username = editUsername.getText().toString().trim();
-                String password = editPassword.getText().toString().trim();
+        // 🔹 Login button
+        btnLogin.setOnClickListener(v -> {
+            String username = etUsername.getText().toString().trim();
+            String password = etPassword.getText().toString().trim();
 
-                if (username.isEmpty() || password.isEmpty()) {
-                    Toast.makeText(Login.this, "Please enter username and password", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                if (!Patterns.EMAIL_ADDRESS.matcher(username).matches()) {
-                    Toast.makeText(Login.this, "Invalid email address", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                // Retrieve saved credentials
-                SharedPreferences sharedPreferences = getSharedPreferences("FitQuestPrefs", MODE_PRIVATE);
-                String savedUser = sharedPreferences.getString("username", "");
-                String savedPass = sharedPreferences.getString("password", "");
-
-                if (username.equals(savedUser) && password.equals(savedPass)) {
-                    Toast.makeText(Login.this, "Login successful!", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(Login.this, AvatarCreationActivity.class);
-                    startActivity(intent);
-                    finish();
-                } else {
-                    Toast.makeText(Login.this, "Invalid username or password", Toast.LENGTH_SHORT).show();
-                }
+            // Validation
+            if (username.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Please enter both username and password", Toast.LENGTH_SHORT).show();
+                return;
             }
-        });*/
-        buttonLogin.setOnClickListener(v -> {
-            String email = editUsername.getText().toString().trim(); // Use email for Firebase login
-            String password = editPassword.getText().toString().trim();
-
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(Login.this, "Please enter email and password", Toast.LENGTH_SHORT).show();
+            // Check if username looks like an email
+            if (!Patterns.EMAIL_ADDRESS.matcher(username).matches()) {
+                Toast.makeText(this, "Invalid email address", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            AuthManager authManager = new AuthManager();
-            authManager.login(email, password, Login.this, new AuthManager.AuthCallback() {
+            progressOverlay.setVisibility(View.VISIBLE);
+
+            // Firebase login
+            authManager.login(username, password, new AuthManager.AuthCallback() {
                 @Override
                 public void onSuccess(FirebaseUser user) {
+                    progressOverlay.setVisibility(View.GONE);
                     Toast.makeText(Login.this, "Login successful!", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(Login.this, AvatarCreationActivity.class));
+
+                    // Go to main app screen
+                    startActivity(new Intent(Login.this, MainActivity.class));
                     finish();
                 }
 
                 @Override
                 public void onFailure(String errorMessage) {
+                    progressOverlay.setVisibility(View.GONE);
                     Toast.makeText(Login.this, "Login failed: " + errorMessage, Toast.LENGTH_LONG).show();
                 }
             });
         });
 
+        // 🔹 Signup button
+        btnSignup.setOnClickListener(v ->
+                startActivity(new Intent(Login.this, AccountCreation.class))
+        );
 
-        // SIGN UP button → AccountCreation
-        buttonSignup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Login.this, AccountCreation.class);
-                startActivity(intent);
-            }
-        });
+        // 🔹 Placeholder for social login
+        btnFacebook.setOnClickListener(v ->
+                Toast.makeText(this, "Facebook Login coming soon!", Toast.LENGTH_SHORT).show()
+        );
 
-        // Forgot Password → show saved password (for testing only)
-        textForgotPassword.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                SharedPreferences sharedPreferences = getSharedPreferences("FitQuestPrefs", MODE_PRIVATE);
-                String savedUser = sharedPreferences.getString("username", "");
-                String savedPass = sharedPreferences.getString("password", "");
-
-                if (!savedUser.isEmpty() && !savedPass.isEmpty()) {
-                    Toast.makeText(Login.this, "Password for " + savedUser + ": " + savedPass, Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(Login.this, "No account found. Please sign up first.", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        btnGoogle.setOnClickListener(v ->
+                Toast.makeText(this, "Google Login coming soon!", Toast.LENGTH_SHORT).show()
+        );
     }
 }

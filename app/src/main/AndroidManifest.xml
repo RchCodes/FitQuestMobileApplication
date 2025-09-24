@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
     <!-- Permissions -->
-    <uses-feature android:name="android.hardware.camera.any" android:required="true" />
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="true" />
+
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
@@ -14,42 +16,37 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.FitQuest">
-
-        <!-- Login Activity (set as LAUNCHER) -->
+        <activity
+            android:name=".BattleResultActivity"
+            android:exported="false" />
+        <activity
+            android:name=".CombatArenaActivity"
+            android:exported="false" /> <!-- Login Activity (set as LAUNCHER) -->
         <activity
             android:name=".Login"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- Account Creation Activity -->
+        </activity> <!-- Account Creation Activity -->
         <activity
             android:name=".AccountCreation"
-            android:exported="false" />
-
-        <!-- Avatar Creation Activity -->
+            android:exported="false" /> <!-- Avatar Creation Activity -->
         <activity
             android:name=".AvatarCreationActivity"
-            android:exported="false" />
-
-        <!-- Exercise Tracking Activity -->
+            android:exported="false" /> <!-- Exercise Tracking Activity -->
         <activity
             android:name=".ExerciseTrackingActivity"
             android:exported="false"
-            android:theme="@style/Theme.FitQuest.NoActionBar" />
-
-        <!-- Settings Activity -->
+            android:theme="@style/Theme.FitQuest.NoActionBar" /> <!-- Settings Activity -->
         <activity
             android:name=".UserSettingsActivity"
-            android:exported="false" />
-
-        <!-- Optional: Keep MainActivity if you use it for testing -->
+            android:exported="false" /> <!-- Optional: Keep MainActivity if you use it for testing -->
         <activity
             android:name=".MainActivity"
             android:exported="false" />
-
     </application>
+
 </manifest>
