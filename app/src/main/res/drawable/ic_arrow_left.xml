@@ -1,14 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="48dp"
-    android:height="48dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-
-    <!-- Filled triangle -->
-    <path
-        android:pathData="M15,6 L9,12 L15,18 Z"
-        android:fillColor="#FFFFFF"
-        android:strokeColor="#9E9C9C"
-        android:strokeWidth="1.5"/>
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24.0"
+    android:viewportHeight="24.0"
+    android:tint="?attr/colorControlNormal">
+  <path
+      android:fillColor="@android:color/white"
+      android:pathData="M15.41,7.41L14,6l-6,6 6,6 1.41,-1.41L10.83,12z"/>
 </vector>
