@@ -16,28 +16,33 @@ public class AvatarManager {
 
     private static final String TAG = "AvatarManager";
     private static final String PREFS_NAME = "FitQuestPrefs";
-    private static final String KEY_AVATAR = "avatar_json";
+    private static final String AVATAR_KEY = "avatar_data";
 
     private static final Gson gson = new Gson();
-
     // --- Save offline ---
     public static void saveAvatarOffline(Context context, AvatarModel avatar) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String json = gson.toJson(avatar);
-        prefs.edit().putString(KEY_AVATAR, json).apply();
-        Log.d(TAG, "Avatar saved offline: " + json);
+        SharedPreferences.Editor editor = prefs.edit();
+        Gson gson = new Gson();
+        String avatarJson = gson.toJson(avatar);
+        editor.putString(AVATAR_KEY, avatarJson);
+        editor.apply();
     }
 
-    // --- Load offline ---
+    /** Load avatar from SharedPreferences; returns null if none exists */
     public static AvatarModel loadAvatarOffline(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String json = prefs.getString(KEY_AVATAR, null);
-        if (json != null) {
-            AvatarModel avatar = gson.fromJson(json, AvatarModel.class);
-            Log.d(TAG, "Avatar loaded offline: " + json);
-            return avatar;
+        String avatarJson = prefs.getString(AVATAR_KEY, null);
+        if (avatarJson == null) {
+            return null; // no saved avatar
         }
-        return null;
+        Gson gson = new Gson();
+        try {
+            return gson.fromJson(avatarJson, AvatarModel.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null; // fallback if JSON corrupted
+        }
     }
 
     // --- Save online (Firebase RTDB) ---
@@ -73,10 +78,12 @@ public class AvatarManager {
         avatarMap.put("coins", avatar.getCoins());
         avatarMap.put("xp", avatar.getXp());
         avatarMap.put("level", avatar.getLevel());
+        avatarMap.put("rank", avatar.getRank()); // <-- add rank
 
         // Push all at once
         ref.updateChildren(avatarMap)
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "Avatar saved online successfully"))
                 .addOnFailureListener(e -> Log.e(TAG, "Failed to save avatar online", e));
     }
+
 }

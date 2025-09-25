@@ -5,67 +5,112 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
-import android.view.ViewGroup;
+
+import androidx.annotation.DrawableRes;
 
 public class Profile {
 
     private static final String PREF_NAME = "FitQuestPrefs";
-    private static final String KEY_USERNAME = "username";
-    private static final String KEY_GENDER = "gender"; // "male" or "female"
+    private static final String AVATAR_KEY = "avatar_data";
 
     private final Dialog dialog;
+    private AvatarModel avatar;
 
     public Profile(Context context) {
         // Inflate layout
-        LayoutInflater inflater = LayoutInflater.from(context);
-        View popupView = inflater.inflate(R.layout.profile, null);
+        View popupView = LayoutInflater.from(context).inflate(R.layout.profile, null);
 
-        // Create dialog
         dialog = new Dialog(context);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(popupView);
         dialog.setCancelable(true);
-        dialog.setCanceledOnTouchOutside(true); // ✅ dismiss on outside tap
+        dialog.setCanceledOnTouchOutside(true);
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+
+        // Load offline avatar
+        avatar = AvatarManager.loadAvatarOffline(context);
+        if (avatar == null) avatar = new AvatarModel(); // fallback
 
         // Bind views
         ImageView profileImage = popupView.findViewById(R.id.profile_image);
         TextView usernameView = popupView.findViewById(R.id.username);
+        TextView classView = popupView.findViewById(R.id.classView);
+        TextView levelView = popupView.findViewById(R.id.level);
+        ProgressBar expBar = popupView.findViewById(R.id.exp_bar);
+        ImageView coinsIcon = popupView.findViewById(R.id.coins_icon);
+        TextView coinsView = popupView.findViewById(R.id.coins);
+        ImageView rankIcon = popupView.findViewById(R.id.rank_icon);
+        TextView rankName = popupView.findViewById(R.id.rank_name);
+
         Button bindButton = popupView.findViewById(R.id.bind_button);
         Button switchButton = popupView.findViewById(R.id.switch_button);
 
-        // Load saved data
-        SharedPreferences prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        String username = prefs.getString(KEY_USERNAME, "Player");
-        String gender = prefs.getString(KEY_GENDER, "male");
+        TextView playerIdView = popupView.findViewById(R.id.player_id);
 
-        // Set username
-        usernameView.setText(username);
+        ImageButton btnClose = popupView.findViewById(R.id.btn_close_profile);
+        btnClose.setOnClickListener(v -> dialog.dismiss());
 
-        // Set profile image based on gender
-        if ("female".equalsIgnoreCase(gender)) {
-            profileImage.setImageResource(R.drawable.female);
+
+// Display player ID
+        playerIdView.setText("ID: " + (avatar.getPlayerId() != null ? avatar.getPlayerId() : "00000000"));
+
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+        // Set avatar info
+        usernameView.setText(avatar.getUsername() != null ? avatar.getUsername() : "Player");
+        classView.setText(avatar.getPlayerClass().substring(0,1).toUpperCase() +
+                avatar.getPlayerClass().substring(1)); // placeholder or extend as needed
+        levelView.setText("LV. " + avatar.getLevel());
+        expBar.setProgress(avatar.getXp());
+
+        coinsView.setText(String.valueOf(avatar.getCoins()));
+        coinsIcon.setImageResource(R.drawable.currency);
+
+        // Determine rank
+        @DrawableRes int rankRes;
+        String rankText;
+        int level = avatar.getLevel();
+
+        if (level < 10) {
+            rankRes = R.drawable.rank_novice;
+            rankText = "Novice";
+        } else if (level < 25) {
+            rankRes = R.drawable.rank_warrior;
+            rankText = "Warrior";
+        } else if (level < 50) {
+            rankRes = R.drawable.rank_elite;
+            rankText = "Elite";
         } else {
-            profileImage.setImageResource(R.drawable.male2);
+            rankRes = R.drawable.rank_hero;
+            rankText = "Hero";
         }
 
-        // Button click actions
-        bindButton.setOnClickListener(v ->
-                Toast.makeText(context, "Bind Account Clicked", Toast.LENGTH_SHORT).show()
-        );
+        rankIcon.setImageResource(rankRes);
+        rankName.setText(rankText);
 
-        switchButton.setOnClickListener(v ->
-                Toast.makeText(context, "Switch Account Clicked", Toast.LENGTH_SHORT).show()
-        );
+        // Buttons
+        bindButton.setOnClickListener(v -> {
+            // implement binding logic
+        });
+
+        switchButton.setOnClickListener(v -> {
+            // implement switching logic
+        });
     }
 
     public void show() {
         dialog.show();
+    }
+
+    public void dismiss() {
+        dialog.dismiss();
     }
 }

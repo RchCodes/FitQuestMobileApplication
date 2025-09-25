@@ -1,18 +1,38 @@
 package com.example.fitquest;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.widget.ImageView;
 import androidx.appcompat.app.AppCompatActivity;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
     private AvatarDisplayManager avatarHelper;
 
+    // Profile info
+    private ImageView userIcon;
+    private TextView playerName, playerLevel, coins;
+    private ProgressBar expBar;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Bind profile views
+        userIcon = findViewById(R.id.user_icon);
+        playerName = findViewById(R.id.player_name);
+        playerLevel = findViewById(R.id.player_level);
+        coins = findViewById(R.id.coins);
+        expBar = findViewById(R.id.exp_bar);
+
+        // Load profile info from local storage or database
+        loadProfileInfo();
+
 
         // Initialize avatar helper with all layers
         avatarHelper = new AvatarDisplayManager(
@@ -28,51 +48,60 @@ public class MainActivity extends AppCompatActivity {
                 findViewById(R.id.lipsLayer)
         );
 
-        // Example: buttons (profile, settings, challenge, etc.)
-        findViewById(R.id.profile_section).setOnClickListener(v -> {
-            // Open profile activity
-            startActivity(new Intent(this, Profile.class));
-        });
+        // Load avatar automatically
+        loadAvatarIfExists();
 
-        findViewById(R.id.settings_button).setOnClickListener(v -> {
-            startActivity(new Intent(this, Settings.class));
-        });
-
-        findViewById(R.id.challenge_button).setOnClickListener(v -> {
-            startActivity(new Intent(this, Challenge.class));
-        });
-
-        // Left buttons
-        findViewById(R.id.stats_button).setOnClickListener(v -> {
-            startActivity(new Intent(this, CharacterStats.class));
-        });
-        findViewById(R.id.gear_button).setOnClickListener(v -> {
-            startActivity(new Intent(this, Gear.class));
-        });
-        findViewById(R.id.arena_button).setOnClickListener(v -> {
-            startActivity(new Intent(this, Arena.class));
-        });
-
-        // Right buttons
-        findViewById(R.id.quest_button).setOnClickListener(v -> {
-            startActivity(new Intent(this, Quest.class));
-        });
-        findViewById(R.id.goals_button).setOnClickListener(v -> {
-            startActivity(new Intent(this, Goals.class));
-        });
-        findViewById(R.id.store_button).setOnClickListener(v -> {
-            startActivity(new Intent(this, Store.class));
-        });
-        findViewById(R.id.friends_button).setOnClickListener(v -> {
-            startActivity(new Intent(this, Friends.class));
-        });
-
-        // Optional: refresh avatar display in case of changes (gear, outfit)
-        avatarHelper.refreshDisplay();
+        // Setup other buttons
+        setupButtons();
     }
 
-    // Public method to allow other activities to update the avatar layers
+    /** Load avatar from offline storage and refresh display */
+    private void loadAvatarIfExists() {
+        AvatarModel avatar = AvatarManager.loadAvatarOffline(this);
+        if (avatar != null) {
+            avatarHelper.loadAvatar(avatar);
+        }
+    }
+
+    private void setupButtons() {
+        // Dialog-style buttons
+        findViewById(R.id.profile_section).setOnClickListener(v -> new Profile(this).show());
+        findViewById(R.id.settings_button).setOnClickListener(v -> new Settings(this).show());
+        findViewById(R.id.store_button).setOnClickListener(v -> new Store(this).show());
+        findViewById(R.id.quest_button).setOnClickListener(v -> new Quest(this).show());
+        findViewById(R.id.goals_button).setOnClickListener(v -> new Goals(this).show());
+        findViewById(R.id.gear_button).setOnClickListener(v -> new Gear(this).show());
+        findViewById(R.id.friends_button).setOnClickListener(v -> new Friends(this).show());
+        findViewById(R.id.arena_button).setOnClickListener(v -> new Arena(this).show());
+        findViewById(R.id.challenge_button).setOnClickListener(v -> new Challenge(this).show());
+        findViewById(R.id.stats_button).setOnClickListener(v -> new CharacterStats(this).show());
+
+    }
+    // Allow other activities to access the avatar helper
     public AvatarDisplayManager getAvatarHelper() {
         return avatarHelper;
     }
+
+    private void loadProfileInfo() {
+        // Example: load from SharedPreferences (offline)
+        SharedPreferences prefs = getSharedPreferences("FitQuestPrefs", MODE_PRIVATE);
+
+        String username = prefs.getString("username", "Player");
+        int level = prefs.getInt("level", 1);
+        int coinCount = prefs.getInt("coins", 0);
+        int exp = prefs.getInt("exp", 0);
+        int expMax = prefs.getInt("expMax", 1000); // max for current level
+
+        // Set the views
+        playerName.setText(username);
+        playerLevel.setText("LV. " + level);
+        coins.setText(String.valueOf(coinCount));
+
+        expBar.setMax(expMax);
+        expBar.setProgress(exp);
+
+    }
+
+
+
 }

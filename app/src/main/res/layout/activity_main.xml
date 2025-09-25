@@ -70,17 +70,37 @@
         android:layout_marginTop="8dp"/>
 
     <!-- COINS badge (left of settings) -->
-    <TextView
-        android:id="@+id/coins"
+    <LinearLayout
+        android:id="@+id/coins_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="999M"
-        android:textColor="@android:color/white"
-        android:textSize="14sp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/bg_right_panel_target"
         android:padding="4dp"
         app:layout_constraintEnd_toStartOf="@id/settings_button"
         app:layout_constraintTop_toTopOf="@id/settings_button"
-        android:layout_marginEnd="12dp"/>
+        android:layout_marginEnd="12dp">
+
+        <!-- Coin Icon -->
+        <ImageView
+            android:id="@+id/coin_icon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/currency"
+            android:contentDescription="Coin Icon"
+            android:layout_marginEnd="4dp"/>
+
+        <!-- Coin Count -->
+        <TextView
+            android:id="@+id/coins"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="999M"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"/>
+    </LinearLayout>
+
 
     <!-- EXP bar under profile -->
     <ProgressBar

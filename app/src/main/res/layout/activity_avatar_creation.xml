@@ -21,7 +21,7 @@
         android:id="@+id/tvUsernameLabel"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="60dp"
         android:text="Avatar Name"
         android:textColor="@android:color/black"
         android:textSize="18sp"
@@ -60,7 +60,7 @@
         app:layout_constraintEnd_toStartOf="@id/guideline_half"
         app:layout_constraintBottom_toTopOf="@id/btnCreate"
         android:layout_marginTop="16dp"
-        android:layout_marginBottom="30dp">
+        android:layout_marginBottom="60dp">
 
         <ImageView
             android:id="@+id/baseBody"
@@ -126,8 +126,8 @@
         app:layout_constraintStart_toStartOf="@id/guideline_half"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/btnCreate"
-        android:layout_marginTop="70dp"
-        android:layout_marginBottom="30dp">
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="40dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -144,7 +144,8 @@
                 android:textStyle="bold"
                 android:textColor="@android:color/white"
                 android:textSize="14sp"
-                android:layout_gravity="center" />
+                android:layout_gravity="center"
+                app:backgroundTint="@null"/>
 
             <Button
                 android:id="@+id/btnWarrior"
@@ -156,7 +157,8 @@
                 android:textSize="11dp"
                 android:textColor="@android:color/white"
                 android:textStyle="bold"
-                android:background="@drawable/bg_btn_warrior_selector" />
+                android:background="@drawable/bg_btn_warrior_selector"
+                app:backgroundTint="@null"/>
 
             <Button
                 android:id="@+id/btnRogue"
@@ -168,7 +170,8 @@
                 android:textSize="11dp"
                 android:textColor="@android:color/white"
                 android:textStyle="bold"
-                android:background="@drawable/bg_btn_rogue" />
+                android:background="@drawable/bg_btn_rogue"
+                app:backgroundTint="@null"/>
 
             <Button
                 android:id="@+id/btnTank"
@@ -180,7 +183,8 @@
                 android:textSize="11dp"
                 android:textColor="@android:color/white"
                 android:textStyle="bold"
-                android:background="@drawable/bg_btn_tank" />
+                android:background="@drawable/bg_btn_tank"
+                app:backgroundTint="@null"/>
 
             <!-- Gender Section -->
             <TextView
@@ -207,7 +211,8 @@
                     android:layout_weight="1"
                     android:drawableTop="@drawable/icon_male"
                     android:background="@drawable/bg_btn_gender_male"
-                    android:padding="8dp" />
+                    android:padding="8dp"
+                    app:backgroundTint="@null"/>
 
                 <Space
                     android:layout_width="10dp"
@@ -220,7 +225,8 @@
                     android:layout_weight="1"
                     android:drawableTop="@drawable/icon_female"
                     android:background="@drawable/bg_btn_gender_female"
-                    android:padding="8dp" />
+                    android:padding="8dp"
+                    app:backgroundTint="@null"/>
             </LinearLayout>
 
             <!-- Customization Section -->
@@ -343,6 +349,13 @@
                 </LinearLayout>
 
                 <!-- Lips -->
+                <ImageButton
+                    android:id="@+id/btnLipsRight"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:background="@android:color/transparent"
+                    android:src="@drawable/ic_arrow_right" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -367,18 +380,19 @@
                         android:textColor="@android:color/white"
                         android:textSize="14sp"/>
 
-                    <ImageButton
-                        android:id="@+id/btnLipsRight"
-                        android:layout_width="35dp"
-                        android:layout_height="35dp"
-                        android:src="@drawable/ic_arrow_right"
-                        android:background="@android:color/transparent"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
     <!-- Create Button -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineBottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_end="16dp" />
+
     <Button
         android:id="@+id/btnCreate"
         android:layout_width="140dp"
@@ -388,7 +402,8 @@
         android:textSize="16sp"
         android:textColor="@android:color/black"
         android:background="@drawable/button_style"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/guidelineBottom"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:backgroundTint="@null"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

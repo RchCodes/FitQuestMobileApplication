@@ -2,10 +2,9 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="#80000000"> <!-- semi-transparent dim background -->
+    android:background="#80000000"> <!-- semi-transparent dim -->
 
-    <!-- Popup Card -->
+    <!-- Scrollable profile card -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -21,7 +20,6 @@
             android:padding="16dp"
             android:elevation="6dp">
 
-            <!-- Your entire content stays the same from here down -->
             <!-- Title -->
             <TextView
                 android:id="@+id/title"
@@ -30,11 +28,11 @@
                 android:text="PROFILE"
                 android:textSize="20sp"
                 android:textStyle="bold"
+                android:gravity="center"
                 android:background="@android:color/holo_blue_dark"
                 android:textColor="@android:color/white"
-                android:gravity="center"
                 android:padding="8dp"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="12dp"/>
 
             <!-- Profile Picture & Info -->
             <LinearLayout
@@ -63,118 +61,150 @@
                         android:id="@+id/username"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="CHIAN 🖊️"
+                        android:text="PLAYER"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@android:color/black" />
+                        android:textColor="@android:color/black"/>
 
                     <TextView
-                        android:id="@+id/clan"
+                        android:id="@+id/classView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="SPARTAN"
+                        android:text="CLASS"
                         android:textColor="@android:color/darker_gray"
-                        android:textSize="14sp" />
+                        android:textSize="14sp"/>
+
+                    <TextView
+                        android:id="@+id/player_id"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ID: 16976531"
+                        android:textColor="@android:color/black"
+                        android:layout_marginBottom="4dp"/>
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Level Bar -->
+            <!-- Level & EXP -->
             <TextView
                 android:id="@+id/level"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="LV. 99"
+                android:text="LV. 1"
                 android:textColor="@android:color/black"
                 android:textSize="14sp"
-                android:layout_marginBottom="4dp" />
+                android:layout_marginBottom="4dp"/>
 
             <ProgressBar
                 android:id="@+id/exp_bar"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
                 android:layout_height="16dp"
-                android:max="10000"
-                android:progress="5000"
+                android:max="100"
+                android:progress="0"
                 android:progressTint="@android:color/holo_green_light"
-                android:layout_marginBottom="12dp" />
+                android:layout_marginBottom="12dp"/>
 
-            <!-- ID -->
-            <TextView
-                android:id="@+id/player_id"
+            <!-- Coins -->
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ID: 16976531"
-                android:textColor="@android:color/black"
-                android:layout_marginBottom="4dp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
 
-            <!-- Rank Section -->
+                <ImageView
+                    android:id="@+id/coins_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/currency"
+                    android:contentDescription="Coins"
+                    android:layout_marginEnd="4dp"/>
+
+                <TextView
+                    android:id="@+id/coins"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="@android:color/black"
+                    android:textSize="16sp"/>
+            </LinearLayout>
+
+            <!-- Rank -->
             <TextView
                 android:id="@+id/current_rank_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Current Rank:"
                 android:textColor="@android:color/black"
-                android:layout_marginTop="8dp" />
+                android:layout_marginTop="8dp"/>
 
             <ImageView
                 android:id="@+id/rank_icon"
                 android:layout_width="72dp"
                 android:layout_height="72dp"
                 android:layout_gravity="center_horizontal"
-                android:src="@drawable/highest_rank"
+                android:src="@drawable/rank_novice"
                 android:layout_marginTop="4dp"
-                android:contentDescription="Rank Icon" />
+                android:contentDescription="Rank Icon"/>
 
             <TextView
                 android:id="@+id/rank_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="CHAMPION"
+                android:text="Novice"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="@android:color/holo_purple"
                 android:gravity="center"
-                android:layout_marginTop="4dp"
-                android:layout_gravity="center_horizontal" />
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="4dp"/>
 
             <!-- Buttons -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="12dp"
-                android:gravity="center">
+                android:gravity="center"
+                android:layout_marginTop="12dp">
 
                 <Button
                     android:id="@+id/bind_button"
                     android:layout_width="150dp"
                     android:layout_height="50dp"
-                    android:layout_below="@id/social_login_row"
-                    android:layout_centerHorizontal="true"
                     android:text="Bind Account"
                     android:textStyle="bold"
                     android:textSize="14sp"
                     android:textColor="@android:color/black"
-                    app:backgroundTint="@null"
                     android:background="@drawable/button_style"/>
 
                 <View
                     android:layout_width="8dp"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"/>
 
                 <Button
                     android:id="@+id/switch_button"
                     android:layout_width="150dp"
                     android:layout_height="50dp"
-                    android:layout_below="@id/social_login_row"
-                    android:layout_centerHorizontal="true"
                     android:text="Switch Account"
                     android:textStyle="bold"
                     android:textSize="14sp"
                     android:textColor="@android:color/black"
-                    app:backgroundTint="@null"
                     android:background="@drawable/button_style"/>
             </LinearLayout>
+
         </LinearLayout>
     </ScrollView>
+
+    <!-- Close button overlaid on top-right -->
+    <ImageButton
+        android:id="@+id/btn_close_profile"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_close"
+        android:contentDescription="Close Profile"/>
+
 </FrameLayout>

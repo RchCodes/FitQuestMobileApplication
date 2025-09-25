@@ -26,6 +26,11 @@ public class AvatarModel {
     private int xp;              // experience points
     private int level;           // player level
 
+    // New field for rank
+    private int rank; // 0=Novice, 1=Warrior, 2=Elite, 3=Hero
+
+    private String playerId; // unique player ID
+
     // Required empty constructor for Firebase
     public AvatarModel() {}
 
@@ -53,6 +58,11 @@ public class AvatarModel {
         this.coins = 0;
         this.xp = 0;
         this.level = 1; // start at level 1
+        this.rank = 0; // default to Novice
+
+        // Generate player ID
+        this.playerId = generatePlayerId();
+
     }
 
     // --- Getters and Setters ---
@@ -107,4 +117,17 @@ public class AvatarModel {
 
     public int getLevel() { return level; }
     public void setLevel(int level) { this.level = level; }
+
+    // Getter & Setter for rank
+    public int getRank() { return rank; }
+    public void setRank(int rank) { this.rank = rank; }
+
+    // --- Getter & Setter ---
+    public String getPlayerId() { return playerId; }
+    public void setPlayerId(String playerId) { this.playerId = playerId; }
+
+    // --- Utility ---
+    private String generatePlayerId() {
+        return String.valueOf(10000000 + (int)(Math.random() * 89999999)); // 8-digit random ID
+    }
 }

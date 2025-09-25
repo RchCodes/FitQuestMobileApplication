@@ -2,7 +2,6 @@ package com.example.fitquest;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -48,22 +47,22 @@ public class AvatarCreationActivity extends AppCompatActivity {
 
     // Resource arrays
     private int[] maleHairOutlines = {
-            R.drawable.hair_male_1, R.drawable.hair_male_2,
-            R.drawable.hair_male_3, R.drawable.hair_male_4};
+            R.drawable.hair_male_1_outline, R.drawable.hair_male_2_outline,
+            R.drawable.hair_male_3_outline, R.drawable.hair_male_4_outline};
     private int[] maleHairFills = {
             R.drawable.hair_male_fill_1, R.drawable.hair_male_fill_2,
             R.drawable.hair_male_fill_3, R.drawable.hair_male_fill_4};
 
     private int[] femaleHairOutlines = {
-            R.drawable.hair_female_1, R.drawable.hair_female_2,
-            R.drawable.hair_female_3, R.drawable.hair_female_4};
+            R.drawable.hair_female_1_outline, R.drawable.hair_female_2_outline,
+            R.drawable.hair_female_3_outline, R.drawable.hair_female_4_outline};
     private int[] femaleHairFills = {
             R.drawable.hair_female_fill_1, R.drawable.hair_female_fill_2,
             R.drawable.hair_female_fill_3, R.drawable.hair_female_fill_4};
 
     private int[] eyesOutlines = {
-            R.drawable.eyes_1, R.drawable.eyes_2,
-            R.drawable.eyes_3, R.drawable.eyes_4, R.drawable.eyes_5};
+            R.drawable.eyes_1_outline, R.drawable.eyes_2_outline,
+            R.drawable.eyes_3_outline, R.drawable.eyes_4_outline, R.drawable.eyes_5_outline};
     private int[] eyesIrises = {
             R.drawable.eyes_iris_1, R.drawable.eyes_iris_2,
             R.drawable.eyes_iris_3, R.drawable.eyes_iris_4, R.drawable.eyes_iris_5};
@@ -234,6 +233,7 @@ public class AvatarCreationActivity extends AppCompatActivity {
             avatar.setCoins(0);
             avatar.setXp(0);
             avatar.setLevel(1);
+            avatar.setRank(0);
 
             // Save offline & online
             AvatarManager.saveAvatarOffline(this, avatar);

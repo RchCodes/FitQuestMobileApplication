@@ -23,6 +23,14 @@
           }
         },
         {
+          "client_id": "685429381478-0phq1mumj3m450raueuivb5bv17nb94t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.fitquest",
+            "certificate_hash": "1ef2c0dcbf04d4ab0759dc9bce1431c0bfff0ea9"
+          }
+        },
+        {
           "client_id": "685429381478-eaak59aer1ngn50ue089etstv2ac9ddl.apps.googleusercontent.com",
           "client_type": 3
         }
