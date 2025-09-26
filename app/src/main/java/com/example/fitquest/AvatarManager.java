@@ -86,4 +86,6 @@ public class AvatarManager {
                 .addOnFailureListener(e -> Log.e(TAG, "Failed to save avatar online", e));
     }
 
+    public static void saveAvatar(Context context, AvatarModel avatar) {
+    }
 }

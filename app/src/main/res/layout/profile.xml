@@ -73,61 +73,65 @@
                         android:text="CLASS"
                         android:textColor="@android:color/darker_gray"
                         android:textSize="14sp"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/level"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:text="LV. 1"
+                    android:textColor="@android:color/black"
+                    android:textSize="14sp" />
+
+                <FrameLayout
+                    android:id="@+id/expContainer"
+                    android:layout_width="140dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginLeft="8dp">
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="12dp"
+                        android:background="@drawable/progress_bg"
+                        android:padding="2dp"> <!-- padding ensures ProgressBar is smaller than border -->
+
+                        <ProgressBar
+                            android:id="@+id/exp_bar"
+                            style="@android:style/Widget.ProgressBar.Horizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:progress="50"
+                            android:max="100"
+                            android:progressDrawable="@drawable/progress_fill"
+                            android:clipToPadding="false"/>
+                    </FrameLayout>
 
                     <TextView
-                        android:id="@+id/player_id"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ID: 16976531"
-                        android:textColor="@android:color/black"
-                        android:layout_marginBottom="4dp"/>
+                        android:id="@+id/progressText"
+                        android:layout_width="140dp"
+                        android:layout_height="12dp"
+                        android:gravity="center"
+                        android:text="50/100"
+                        android:textColor="#FFFFFF"
+                        android:textSize="8dp" />
+                </FrameLayout>
+            </LinearLayout>
+
                 </LinearLayout>
             </LinearLayout>
 
             <!-- Level & EXP -->
+
             <TextView
-                android:id="@+id/level"
+                android:id="@+id/player_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="LV. 1"
-                android:textColor="@android:color/black"
-                android:textSize="14sp"
-                android:layout_marginBottom="4dp"/>
-
-            <ProgressBar
-                android:id="@+id/exp_bar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="16dp"
-                android:max="100"
-                android:progress="0"
-                android:progressTint="@android:color/holo_green_light"
-                android:layout_marginBottom="12dp"/>
-
-            <!-- Coins -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
-
-                <ImageView
-                    android:id="@+id/coins_icon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/currency"
-                    android:contentDescription="Coins"
-                    android:layout_marginEnd="4dp"/>
-
-                <TextView
-                    android:id="@+id/coins"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="@android:color/black"
-                    android:textSize="16sp"/>
-            </LinearLayout>
+                android:layout_marginBottom="4dp"
+                android:text="ID: 16976531"
+                android:textColor="@android:color/black" />
 
             <!-- Rank -->
             <TextView

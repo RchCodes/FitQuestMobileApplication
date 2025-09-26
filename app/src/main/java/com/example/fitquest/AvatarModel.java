@@ -21,29 +21,45 @@ public class AvatarModel {
     private String nose;
     private String lips;
 
-    // NEW fields
-    private int coins;           // total coins
-    private int xp;              // experience points
-    private int level;           // player level
+    // Core progression
+    private int coins;
+    private int xp;
+    private int level;
+    private int rank;
+    private String playerId;
 
-    private int armPoints, legPoints, chestPoints, backPoints;
+    // Free points
+    private int freePhysiquePoints = 1;
+    private int freeAttributePoints = 1;
 
-    // ATTRIBUTES
-    private int strength, endurance, agility, flexibility, stamina;
+    // Physique stats
+    private int armPoints = 0;
+    private int legPoints = 0;
+    private int chestPoints = 0;
+    private int backPoints = 0;
 
-    // New field for rank
-    private int rank; // 0=Novice, 1=Warrior, 2=Elite, 3=Hero
+    // Attributes
+    private int strength = 0;
+    private int endurance = 0;
+    private int agility = 0;
+    private int flexibility = 0;
+    private int stamina = 0;
 
-    private String playerId; // unique player ID
-
-    // Required empty constructor for Firebase
-    public AvatarModel() {}
+    // Constructors
+    public AvatarModel() {
+        this.level = 1;
+        this.xp = 0;
+        this.coins = 0;
+        this.rank = 0;
+        this.playerId = generatePlayerId();
+    }
 
     public AvatarModel(String username, String gender, String playerClass,
                        String bodyStyle, String outfit, String weapon,
                        String hairOutline, String hairFill, String hairColor,
                        String eyesOutline, String eyesFill, String eyesColor,
                        String nose, String lips) {
+        this();
         this.username = username;
         this.gender = gender;
         this.playerClass = playerClass;
@@ -58,19 +74,9 @@ public class AvatarModel {
         this.eyesColor = eyesColor;
         this.nose = nose;
         this.lips = lips;
-
-        // Initialize coins, XP, level
-        this.coins = 0;
-        this.xp = 0;
-        this.level = 1; // start at level 1
-        this.rank = 0; // default to Novice
-
-        // Generate player ID
-        this.playerId = generatePlayerId();
-
     }
 
-    // --- Getters and Setters ---
+    // --- Getters & Setters ---
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
 
@@ -113,79 +119,104 @@ public class AvatarModel {
     public String getLips() { return lips; }
     public void setLips(String lips) { this.lips = lips; }
 
-    // --- NEW setters/getters ---
     public int getCoins() { return coins; }
     public void setCoins(int coins) { this.coins = coins; }
+    public void addCoins(int amount) { this.coins += amount; }
 
     public int getXp() { return xp; }
-    public void setXp(int xp) { this.xp = xp; }
-
-    public int getLevel() { return level; }
-    public void setLevel(int level) { this.level = level; }
-
-    // Getter & Setter for rank
-    public int getRank() { return rank; }
-    public void setRank(int rank) { this.rank = rank; }
-
-    // --- Getter & Setter ---
-    public String getPlayerId() { return playerId; }
-    public void setPlayerId(String playerId) { this.playerId = playerId; }
-
-    // --- Utility ---
-    private String generatePlayerId() {
-        return String.valueOf(10000000 + (int)(Math.random() * 89999999)); // 8-digit random ID
-    }
-
-    public void addCoins(int amount) {
-        this.coins += amount;
-    }
-
+    /** Adds XP and returns true if level increased */
     public boolean addXp(int amount) {
-        this.xp += amount;
-        int oldLevel = this.level;
-        checkLevelUp();
-        return this.level > oldLevel; // true if level increased
-    }
-
-
-    private void checkLevelUp() {
-        int xpNeeded = this.level * 100;
-        while (this.xp >= xpNeeded) {
-            this.xp -= xpNeeded;
-            this.level++;
-            xpNeeded = this.level * 100;
+        if (level >= LevelProgression.getMaxLevel()) {
+            xp = LevelProgression.getMaxXpForLevel(level);
+            return false; // cannot level up further
         }
 
-        // --- Rank progression ---
-        if (this.level >= 20) this.rank = 3; // Hero
-        else if (this.level >= 15) this.rank = 2; // Elite
-        else if (this.level >= 10) this.rank = 1; // Warrior
-        else this.rank = 0; // Novice
+        xp += amount;
+        int oldLevel = level;
+        checkLevelUp();
+        return level > oldLevel;
     }
 
-    // Physique
-    public void addArmPoints(int pts) { this.armPoints += pts; }
-    public void addLegPoints(int pts) { this.legPoints += pts; }
-    public void addChestPoints(int pts) { this.chestPoints += pts; }
-    public void addBackPoints(int pts) { this.backPoints += pts; }
 
-    // Attributes
-    public void addStrength(int pts) { this.strength += pts; }
-    public void addEndurance(int pts) { this.endurance += pts; }
-    public void addAgility(int pts) { this.agility += pts; }
-    public void addFlexibility(int pts) { this.flexibility += pts; }
-    public void addStamina(int pts) { this.stamina += pts; }
+    public int getLevel() { return level; }
+    public int getRank() { return rank; }
 
-    // Optional: getters for UI
+    public String getPlayerId() { return playerId; }
+
+    // --- Free Points ---
+    public int getFreePhysiquePoints() { return freePhysiquePoints; }
+    public int getFreeAttributePoints() { return freeAttributePoints; }
+    public void addFreePhysiquePoints(int pts) { freePhysiquePoints += pts; }
+    public void addFreeAttributePoints(int pts) { freeAttributePoints += pts; }
+
+    // --- Physique ---
     public int getArmPoints() { return armPoints; }
     public int getLegPoints() { return legPoints; }
     public int getChestPoints() { return chestPoints; }
     public int getBackPoints() { return backPoints; }
+
+    public void addArmPoints(int pts) { armPoints += pts; }
+    public void addLegPoints(int pts) { legPoints += pts; }
+    public void addChestPoints(int pts) { chestPoints += pts; }
+    public void addBackPoints(int pts) { backPoints += pts; }
+
+    // --- Attributes ---
     public int getStrength() { return strength; }
     public int getEndurance() { return endurance; }
     public int getAgility() { return agility; }
     public int getFlexibility() { return flexibility; }
     public int getStamina() { return stamina; }
 
+    public void addStrength(int pts) { strength += pts; }
+    public void addEndurance(int pts) { endurance += pts; }
+    public void addAgility(int pts) { agility += pts; }
+    public void addFlexibility(int pts) { flexibility += pts; }
+    public void addStamina(int pts) { stamina += pts; }
+
+    // --- Level & Rank logic ---
+    private void checkLevelUp() {
+        while (level < LevelProgression.getMaxLevel() && xp >= LevelProgression.getMaxXpForLevel(level)) {
+            xp -= LevelProgression.getMaxXpForLevel(level);
+            level++;
+        }
+        if (level >= LevelProgression.getMaxLevel()) {
+            level = LevelProgression.getMaxLevel();
+            xp = LevelProgression.getMaxXpForLevel(level);
+        }
+        updateRank();
+    }
+
+    private void updateRank() {
+        if (level >= 20) rank = 3; // Hero
+        else if (level >= 15) rank = 2; // Elite
+        else if (level >= 10) rank = 1; // Warrior
+        else rank = 0; // Novice
+    }
+
+    public int getXpNeeded() {
+        if (level >= LevelProgression.getMaxLevel()) return 0;
+        return LevelProgression.getMaxXpForLevel(level) - xp;
+    }
+
+    // --- Utility ---
+    private String generatePlayerId() {
+        return String.valueOf(10000000 + (int)(Math.random() * 89999999));
+    }
+
+    // --- Setters for XP, Level, Rank ---
+    public void setXp(int xp) {
+        if (xp < 0) xp = 0;
+        this.xp = xp;
+        checkLevelUp(); // Ensure level and rank stay consistent
+    }
+
+    public void setLevel(int level) {
+        this.level = Math.min(level, LevelProgression.getMaxLevel());
+        checkLevelUp(); // Adjust XP and rank if needed
+    }
+
+    public void setRank(int rank) {
+        this.rank = Math.max(0, Math.min(rank, 3)); // 0=Novice, 3=Hero
+    }
 
 }

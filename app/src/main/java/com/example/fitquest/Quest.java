@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
-import android.widget.TextView;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -36,7 +35,9 @@ public class Quest {
 		RecyclerView recyclerView = view.findViewById(R.id.quest_recycler);
 		recyclerView.setLayoutManager(new LinearLayoutManager(context));
 
-		adapter = new QuestAdapter(context, QuestManager.getQuestsByCategory(context, QuestCategory.DAILY));
+		// Use public QuestManager method
+		List<QuestModel> dailyQuests = QuestManager.getByCategory(context, QuestCategory.DAILY);
+		adapter = new QuestAdapter(context, dailyQuests);
 		recyclerView.setAdapter(adapter);
 
 		setupTabButtons(view);
@@ -65,11 +66,13 @@ public class Quest {
 	}
 
 	private void showQuests(QuestCategory category) {
-		List<QuestModel> quests = QuestManager.getQuestsByCategory(context, category);
+		// Use public QuestManager method
+		List<QuestModel> quests = QuestManager.getByCategory(context, category);
 		adapter.updateQuests(quests);
 	}
 
 	public void show() {
+		// Use public QuestManager method
 		QuestManager.resetQuestsIfNeeded(context);
 		showQuests(currentCategory);
 		dialog.show();

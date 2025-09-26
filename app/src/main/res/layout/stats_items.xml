@@ -1,184 +1,238 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="8dp"
     android:background="#2D2D35">
 
-    <!-- PHYSIQUE -->
+    <!-- PHYSIQUE TITLE -->
     <TextView
         android:id="@+id/physique_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="PHYSIQUE: 99"
+        android:text="PHYSIQUE: 0"
         android:textSize="18sp"
         android:textColor="@android:color/white"
         android:background="#1E3A8A"
-        android:padding="8dp" />
+        android:padding="8dp"/>
 
     <!-- ARMS -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="4dp">
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/img_arms"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_arms"
+            android:contentDescription="Arms Icon"/>
 
         <TextView
+            android:id="@+id/txt_arms_label"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="ARMS"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"/>
 
-        <ProgressBar
-            android:id="@+id/bar_arms"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="0dp"
-            android:layout_weight="2"
-            android:layout_height="16dp"
-            android:max="20"
-            android:progress="10"
-            android:progressTint="@android:color/holo_blue_light" />
+        <TextView
+            android:id="@+id/txt_arms_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/plus_arms"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="+" />
+            android:text="+"/>
     </LinearLayout>
 
-    <!-- Repeat for LEGS, CHEST, BACK -->
+    <!-- LEGS -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="4dp">
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/img_legs"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_legs"
+            android:contentDescription="Legs Icon"/>
 
         <TextView
+            android:id="@+id/txt_legs_label"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="LEGS"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"/>
 
-        <ProgressBar
-            android:id="@+id/bar_legs"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="0dp"
-            android:layout_weight="2"
-            android:layout_height="16dp"
-            android:max="20"
-            android:progress="10"
-            android:progressTint="@android:color/holo_blue_light" />
+        <TextView
+            android:id="@+id/txt_legs_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/plus_legs"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="+" />
+            android:text="+"/>
     </LinearLayout>
 
+    <!-- CHEST -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="4dp">
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/img_chest"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_chest"
+            android:contentDescription="Chest Icon"/>
 
         <TextView
+            android:id="@+id/txt_chest_label"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="CHEST"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"/>
 
-        <ProgressBar
-            android:id="@+id/bar_chest" style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="0dp"
-            android:layout_weight="2"
-            android:layout_height="16dp"
-            android:max="20"
-            android:progress="10"
-            android:progressTint="@android:color/holo_blue_light" />
+        <TextView
+            android:id="@+id/txt_chest_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/plus_chest"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="+" />
+            android:text="+"/>
     </LinearLayout>
 
+    <!-- BACK -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="4dp">
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/img_back"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_back"
+            android:contentDescription="Back Icon"/>
 
         <TextView
+            android:id="@+id/txt_back_label"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="BACK"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"/>
 
-        <ProgressBar
-            android:id="@+id/bar_back" style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="0dp"
-            android:layout_weight="2"
-            android:layout_height="16dp"
-            android:max="20"
-            android:progress="10"
-            android:progressTint="@android:color/holo_blue_light" />
+        <TextView
+            android:id="@+id/txt_back_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/plus_back"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="+" />
+            android:text="+"/>
     </LinearLayout>
 
-    <!-- ATTRIBUTES -->
+    <!-- ATTRIBUTES TITLE -->
     <TextView
         android:id="@+id/attributes_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="ATTRIBUTES: 99"
+        android:text="ATTRIBUTES: 0"
         android:textSize="18sp"
         android:textColor="@android:color/white"
         android:background="#1E3A8A"
         android:padding="8dp"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"/>
 
     <!-- Strength -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" android:padding="4dp">
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/img_strength"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_strength"
+            android:contentDescription="Strength Icon"/>
 
         <TextView
+            android:id="@+id/txt_strength_label"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="STRENGTH"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"/>
 
         <TextView
             android:id="@+id/txt_strength"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="5"
+            android:text="0"
             android:textColor="@android:color/white"
-            android:paddingEnd="8dp" />
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/plus_strength"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="+" />
+            android:text="+"/>
     </LinearLayout>
 
     <!-- Endurance -->
@@ -186,28 +240,40 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="4dp">
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/img_endurance"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_endurance"
+            android:contentDescription="Endurance Icon"/>
 
         <TextView
+            android:id="@+id/txt_endurance_label"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="ENDURANCE"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"/>
 
         <TextView
             android:id="@+id/txt_endurance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="5"
+            android:text="0"
             android:textColor="@android:color/white"
-            android:paddingEnd="8dp" />
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/plus_endurance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="+" />
+            android:text="+"/>
     </LinearLayout>
 
     <!-- Agility -->
@@ -215,28 +281,40 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="4dp">
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/img_agility"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_agility"
+            android:contentDescription="Agility Icon"/>
 
         <TextView
+            android:id="@+id/txt_agility_label"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="AGILITY"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"/>
 
         <TextView
             android:id="@+id/txt_agility"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="5"
+            android:text="0"
             android:textColor="@android:color/white"
-            android:paddingEnd="8dp" />
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/plus_agility"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="+" />
+            android:text="+"/>
     </LinearLayout>
 
     <!-- Flexibility -->
@@ -244,28 +322,40 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="4dp">
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/img_flexibility"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_flexibility"
+            android:contentDescription="Flexibility Icon"/>
 
         <TextView
+            android:id="@+id/txt_flexibility_label"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="FLEXIBILITY"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"/>
 
         <TextView
             android:id="@+id/txt_flexibility"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="5"
+            android:text="0"
             android:textColor="@android:color/white"
-            android:paddingEnd="8dp" />
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/plus_flexibility"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="+" />
+            android:text="+"/>
     </LinearLayout>
 
     <!-- Stamina -->
@@ -273,36 +363,49 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="4dp">
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/img_stamina"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_stamina"
+            android:contentDescription="Stamina Icon"/>
 
         <TextView
+            android:id="@+id/txt_stamina_label"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="STAMINA"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"/>
 
         <TextView
             android:id="@+id/txt_stamina"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="5"
+            android:text="0"
             android:textColor="@android:color/white"
-            android:paddingEnd="8dp" />
+            android:textSize="16sp"
+            android:layout_marginEnd="8dp"/>
 
         <Button
             android:id="@+id/plus_stamina"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="+" />
+            android:text="+"/>
     </LinearLayout>
 
+    <!-- APPLY BUTTON -->
     <Button
         android:id="@+id/apply_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="APPLY"
         android:backgroundTint="@android:color/holo_orange_light"
-        android:layout_marginTop="12dp" />
-
+        android:textColor="@android:color/white"
+        android:layout_marginTop="16dp"/>
 </LinearLayout>

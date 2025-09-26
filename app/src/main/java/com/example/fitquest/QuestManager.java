@@ -60,8 +60,8 @@ public class QuestManager {
     // --- Report exercise result ---
     public static void reportExerciseResult(Context ctx, String exerciseType, int amount) {
         ensureLoaded(ctx);
-
         boolean changed = false;
+
         for (QuestModel q : quests) {
             if (q.isCompleted()) continue;
 
@@ -69,7 +69,7 @@ public class QuestManager {
             String lowerDesc  = q.getDescription() == null ? "" : q.getDescription().toLowerCase();
 
             if (lowerTitle.contains(exerciseType.toLowerCase()) || lowerDesc.contains(exerciseType.toLowerCase())) {
-                q.addProgress(amount); // only increment progress
+                q.addProgress(amount);
                 changed = true;
             }
         }
@@ -77,44 +77,21 @@ public class QuestManager {
         if (changed) persistAll(ctx);
     }
 
-
-    // --- Apply quest rewards ---
-    public static boolean applyRewards(Context ctx, QuestModel quest) {
-        AvatarModel avatar = AvatarManager.loadAvatarOffline(ctx);
-        if (avatar == null) return false;
-
-        QuestReward r = quest.getReward();
-        if (r == null) return false;
-
-        // Coins & XP
-        avatar.setCoins(avatar.getCoins() + r.getCoins());
-        boolean leveledUp = avatar.addXp(r.getXp());
-
-        // Body points
-        if (r.getArmPoints() > 0) avatar.addArmPoints(r.getArmPoints());
-        if (r.getLegPoints() > 0) avatar.addLegPoints(r.getLegPoints());
-
-        // Attribute points
-        CharacterStats stats = new CharacterStats(ctx);
-        stats.addPhysiquePoints(r.getArmPoints() + r.getLegPoints());
-        stats.addAttributePoints(r.getAttributePoints());
-
-        // Save avatar
-        AvatarManager.saveAvatarOffline(ctx, avatar);
-        AvatarManager.saveAvatarOnline(avatar);
-
-        // Mark quest completed
-        quest.complete();
-        persistAll(ctx);
-
-        return leveledUp;
-    }
-
     // --- Claim quest manually ---
     public static boolean claimQuest(Context ctx, QuestModel quest) {
         if (quest == null || !quest.isCompleted() || quest.isClaimed()) return false;
 
-        boolean leveledUp = applyRewards(ctx, quest);
+        // Apply rewards through QuestRewardManager
+        boolean leveledUp = QuestRewardManager.applyRewards(ctx, quest);
+
+        quest.setClaimed(true);
+        persistAll(ctx);
+
+        // Notify listener
+        if (progressListener != null) {
+            progressListener.onQuestCompleted(quest, leveledUp);
+        }
+
         return leveledUp;
     }
 
@@ -187,8 +164,8 @@ public class QuestManager {
                 new QuestReward(20,50,1,0,0,0,1,0), QuestCategory.DAILY,10,"pushups"));
         list.add(new QuestModel("q_daily_squat_15", "Execute 15 Squats", "Do 15 squats in one session",
                 new QuestReward(15,40,0,1,0,0,1,0), QuestCategory.DAILY,15,"squats"));
-        list.add(new QuestModel("q_daily_plank_60", "Hold Plank 60 Seconds", "Maintain a plank for 60 seconds",
-                new QuestReward(25,60,0,0,1,1,1,1), QuestCategory.DAILY,60,"plank"));
+        list.add(new QuestModel("q_daily_plank_30", "Hold Plank 30 Seconds", "Maintain a plank for 30 seconds",
+                new QuestReward(25,60,0,0,1,1,1,1), QuestCategory.DAILY,30,"plank"));
         list.add(new QuestModel("q_daily_crunches_20", "Do 20 Crunches", "Complete 20 crunches in one session",
                 new QuestReward(15,40,0,0,1,1,1,0), QuestCategory.DAILY,20,"crunches"));
 
@@ -205,17 +182,6 @@ public class QuestManager {
                 new QuestReward(150,250,0,0,0,0,0,0), QuestCategory.MONTHLY,50,"pushups"));
 
         return list;
-    }
-
-    public static List<QuestModel> getQuestsByCategory(Context ctx, QuestCategory category) {
-        ensureLoaded(ctx); // lazy-load quests if not already loaded
-        List<QuestModel> result = new ArrayList<>();
-        for (QuestModel q : quests) {
-            if (q.getCategory() == category) {
-                result.add(q);
-            }
-        }
-        return result;
     }
 
 }

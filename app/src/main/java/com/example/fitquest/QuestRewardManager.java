@@ -16,7 +16,10 @@ public class QuestRewardManager {
     private static final String TAG = "QuestRewardManager";
 
     /**
-     * Apply quest rewards to the avatar and character stats
+     * Apply quest rewards directly to the AvatarModel
+     * without using CharacterStats.
+     * @param ctx Context
+     * @param quest Quest to apply rewards for
      * @return true if avatar leveled up
      */
     public static boolean applyRewards(Context ctx, QuestModel quest) {
@@ -32,22 +35,21 @@ public class QuestRewardManager {
             return false;
         }
 
-        // Apply coins & XP
+        // Apply coins and XP
         avatar.setCoins(avatar.getCoins() + reward.getCoins());
         boolean leveledUp = avatar.addXp(reward.getXp());
 
-        // Apply body-part points
-        CharacterStats stats = new CharacterStats(ctx);
-        stats.addArmPoints(reward.getArmPoints());
-        stats.addLegPoints(reward.getLegPoints());
-        stats.addChestPoints(reward.getChestPoints());
-        stats.addBackPoints(reward.getBackPoints());
+        // Apply allocated body-part points directly
+        avatar.addArmPoints(reward.getArmPoints());
+        avatar.addLegPoints(reward.getLegPoints());
+        avatar.addChestPoints(reward.getChestPoints());
+        avatar.addBackPoints(reward.getBackPoints());
 
-        // Apply free physique & attribute points
-        stats.addPhysiquePoints(reward.getPhysiquePoints());
-        stats.addAttributePoints(reward.getAttributePoints());
+        // Add free points for user allocation
+        avatar.addFreePhysiquePoints(reward.getPhysiquePoints());
+        avatar.addFreeAttributePoints(reward.getAttributePoints());
 
-        // Save avatar
+        // Save avatar immediately
         AvatarManager.saveAvatarOffline(ctx, avatar);
         AvatarManager.saveAvatarOnline(avatar);
 
@@ -69,12 +71,12 @@ public class QuestRewardManager {
                 reward.getXp() + " XP, +" + reward.getArmPoints() + " Arms, +" +
                 reward.getLegPoints() + " Legs, +" + reward.getChestPoints() + " Chest, +" +
                 reward.getBackPoints() + " Back, +" + reward.getPhysiquePoints() +
-                " Physique, +" + reward.getAttributePoints() + " Attributes");
+                " Free Physique Points, +" + reward.getAttributePoints() + " Free Attribute Points");
 
         return leveledUp;
     }
 
-    /** Show rewards popup */
+    /** Show rewards summary popup */
     public static void showRewardPopup(Context ctx, QuestReward reward) {
         AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
         View view = LayoutInflater.from(ctx).inflate(R.layout.dialog_rewards, null);
@@ -82,17 +84,17 @@ public class QuestRewardManager {
         TextView tvSummary = view.findViewById(R.id.tvRewardSummary);
         Button btnOk = view.findViewById(R.id.btnOk);
 
-        String summary = "";
-        if (reward.getXp() > 0) summary += "+ " + reward.getXp() + " XP\n";
-        if (reward.getCoins() > 0) summary += "+ " + reward.getCoins() + " Coins\n";
-        if (reward.getArmPoints() > 0) summary += "+ " + reward.getArmPoints() + " Arm Point(s)\n";
-        if (reward.getLegPoints() > 0) summary += "+ " + reward.getLegPoints() + " Leg Point(s)\n";
-        if (reward.getChestPoints() > 0) summary += "+ " + reward.getChestPoints() + " Chest Point(s)\n";
-        if (reward.getBackPoints() > 0) summary += "+ " + reward.getBackPoints() + " Back Point(s)\n";
-        if (reward.getPhysiquePoints() > 0) summary += "+ " + reward.getPhysiquePoints() + " Physique Point(s)\n";
-        if (reward.getAttributePoints() > 0) summary += "+ " + reward.getAttributePoints() + " Attribute Point(s)\n";
+        StringBuilder summary = new StringBuilder();
+        if (reward.getXp() > 0) summary.append("+ ").append(reward.getXp()).append(" XP\n");
+        if (reward.getCoins() > 0) summary.append("+ ").append(reward.getCoins()).append(" Coins\n");
+        if (reward.getArmPoints() > 0) summary.append("+ ").append(reward.getArmPoints()).append(" Arm Point(s)\n");
+        if (reward.getLegPoints() > 0) summary.append("+ ").append(reward.getLegPoints()).append(" Leg Point(s)\n");
+        if (reward.getChestPoints() > 0) summary.append("+ ").append(reward.getChestPoints()).append(" Chest Point(s)\n");
+        if (reward.getBackPoints() > 0) summary.append("+ ").append(reward.getBackPoints()).append(" Back Point(s)\n");
+        if (reward.getPhysiquePoints() > 0) summary.append("+ ").append(reward.getPhysiquePoints()).append(" Free Physique Point(s)\n");
+        if (reward.getAttributePoints() > 0) summary.append("+ ").append(reward.getAttributePoints()).append(" Free Attribute Point(s)\n");
 
-        tvSummary.setText(summary.trim());
+        tvSummary.setText(summary.toString().trim());
 
         AlertDialog dialog = builder.setView(view).create();
         btnOk.setOnClickListener(v -> dialog.dismiss());

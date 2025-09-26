@@ -65,42 +65,47 @@ public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHol
         holder.progressPercent.setText(percent + "%");
 
         // Button logic
-        holder.actionButton.setEnabled(!quest.isCompleted());
-        holder.actionButton.setText(quest.isCompleted() ? "COMPLETED" : "DO QUEST");
+        if (!quest.isCompleted()) {
+            holder.actionButton.setText("DO QUEST");
+        } else if (quest.isCompleted() && !quest.isClaimed()) {
+            holder.actionButton.setText("CLAIM");
+        } else {
+            holder.actionButton.setText("COMPLETED");
+            holder.actionButton.setEnabled(false);
+        }
+
 
         holder.actionButton.setOnClickListener(v -> {
             if (!quest.isCompleted()) {
-                // Increment progress
-                //quest.addProgress(1);
-
+                // Launch exercise activity
                 Context ctx = v.getContext();
                 Intent intent = new Intent(ctx, ExerciseTrackingActivity.class);
                 intent.putExtra("EXERCISE_TYPE", quest.getExerciseType());
                 intent.putExtra("MAX_PROGRESS", quest.getTarget());
                 intent.putExtra("DIFFICULTY_LEVEL", "beginner"); // optional
-                intent.putExtra("QUEST_ID", quest.getId()); // this links the quest for auto-claim
+                intent.putExtra("QUEST_ID", quest.getId()); // link quest for tracking
                 ctx.startActivity(intent);
 
-                // Check if quest completed
-                if (quest.isCompleted()) {
-                    // Apply rewards
-                    boolean leveledUp = new QuestRewardManager().applyRewards(context, quest);
+                // Do NOT call applyRewards or auto-claim here
+                // Rewards will only be claimed manually in the dialog
+            } else if (quest.isCompleted() && !quest.isClaimed()) {
+                // Claim button pressed
+                boolean leveledUp = QuestManager.claimQuest(context, quest);
 
-                    // Show reward popup
-                    new QuestRewardManager().showRewardPopup(context, quest.getReward());
+                // Show reward popup
+                new QuestRewardManager().showRewardPopup(context, quest.getReward());
 
-                    // Optionally show level-up
-                    if (leveledUp) {
-                        new QuestRewardManager().showLevelUpPopup(context,
-                                AvatarManager.loadAvatarOffline(context).getLevel(),
-                                AvatarManager.loadAvatarOffline(context).getRank());
-                    }
+                // Optionally show level-up
+                if (leveledUp) {
+                    AvatarModel avatar = AvatarManager.loadAvatarOffline(context);
+                    new QuestRewardManager().showLevelUpPopup(context, avatar.getLevel(), avatar.getRank());
                 }
 
-                // Refresh the item
+                // Refresh item
                 notifyItemChanged(position);
             }
         });
+
     }
 
     @Override

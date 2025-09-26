@@ -30,6 +30,7 @@ public class QuestModel implements Serializable {
         this.target = Math.max(1, target);
         this.progress = 0;
         this.isCompleted = false;
+        this.claimed = false;
         this.lastCompletedTime = 0;
         this.exerciseType = exerciseType;
     }
@@ -71,7 +72,11 @@ public class QuestModel implements Serializable {
         isCompleted = false;
         progress = 0;
         lastCompletedTime = 0;
+        this.claimed = false;
     }
+
+
+    // Reset quest
 
     public int getProgressPercentage() {
         if (target <= 0) return isCompleted ? 100 : 0;

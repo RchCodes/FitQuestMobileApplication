@@ -232,21 +232,21 @@ public class ExerciseTrackingActivity extends AppCompatActivity implements Exerc
         QuestManager.reportExerciseResult(this, exerciseType, 0);
 
         // Auto-apply rewards only for the specific questId if provided and quest became completed
-        if (questId != null && !questId.isEmpty()) {
-            for (QuestModel q : QuestManager.getAll(this)) {
-                if (questId.equals(q.getId()) && q.isCompleted() && !q.isClaimed()) {
-                    boolean leveled = QuestManager.claimQuest(this, q);
-                    QuestRewardManager.showRewardPopup(this, q.getReward());
-                    if (leveled) {
-                        AvatarModel avatar = AvatarManager.loadAvatarOffline(this);
-                        if (avatar != null) QuestRewardManager.showLevelUpPopup(this, avatar.getLevel(), avatar.getRank());
-                    }
-                    break;
-                }
-            }
-        }
+//        if (questId != null && !questId.isEmpty()) {
+//            for (QuestModel q : QuestManager.getAll(this)) {
+//                if (questId.equals(q.getId()) && q.isCompleted() && !q.isClaimed()) {
+//                    boolean leveled = QuestManager.claimQuest(this, q);
+//                    QuestRewardManager.showRewardPopup(this, q.getReward());
+//                    if (leveled) {
+//                        AvatarModel avatar = AvatarManager.loadAvatarOffline(this);
+//                        if (avatar != null) QuestRewardManager.showLevelUpPopup(this, avatar.getLevel(), avatar.getRank());
+//                    }
+//                    break;
+//                }
+//            }
+//        }
 
-        new Handler(Looper.getMainLooper()).postDelayed(this::finish, 1400);
+        new Handler(Looper.getMainLooper()).postDelayed(this::finish, 5000);
     }
 
     private String capitalize(String s) {

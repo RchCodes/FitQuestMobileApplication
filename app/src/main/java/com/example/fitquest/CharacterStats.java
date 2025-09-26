@@ -1,180 +1,132 @@
 package com.example.fitquest;
 
+import android.app.Activity;
 import android.app.Dialog;
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class CharacterStats {
 
     private final Dialog dialog;
-    private final Context context;
+    private final AvatarModel avatar;
 
-    private int freePhysiquePoints = 1;
-    private int freeAttributePoints = 1;
-
-    private int armPoints = 0;
-    private int legPoints = 0;
-    private int chestPoints = 0;
-    private int backPoints = 0;
-
-    private ProgressBar barArms, barLegs, barChest, barBack;
+    // UI elements
+    private TextView txtArm, txtLeg, txtChest, txtBack;
     private TextView txtStrength, txtEndurance, txtAgility, txtFlexibility, txtStamina;
     private TextView physiqueTitle, attributesTitle;
 
-    public CharacterStats(Context context) {
-        this.context = context;
+    public CharacterStats(Activity activity, AvatarModel avatar) {
+        this.avatar = avatar;
 
-        LayoutInflater inflater = LayoutInflater.from(context);
-        View popupView = inflater.inflate(R.layout.character_stats, null);
+        View popupView = LayoutInflater.from(activity).inflate(R.layout.character_stats, null);
 
-        // Dialog setup
-        dialog = new Dialog(context);
+        dialog = new Dialog(activity);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(popupView);
         dialog.setCancelable(true);
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
 
-        // --- PHYSIQUE ---
+        // Titles
         physiqueTitle = popupView.findViewById(R.id.physique_title);
-        barArms = popupView.findViewById(R.id.bar_arms);
-        barLegs = popupView.findViewById(R.id.bar_legs);
-        barChest = popupView.findViewById(R.id.bar_chest);
-        barBack = popupView.findViewById(R.id.bar_back);
-
-        setupPhysiqueButton(popupView.findViewById(R.id.plus_arms), barArms, "Arms", "arm");
-        setupPhysiqueButton(popupView.findViewById(R.id.plus_legs), barLegs, "Legs", "leg");
-        setupPhysiqueButton(popupView.findViewById(R.id.plus_chest), barChest, "Chest", "chest");
-        setupPhysiqueButton(popupView.findViewById(R.id.plus_back), barBack, "Back", "back");
-
-        // --- ATTRIBUTES ---
         attributesTitle = popupView.findViewById(R.id.attributes_title);
+
+        // Physique TextViews
+        txtArm = popupView.findViewById(R.id.txt_arms_value);
+        txtLeg = popupView.findViewById(R.id.txt_legs_value);
+        txtChest = popupView.findViewById(R.id.txt_chest_value);
+        txtBack = popupView.findViewById(R.id.txt_back_value);
+
+        setupPhysiqueButton(popupView.findViewById(R.id.plus_arms), "arm");
+        setupPhysiqueButton(popupView.findViewById(R.id.plus_legs), "leg");
+        setupPhysiqueButton(popupView.findViewById(R.id.plus_chest), "chest");
+        setupPhysiqueButton(popupView.findViewById(R.id.plus_back), "back");
+
+        // Attribute TextViews
         txtStrength = popupView.findViewById(R.id.txt_strength);
         txtEndurance = popupView.findViewById(R.id.txt_endurance);
         txtAgility = popupView.findViewById(R.id.txt_agility);
         txtFlexibility = popupView.findViewById(R.id.txt_flexibility);
         txtStamina = popupView.findViewById(R.id.txt_stamina);
 
-        setupAttributeButton(popupView.findViewById(R.id.plus_strength), txtStrength, "Strength");
-        setupAttributeButton(popupView.findViewById(R.id.plus_endurance), txtEndurance, "Endurance");
-        setupAttributeButton(popupView.findViewById(R.id.plus_agility), txtAgility, "Agility");
-        setupAttributeButton(popupView.findViewById(R.id.plus_flexibility), txtFlexibility, "Flexibility");
-        setupAttributeButton(popupView.findViewById(R.id.plus_stamina), txtStamina, "Stamina");
+        setupAttributeButton(popupView.findViewById(R.id.plus_strength), "strength");
+        setupAttributeButton(popupView.findViewById(R.id.plus_endurance), "endurance");
+        setupAttributeButton(popupView.findViewById(R.id.plus_agility), "agility");
+        setupAttributeButton(popupView.findViewById(R.id.plus_flexibility), "flexibility");
+        setupAttributeButton(popupView.findViewById(R.id.plus_stamina), "stamina");
 
-        loadProfile();
-
-        // Buttons
+        // Apply & Close buttons
         Button apply = popupView.findViewById(R.id.apply_button);
         if (apply != null) apply.setOnClickListener(v -> {
-            saveStats();
-            Toast.makeText(context, "Stats Applied!", Toast.LENGTH_SHORT).show();
+            AvatarManager.saveAvatarOffline(activity, avatar);
+            AvatarManager.saveAvatarOnline(avatar);
+            Toast.makeText(activity, "Stats Applied!", Toast.LENGTH_SHORT).show();
         });
 
         Button close = popupView.findViewById(R.id.close_button);
         if (close != null) close.setOnClickListener(v -> dialog.dismiss());
 
-        updateTitles();
+        updateUI();
     }
 
-    private void setupPhysiqueButton(Button button, ProgressBar bar, String label, String bodyPart) {
+    private void setupPhysiqueButton(Button button, String type) {
         button.setOnClickListener(v -> {
-            if (freePhysiquePoints <= 0) {
-                Toast.makeText(context, "No physique points left", Toast.LENGTH_SHORT).show();
+            if (avatar.getFreePhysiquePoints() <= 0) {
+                Toast.makeText(dialog.getContext(), "No physique points left", Toast.LENGTH_SHORT).show();
                 return;
             }
-            int current = bar.getProgress();
-            if (current >= bar.getMax()) {
-                Toast.makeText(context, label + " is maxed out", Toast.LENGTH_SHORT).show();
-                return;
+            switch (type) {
+                case "arm": avatar.addArmPoints(1); break;
+                case "leg": avatar.addLegPoints(1); break;
+                case "chest": avatar.addChestPoints(1); break;
+                case "back": avatar.addBackPoints(1); break;
             }
-            bar.setProgress(current + 1);
-            freePhysiquePoints--;
-            // Update internal fields
-            switch (bodyPart) {
-                case "arm": armPoints++; break;
-                case "leg": legPoints++; break;
-                case "chest": chestPoints++; break;
-                case "back": backPoints++; break;
-            }
-            updateTitles();
+            avatar.addFreePhysiquePoints(-1);
+            updateUI();
         });
     }
 
-    private void setupAttributeButton(Button button, TextView textView, String label) {
+    private void setupAttributeButton(Button button, String type) {
         button.setOnClickListener(v -> {
-            if (freeAttributePoints <= 0) {
-                Toast.makeText(context, "No attribute points left", Toast.LENGTH_SHORT).show();
+            if (avatar.getFreeAttributePoints() <= 0) {
+                Toast.makeText(dialog.getContext(), "No attribute points left", Toast.LENGTH_SHORT).show();
                 return;
             }
-            int current = Integer.parseInt(textView.getText().toString());
-            textView.setText(String.valueOf(current + 1));
-            freeAttributePoints--;
-            updateTitles();
+            switch (type) {
+                case "strength": avatar.addStrength(1); break;
+                case "endurance": avatar.addEndurance(1); break;
+                case "agility": avatar.addAgility(1); break;
+                case "flexibility": avatar.addFlexibility(1); break;
+                case "stamina": avatar.addStamina(1); break;
+            }
+            avatar.addFreeAttributePoints(-1);
+            updateUI();
         });
     }
 
-    public void addArmPoints(int points) { armPoints += points; saveStats(); }
-    public void addLegPoints(int points) { legPoints += points; saveStats(); }
-    public void addChestPoints(int points) { chestPoints += points; saveStats(); }
-    public void addBackPoints(int points) { backPoints += points; saveStats(); }
+    /** Refresh all UI fields from avatar */
+    private void updateUI() {
+        txtArm.setText(String.valueOf(avatar.getArmPoints()));
+        txtLeg.setText(String.valueOf(avatar.getLegPoints()));
+        txtChest.setText(String.valueOf(avatar.getChestPoints()));
+        txtBack.setText(String.valueOf(avatar.getBackPoints()));
 
-    public void addPhysiquePoints(int points) { freePhysiquePoints += points; updateTitles(); }
-    public void addAttributePoints(int points) { freeAttributePoints += points; updateTitles(); }
+        txtStrength.setText(String.valueOf(avatar.getStrength()));
+        txtEndurance.setText(String.valueOf(avatar.getEndurance()));
+        txtAgility.setText(String.valueOf(avatar.getAgility()));
+        txtFlexibility.setText(String.valueOf(avatar.getFlexibility()));
+        txtStamina.setText(String.valueOf(avatar.getStamina()));
 
-    public int getArmPoints() { return armPoints; }
-    public int getLegPoints() { return legPoints; }
-    public int getChestPoints() { return chestPoints; }
-    public int getBackPoints() { return backPoints; }
-
-    private void loadProfile() {
-        SharedPreferences prefs = context.getSharedPreferences("FitQuestPrefs", Context.MODE_PRIVATE);
-        armPoints = prefs.getInt("arms", 0);
-        legPoints = prefs.getInt("legs", 0);
-        chestPoints = prefs.getInt("chest", 0);
-        backPoints = prefs.getInt("back", 0);
-
-        barArms.setProgress(armPoints);
-        barLegs.setProgress(legPoints);
-        barChest.setProgress(chestPoints);
-        barBack.setProgress(backPoints);
-
-        txtStrength.setText(String.valueOf(prefs.getInt("strength", 0)));
-        txtEndurance.setText(String.valueOf(prefs.getInt("endurance", 0)));
-        txtAgility.setText(String.valueOf(prefs.getInt("agility", 0)));
-        txtFlexibility.setText(String.valueOf(prefs.getInt("flexibility", 0)));
-        txtStamina.setText(String.valueOf(prefs.getInt("stamina", 0)));
+        physiqueTitle.setText("PHYSIQUE    Free: " + avatar.getFreePhysiquePoints());
+        attributesTitle.setText("ATTRIBUTES    Free: " + avatar.getFreeAttributePoints());
     }
 
-    private void updateTitles() {
-        physiqueTitle.setText("PHYSIQUE    Free: " + freePhysiquePoints);
-        attributesTitle.setText("ATTRIBUTES    Free: " + freeAttributePoints);
-    }
-
-    private void saveStats() {
-        SharedPreferences prefs = context.getSharedPreferences("FitQuestPrefs", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-
-        editor.putInt("arms", armPoints);
-        editor.putInt("legs", legPoints);
-        editor.putInt("chest", chestPoints);
-        editor.putInt("back", backPoints);
-
-        editor.putInt("strength", Integer.parseInt(txtStrength.getText().toString()));
-        editor.putInt("endurance", Integer.parseInt(txtEndurance.getText().toString()));
-        editor.putInt("agility", Integer.parseInt(txtAgility.getText().toString()));
-        editor.putInt("flexibility", Integer.parseInt(txtFlexibility.getText().toString()));
-        editor.putInt("stamina", Integer.parseInt(txtStamina.getText().toString()));
-
-        editor.apply();
-    }
-
+    /** Show dialog */
     public void show() {
+        updateUI();
         dialog.show();
     }
 }

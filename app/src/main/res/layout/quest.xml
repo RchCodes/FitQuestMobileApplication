@@ -8,7 +8,9 @@
     android:elevation="12dp"
     android:layout_gravity="center"
     android:minWidth="350dp"
-    android:maxWidth="400dp">
+    android:maxWidth="400dp"
+    android:clickable="false"
+    android:focusable="false">
 
     <!-- Title Header -->
     <LinearLayout
