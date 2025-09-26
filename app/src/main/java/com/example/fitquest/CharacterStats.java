@@ -5,7 +5,7 @@ import android.app.Dialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -59,20 +59,21 @@ public class CharacterStats {
         setupAttributeButton(popupView.findViewById(R.id.plus_stamina), "stamina");
 
         // Apply & Close buttons
-        Button apply = popupView.findViewById(R.id.apply_button);
+        View apply = popupView.findViewById(R.id.apply_button);
         if (apply != null) apply.setOnClickListener(v -> {
             AvatarManager.saveAvatarOffline(activity, avatar);
             AvatarManager.saveAvatarOnline(avatar);
             Toast.makeText(activity, "Stats Applied!", Toast.LENGTH_SHORT).show();
         });
 
-        Button close = popupView.findViewById(R.id.close_button);
+        View close = popupView.findViewById(R.id.close_button);
         if (close != null) close.setOnClickListener(v -> dialog.dismiss());
 
         updateUI();
     }
 
-    private void setupPhysiqueButton(Button button, String type) {
+    private void setupPhysiqueButton(View button, String type) {
+        if (button == null) return;
         button.setOnClickListener(v -> {
             if (avatar.getFreePhysiquePoints() <= 0) {
                 Toast.makeText(dialog.getContext(), "No physique points left", Toast.LENGTH_SHORT).show();
@@ -89,7 +90,8 @@ public class CharacterStats {
         });
     }
 
-    private void setupAttributeButton(Button button, String type) {
+    private void setupAttributeButton(View button, String type) {
+        if (button == null) return;
         button.setOnClickListener(v -> {
             if (avatar.getFreeAttributePoints() <= 0) {
                 Toast.makeText(dialog.getContext(), "No attribute points left", Toast.LENGTH_SHORT).show();

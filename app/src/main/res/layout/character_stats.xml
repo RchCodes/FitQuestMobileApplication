@@ -9,63 +9,62 @@
     android:background="#80000000"
     android:padding="16dp">
 
-<androidx.cardview.widget.CardView
-android:id="@+id/card_stats"
-android:layout_width="match_parent"
-android:layout_height="0dp"
-android:layout_weight="1"
-android:foreground="?attr/selectableItemBackground"
-app:cardElevation="8dp"
-app:cardCornerRadius="12dp">
-
-<LinearLayout
+    <androidx.cardview.widget.CardView
+    android:id="@+id/card_stats"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="12dp">
+    android:layout_height="0dp"
+    android:layout_weight="1"
+    android:foreground="?attr/selectableItemBackground"
+    app:cardElevation="8dp"
+    app:cardCornerRadius="12dp">
 
-    <!-- HEADER -->
-    <TextView
-        android:id="@+id/stats_header"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="STATS"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/white"
-        android:background="#B91C1C"
-        android:padding="10dp"/>
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:padding="12dp">
 
-    <!-- Scrollable stats items -->
-    <ScrollView
-        android:id="@+id/scroll_stats"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#1E40AF"
-        android:padding="10dp">
-
-        <LinearLayout
+        <!-- HEADER -->
+        <TextView
+            android:id="@+id/stats_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:text="STATS"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:background="#B91C1C"
+            android:padding="10dp"/>
 
-            <include layout="@layout/stats_items" />
+        <!-- Scrollable stats items -->
+        <ScrollView
+            android:id="@+id/scroll_stats"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="#1E40AF"
+            android:padding="10dp">
 
-        </LinearLayout>
-    </ScrollView>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-    <!-- Close button -->
-    <Button
-        android:id="@+id/close_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="CLOSE"
-        android:textColor="@android:color/white"
-        android:backgroundTint="#EF4444"
-        android:layout_marginBottom="30dp"/>
+                <include layout="@layout/stats_items" />
 
-</LinearLayout>
-</androidx.cardview.widget.CardView>
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- Close button -->
+        <Button
+            android:id="@+id/close_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="CLOSE"
+            android:textColor="@android:color/white"
+            android:backgroundTint="#EF4444"
+            android:layout_marginBottom="30dp"/>
 
     </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</LinearLayout>
