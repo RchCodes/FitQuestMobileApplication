@@ -26,6 +26,11 @@ public class AvatarModel {
     private int xp;              // experience points
     private int level;           // player level
 
+    private int armPoints, legPoints, chestPoints, backPoints;
+
+    // ATTRIBUTES
+    private int strength, endurance, agility, flexibility, stamina;
+
     // New field for rank
     private int rank; // 0=Novice, 1=Warrior, 2=Elite, 3=Hero
 
@@ -130,4 +135,57 @@ public class AvatarModel {
     private String generatePlayerId() {
         return String.valueOf(10000000 + (int)(Math.random() * 89999999)); // 8-digit random ID
     }
+
+    public void addCoins(int amount) {
+        this.coins += amount;
+    }
+
+    public boolean addXp(int amount) {
+        this.xp += amount;
+        int oldLevel = this.level;
+        checkLevelUp();
+        return this.level > oldLevel; // true if level increased
+    }
+
+
+    private void checkLevelUp() {
+        int xpNeeded = this.level * 100;
+        while (this.xp >= xpNeeded) {
+            this.xp -= xpNeeded;
+            this.level++;
+            xpNeeded = this.level * 100;
+        }
+
+        // --- Rank progression ---
+        if (this.level >= 20) this.rank = 3; // Hero
+        else if (this.level >= 15) this.rank = 2; // Elite
+        else if (this.level >= 10) this.rank = 1; // Warrior
+        else this.rank = 0; // Novice
+    }
+
+    // Physique
+    public void addArmPoints(int pts) { this.armPoints += pts; }
+    public void addLegPoints(int pts) { this.legPoints += pts; }
+    public void addChestPoints(int pts) { this.chestPoints += pts; }
+    public void addBackPoints(int pts) { this.backPoints += pts; }
+
+    // Attributes
+    public void addStrength(int pts) { this.strength += pts; }
+    public void addEndurance(int pts) { this.endurance += pts; }
+    public void addAgility(int pts) { this.agility += pts; }
+    public void addFlexibility(int pts) { this.flexibility += pts; }
+    public void addStamina(int pts) { this.stamina += pts; }
+
+    // Optional: getters for UI
+    public int getArmPoints() { return armPoints; }
+    public int getLegPoints() { return legPoints; }
+    public int getChestPoints() { return chestPoints; }
+    public int getBackPoints() { return backPoints; }
+    public int getStrength() { return strength; }
+    public int getEndurance() { return endurance; }
+    public int getAgility() { return agility; }
+    public int getFlexibility() { return flexibility; }
+    public int getStamina() { return stamina; }
+
+
 }

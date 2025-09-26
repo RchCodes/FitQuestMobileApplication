@@ -146,25 +146,25 @@
             android:scaleType="fitXY"/>
 
         <ImageView
-            android:id="@+id/hairOutlineLayer"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="fitXY"/>
-
-        <ImageView
             android:id="@+id/hairFillLayer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitXY"/>
 
         <ImageView
-            android:id="@+id/eyesOutlineLayer"
+            android:id="@+id/hairOutlineLayer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitXY"/>
 
         <ImageView
             android:id="@+id/eyesFillLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/eyesOutlineLayer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitXY"/>

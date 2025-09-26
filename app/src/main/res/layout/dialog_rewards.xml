@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@drawable/bg_reward_popup"
+    android:gravity="center">
+
+    <TextView
+        android:id="@+id/tvRewardTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rewards Claimed!"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:paddingBottom="12dp"/>
+
+    <TextView
+        android:id="@+id/tvRewardSummary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="You gained +50 XP, +10 Coins"
+        android:textSize="16sp"
+        android:gravity="center"/>
+
+    <Button
+        android:id="@+id/btnOk"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="OK"
+        android:layout_marginTop="16dp"/>
+</LinearLayout>

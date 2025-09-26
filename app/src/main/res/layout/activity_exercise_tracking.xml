@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Permission Request Button (overlay) -->
+    <!-- Permission Request Button (overlay) - hidden by default -->
     <LinearLayout
         android:id="@+id/permission_layout"
         android:layout_width="match_parent"
@@ -25,7 +25,7 @@
         android:orientation="vertical"
         android:gravity="center"
         android:background="#80000000"
-        android:visibility="visible">
+        android:visibility="gone">
 
         <TextView
             android:layout_width="wrap_content"
@@ -54,7 +54,6 @@
             android:background="@android:color/holo_blue_dark"
             android:textColor="@android:color/white"
             android:padding="12dp" />
-
     </LinearLayout>
 
     <!-- Exercise Instructions (top center) -->

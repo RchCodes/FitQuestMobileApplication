@@ -79,25 +79,25 @@
             android:scaleType="fitCenter" />
 
         <ImageView
-            android:id="@+id/hairOutlineLayer"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="fitCenter" />
-
-        <ImageView
             android:id="@+id/hairFillLayer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitCenter" />
 
         <ImageView
-            android:id="@+id/eyesOutlineLayer"
+            android:id="@+id/hairOutlineLayer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitCenter" />
 
         <ImageView
             android:id="@+id/eyesFillLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitCenter" />
+
+        <ImageView
+            android:id="@+id/eyesOutlineLayer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitCenter" />
@@ -127,7 +127,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toTopOf="@id/btnCreate"
         android:layout_marginTop="30dp"
-        android:layout_marginBottom="40dp">
+        android:layout_marginBottom="60dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -349,12 +349,6 @@
                 </LinearLayout>
 
                 <!-- Lips -->
-                <ImageButton
-                    android:id="@+id/btnLipsRight"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    android:background="@android:color/transparent"
-                    android:src="@drawable/ic_arrow_right" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -380,6 +374,13 @@
                         android:textColor="@android:color/white"
                         android:textSize="14sp"/>
 
+                    <ImageButton
+                        android:id="@+id/btnLipsRight"
+                        android:layout_width="29dp"
+                        android:layout_height="35dp"
+                        android:background="@android:color/transparent"
+                        android:src="@drawable/ic_arrow_right" />
+
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -391,7 +392,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_end="16dp" />
+        app:layout_constraintGuide_end="30dp" />
 
     <Button
         android:id="@+id/btnCreate"

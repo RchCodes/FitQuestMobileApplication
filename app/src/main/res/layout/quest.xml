@@ -82,20 +82,15 @@
             android:layout_marginStart="4dp" />
     </LinearLayout>
 
-    <!-- Quest List Container -->
-    <ScrollView
+    <!-- Quest List Recycler -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/quest_recycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:maxHeight="400dp"
-        android:background="@android:color/white">
-
-        <LinearLayout
-            android:id="@+id/quest_list"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="12dp" />
-
-    </ScrollView>
+        android:background="@android:color/white"
+        android:overScrollMode="never"
+        android:nestedScrollingEnabled="false"
+        android:padding="12dp" />
 
 </LinearLayout>

@@ -10,376 +10,220 @@ import com.google.mlkit.vision.pose.PoseLandmark;
 import static java.lang.Math.atan2;
 
 public class ExerciseDetector {
-    private final Context context;
-    private final Handler handler;
-    
-    // Exercise state
+    public interface ExerciseListener {
+        void onRepCountChanged(int currentReps, int target);
+        void onPlankTimeUpdated(long seconds, long requiredSeconds);
+        void onFeedbackUpdated(String feedback);
+        void onExerciseCompleted(String summaryMessage);
+    }
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private ExerciseListener listener;
+    private Context context;
+
     private String exerciseType = "squats";
     private String difficultyLevel = "beginner";
-    private int targetReps = 10;
+    private int target = 10;
     private int currentReps = 0;
-    private boolean exerciseCompleted = false;
-    
-    // Exercise-specific states
-    private boolean isSquatting = false;
-    private boolean isPlanking = false;
-    private boolean isPushupDown = false;
-    private boolean isCrunching = false;
-    private boolean isLungingDown = false;
-    
-    // Plank timing
-    private long plankStartTime = 0;
-    private long plankTotalTime = 0;
-    
-    // Cooldown
+    private boolean completed = false;
+
+    // states to ensure full cycle down->up
+    private boolean downState = false; // generic "down" or "low" state
     private long lastRepTime = 0;
-    private static final long REP_COOLDOWN_MS = 1500;
-    
-    // Feedback text
-    private String feedbackText = "Ready to start!";
+    private static final long DEFAULT_COOLDOWN = 800; // ms
 
-    public ExerciseDetector(Context context, String difficultyLevel, int targetReps) {
-        this.context = context;
-        this.difficultyLevel = difficultyLevel;
-        this.targetReps = targetReps;
-        this.handler = new Handler(Looper.getMainLooper());
+    // plank
+    private boolean isPlanking = false;
+    private long plankStart = 0;
+    private long plankAccumMs = 0;
+    private long plankGraceStart = 0;
+    private static final long PLANK_GRACE_MS = 2500;
+
+    private String feedback = "Ready";
+
+    public ExerciseDetector(Context ctx, String difficulty, int targetReps) {
+        this.context = ctx;
+        this.difficultyLevel = difficulty == null ? "beginner" : difficulty;
+        this.target = Math.max(1, targetReps);
     }
 
-    public void updateExercise(String exerciseType, String difficultyLevel, int targetReps) {
-        this.exerciseType = exerciseType;
-        this.difficultyLevel = difficultyLevel;
-        this.targetReps = targetReps;
+    public void setListener(ExerciseListener l) { this.listener = l; }
+
+    public void updateExercise(String exercise, String difficulty, int targetReps) {
+        this.exerciseType = exercise;
+        this.difficultyLevel = difficulty;
+        this.target = Math.max(1, targetReps);
         resetExercise();
-    }
-
-    public void processPose(Pose pose, String exerciseType) {
-        switch (exerciseType) {
-            case "squats":
-                detectSquat(pose);
-                break;
-            case "pushups":
-                detectPushup(pose);
-                break;
-            case "plank":
-                detectPlank(pose);
-                break;
-            case "crunches":
-                detectCrunch(pose);
-                break;
-            case "lunges":
-                detectLunge(pose);
-                break;
-            default:
-                detectSquat(pose);
-                break;
-        }
-    }
-
-    public boolean hasEnoughBodyLandmarks(Pose pose) {
-        // Get all required landmarks
-        PoseLandmark nose = pose.getPoseLandmark(PoseLandmark.NOSE);
-        PoseLandmark lShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
-        PoseLandmark rShoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER);
-        PoseLandmark lElbow = pose.getPoseLandmark(PoseLandmark.LEFT_ELBOW);
-        PoseLandmark rElbow = pose.getPoseLandmark(PoseLandmark.RIGHT_ELBOW);
-        PoseLandmark lWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
-        PoseLandmark rWrist = pose.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
-        PoseLandmark lHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
-        PoseLandmark rHip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP);
-        PoseLandmark lKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE);
-        PoseLandmark rKnee = pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE);
-        PoseLandmark lAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
-        PoseLandmark rAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE);
-
-        boolean hasAllLandmarks = nose != null &&
-                lShoulder != null && rShoulder != null &&
-                lElbow != null && rElbow != null &&
-                lWrist != null && rWrist != null &&
-                lHip != null && rHip != null &&
-                lKnee != null && rKnee != null &&
-                lAnkle != null && rAnkle != null;
-
-        if (!hasAllLandmarks) {
-            return false;
-        }
-
-        boolean hasGoodVisibility =
-                (nose.getInFrameLikelihood() > 0.5f) &&
-                (lShoulder.getInFrameLikelihood() > 0.5f && rShoulder.getInFrameLikelihood() > 0.5f) &&
-                (lElbow.getInFrameLikelihood() > 0.5f && rElbow.getInFrameLikelihood() > 0.5f) &&
-                (lWrist.getInFrameLikelihood() > 0.5f && rWrist.getInFrameLikelihood() > 0.5f) &&
-                (lHip.getInFrameLikelihood() > 0.5f && rHip.getInFrameLikelihood() > 0.5f) &&
-                (lKnee.getInFrameLikelihood() > 0.5f && rKnee.getInFrameLikelihood() > 0.5f) &&
-                (lAnkle.getInFrameLikelihood() > 0.5f && rAnkle.getInFrameLikelihood() > 0.5f);
-
-        return hasGoodVisibility;
-    }
-
-    private void detectSquat(Pose pose) {
-        PoseLandmark leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
-        PoseLandmark leftKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE);
-        PoseLandmark leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
-
-        if (leftHip != null && leftKnee != null && leftAnkle != null) {
-            double kneeAngle = getAngle(leftHip, leftKnee, leftAnkle);
-            double downThreshold = getSquatDownThreshold();
-            double upThreshold = getSquatUpThreshold();
-
-            if (kneeAngle < downThreshold && !isSquatting) {
-                isSquatting = true;
-                feedbackText = "Good! Keep going down";
-            } else if (kneeAngle > upThreshold && isSquatting) {
-                long currentTime = System.currentTimeMillis();
-                if (currentTime - lastRepTime > REP_COOLDOWN_MS) {
-                    currentReps++;
-                    lastRepTime = currentTime;
-                    feedbackText = "Great rep! Keep it up!";
-                    
-                    if (currentReps >= targetReps) {
-                        exerciseCompleted = true;
-                        return;
-                    }
-                }
-                isSquatting = false;
-            }
-        }
-    }
-
-    private void detectPushup(Pose pose) {
-        PoseLandmark leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
-        PoseLandmark leftElbow = pose.getPoseLandmark(PoseLandmark.LEFT_ELBOW);
-        PoseLandmark leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
-
-        if (leftShoulder != null && leftElbow != null && leftWrist != null) {
-            double elbowAngle = getAngle(leftShoulder, leftElbow, leftWrist);
-            double downThreshold = getPushupDownThreshold();
-            double upThreshold = getPushupUpThreshold();
-
-            if (elbowAngle < downThreshold && !isPushupDown) {
-                isPushupDown = true;
-                feedbackText = "Good! Lower your body";
-            } else if (elbowAngle > upThreshold && isPushupDown) {
-                long currentTime = System.currentTimeMillis();
-                if (currentTime - lastRepTime > REP_COOLDOWN_MS) {
-                    currentReps++;
-                    lastRepTime = currentTime;
-                    feedbackText = "Excellent pushup! Keep going!";
-                    
-                    if (currentReps >= targetReps) {
-                        exerciseCompleted = true;
-                        return;
-                    }
-                }
-                isPushupDown = false;
-            }
-        }
-    }
-
-    private void detectCrunch(Pose pose) {
-        PoseLandmark leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
-        PoseLandmark leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
-        PoseLandmark leftKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE);
-
-        if (leftShoulder != null && leftHip != null && leftKnee != null) {
-            double hipAngle = getAngle(leftShoulder, leftHip, leftKnee);
-            double upThreshold = getCrunchUpThreshold();
-            double downThreshold = getCrunchDownThreshold();
-
-            if (hipAngle < downThreshold && !isCrunching) {
-                isCrunching = true;
-                feedbackText = "Crunch up";
-            } else if (hipAngle > upThreshold && isCrunching) {
-                long currentTime = System.currentTimeMillis();
-                if (currentTime - lastRepTime > REP_COOLDOWN_MS) {
-                    currentReps++;
-                    lastRepTime = currentTime;
-                    feedbackText = "Good crunch!";
-                    
-                    if (currentReps >= targetReps) {
-                        exerciseCompleted = true;
-                        return;
-                    }
-                }
-                isCrunching = false;
-            }
-        }
-    }
-
-    private void detectLunge(Pose pose) {
-        PoseLandmark leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
-        PoseLandmark leftKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE);
-        PoseLandmark leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
-
-        if (leftHip != null && leftKnee != null && leftAnkle != null) {
-            double kneeAngle = getAngle(leftHip, leftKnee, leftAnkle);
-            double downThreshold = getLungeDownThreshold();
-            double upThreshold = getLungeUpThreshold();
-
-            if (kneeAngle < downThreshold && !isLungingDown) {
-                isLungingDown = true;
-                feedbackText = "Go down into lunge";
-            } else if (kneeAngle > upThreshold && isLungingDown) {
-                long currentTime = System.currentTimeMillis();
-                if (currentTime - lastRepTime > REP_COOLDOWN_MS) {
-                    currentReps++;
-                    lastRepTime = currentTime;
-                    feedbackText = "Nice lunge!";
-                    
-                    if (currentReps >= targetReps) {
-                        exerciseCompleted = true;
-                        return;
-                    }
-                }
-                isLungingDown = false;
-            }
-        }
-    }
-
-    private void detectPlank(Pose pose) {
-        PoseLandmark leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
-        PoseLandmark leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
-        PoseLandmark leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
-
-        if (leftShoulder != null && leftHip != null && leftAnkle != null) {
-            double bodyAngle = getAngle(leftShoulder, leftHip, leftAnkle);
-            double plankThreshold = getPlankThreshold();
-
-            if (bodyAngle > plankThreshold && !isPlanking) {
-                isPlanking = true;
-                plankStartTime = System.currentTimeMillis();
-                feedbackText = "Perfect plank position! Hold it!";
-            } else if (bodyAngle < plankThreshold - 20 && isPlanking) {
-                isPlanking = false;
-                feedbackText = "Get back into plank position";
-            }
-
-            if (plankTotalTime >= targetReps * 1000) {
-                exerciseCompleted = true;
-            }
-        }
-    }
-
-    public void startPlankTimer() {
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (isPlanking && !exerciseCompleted) {
-                    plankTotalTime += 1000;
-                    handler.postDelayed(this, 1000);
-                }
-            }
-        }, 1000);
     }
 
     public void resetExercise() {
         currentReps = 0;
-        plankTotalTime = 0;
-        exerciseCompleted = false;
-        isSquatting = false;
+        completed = false;
+        downState = false;
+        lastRepTime = 0;
         isPlanking = false;
-        isPushupDown = false;
-        isCrunching = false;
-        isLungingDown = false;
-        feedbackText = "Exercise reset! Ready to start.";
-    }
-
-    // Getters
-    public int getCurrentReps() { return currentReps; }
-    public long getPlankTimeSeconds() { return plankTotalTime / 1000; }
-    public boolean isExerciseCompleted() { return exerciseCompleted; }
-    public String getFeedbackText() { return feedbackText; }
-
-    // Difficulty-based threshold methods
-    private double getSquatDownThreshold() {
-        switch (difficultyLevel) {
-            case "beginner": return 140;
-            case "advanced": return 130;
-            case "expert": return 120;
-            case "master": return 110;
-            default: return 140;
+        plankStart = 0;
+        plankAccumMs = 0;
+        plankGraceStart = 0;
+        feedback = "Ready to start!";
+        if (listener != null) {
+            listener.onRepCountChanged(currentReps, target);
+            listener.onFeedbackUpdated(feedback);
         }
     }
 
-    private double getSquatUpThreshold() {
-        switch (difficultyLevel) {
-            case "beginner": return 150;
-            case "advanced": return 155;
-            case "expert": return 160;
-            case "master": return 165;
-            default: return 150;
+    public void processPose(Pose pose, String exercise) {
+        if (pose == null || completed) return;
+
+        switch (exercise) {
+            case "pushups": detectPushup(pose); break;
+            case "squats": detectSquat(pose); break;
+            case "plank": detectPlank(pose); break;
+            case "crunches": detectCrunch(pose); break;
+            case "lunges": detectLunge(pose); break;
+            default: detectSquat(pose); break;
+        }
+
+        if (listener != null) listener.onFeedbackUpdated(feedback);
+    }
+
+    private long getCooldown() {
+        return DEFAULT_COOLDOWN;
+    }
+
+    private void registerRepIfCooldown() {
+        long now = System.currentTimeMillis();
+        if (now - lastRepTime < getCooldown()) return;
+        lastRepTime = now;
+        currentReps++;
+        if (listener != null) listener.onRepCountChanged(currentReps, target);
+        if (currentReps >= target && !completed) {
+            completed = true;
+            if (listener != null) listener.onExerciseCompleted(currentReps + " reps done.");
         }
     }
 
-    private double getPushupDownThreshold() {
-        switch (difficultyLevel) {
-            case "beginner": return 120;
-            case "advanced": return 110;
-            case "expert": return 100;
-            case "master": return 90;
-            default: return 120;
+    private void detectSquat(Pose pose) {
+        PoseLandmark hip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
+        PoseLandmark knee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE);
+        PoseLandmark ankle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
+        if (hip == null || knee == null || ankle == null) return;
+
+        double angle = getAngle(hip, knee, ankle);
+        double down = 140;
+        double up = 150;
+        if (angle < down && !downState) {
+            downState = true;
+            feedback = "Down";
+        } else if (angle > up && downState) {
+            downState = false;
+            registerRepIfCooldown();
+            feedback = "Nice squat!";
         }
     }
 
-    private double getPushupUpThreshold() {
-        switch (difficultyLevel) {
-            case "beginner": return 140;
-            case "advanced": return 150;
-            case "expert": return 160;
-            case "master": return 165;
-            default: return 140;
+    private void detectPushup(Pose pose) {
+        PoseLandmark shoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
+        PoseLandmark elbow = pose.getPoseLandmark(PoseLandmark.LEFT_ELBOW);
+        PoseLandmark wrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
+        if (shoulder == null || elbow == null || wrist == null) return;
+
+        double angle = getAngle(shoulder, elbow, wrist);
+        double down = 100;
+        double up = 140;
+        if (angle < down && !downState) {
+            downState = true;
+            feedback = "Down";
+        } else if (angle > up && downState) {
+            downState = false;
+            registerRepIfCooldown();
+            feedback = "Great pushup!";
         }
     }
 
-    private double getPlankThreshold() {
-        switch (difficultyLevel) {
-            case "beginner": return 140;
-            case "advanced": return 150;
-            case "expert": return 160;
-            case "master": return 165;
-            default: return 140;
+    private void detectCrunch(Pose pose) {
+        PoseLandmark shoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
+        PoseLandmark hip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
+        PoseLandmark knee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE);
+        if (shoulder == null || hip == null || knee == null) return;
+
+        double angle = getAngle(shoulder, hip, knee);
+        double down = 120;
+        double up = 150;
+        if (angle < down && !downState) {
+            downState = true;
+            feedback = "Up";
+        } else if (angle > up && downState) {
+            downState = false;
+            registerRepIfCooldown();
+            feedback = "Crunch!";
         }
     }
 
-    private double getCrunchDownThreshold() {
-        switch (difficultyLevel) {
-            case "beginner": return 120;
-            case "advanced": return 110;
-            case "expert": return 100;
-            case "master": return 95;
-            default: return 120;
+    private void detectLunge(Pose pose) {
+        PoseLandmark hip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
+        PoseLandmark knee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE);
+        PoseLandmark ankle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
+        if (hip == null || knee == null || ankle == null) return;
+
+        double angle = getAngle(hip, knee, ankle);
+        double down = 140;
+        double up = 150;
+        if (angle < down && !downState) {
+            downState = true;
+            feedback = "Down";
+        } else if (angle > up && downState) {
+            downState = false;
+            registerRepIfCooldown();
+            feedback = "Nice lunge!";
         }
     }
 
-    private double getCrunchUpThreshold() {
-        switch (difficultyLevel) {
-            case "beginner": return 150;
-            case "advanced": return 155;
-            case "expert": return 160;
-            case "master": return 165;
-            default: return 150;
+    private void detectPlank(Pose pose) {
+        PoseLandmark s = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
+        PoseLandmark h = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
+        PoseLandmark a = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
+        if (s == null || h == null || a == null) return;
+
+        double angle = getAngle(s, h, a);
+        double threshold = 140;
+        long now = System.currentTimeMillis();
+
+        if (angle > threshold) {
+            if (!isPlanking) {
+                isPlanking = true;
+                plankStart = now;
+                plankGraceStart = 0;
+                feedback = "Hold plank";
+            } else {
+                // add elapsed
+                plankAccumMs += now - plankStart;
+                plankStart = now;
+            }
+        } else {
+            if (isPlanking) {
+                if (plankGraceStart == 0) plankGraceStart = now;
+                else if (now - plankGraceStart > PLANK_GRACE_MS) {
+                    isPlanking = false;
+                    plankStart = 0;
+                    plankGraceStart = 0;
+                } else {
+                    // within grace period: do not add time yet
+                }
+            }
+        }
+
+        long secs = plankAccumMs / 1000;
+        if (listener != null) listener.onPlankTimeUpdated(secs, target);
+
+        // report delta seconds to QuestManager from Activity (Activity calls QuestManager)
+        if (secs >= target && !completed) {
+            completed = true;
+            if (listener != null) listener.onExerciseCompleted("Plank completed! " + secs + "s held.");
         }
     }
 
-    private double getLungeDownThreshold() {
-        switch (difficultyLevel) {
-            case "beginner": return 140;
-            case "advanced": return 130;
-            case "expert": return 120;
-            case "master": return 110;
-            default: return 140;
-        }
-    }
-
-    private double getLungeUpThreshold() {
-        switch (difficultyLevel) {
-            case "beginner": return 150;
-            case "advanced": return 155;
-            case "expert": return 160;
-            case "master": return 165;
-            default: return 150;
-        }
-    }
-
+    // utility
     private static double getAngle(PoseLandmark firstPoint, PoseLandmark midPoint, PoseLandmark lastPoint) {
         double result = Math.toDegrees(
                 atan2(lastPoint.getPosition().y - midPoint.getPosition().y,
@@ -393,7 +237,12 @@ public class ExerciseDetector {
         return result;
     }
 
+    public int getCurrentReps() { return currentReps; }
+    public long getPlankSeconds() { return plankAccumMs / 1000; }
+    public boolean isCompleted() { return completed; }
+
     public void destroy() {
         handler.removeCallbacksAndMessages(null);
+        listener = null;
     }
 }

@@ -1,27 +1,21 @@
 package com.example.fitquest;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.media.AudioAttributes;
-import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.speech.RecognitionListener;
-import android.speech.RecognizerIntent;
-import android.speech.SpeechRecognizer;
-import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ExperimentalGetImage;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
@@ -35,363 +29,246 @@ import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.pose.Pose;
 import com.google.mlkit.vision.pose.PoseDetection;
 import com.google.mlkit.vision.pose.PoseDetector;
-import com.google.mlkit.vision.pose.PoseLandmark;
 import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions;
 
-import java.util.ArrayList;
-import java.util.Locale;
 import java.util.concurrent.ExecutionException;
-import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import static java.lang.Math.atan2;
+public class ExerciseTrackingActivity extends AppCompatActivity implements ExerciseDetector.ExerciseListener {
 
-public class ExerciseTrackingActivity extends AppCompatActivity {
+    private static final String TAG = "ExerciseTrackingAct";
 
-    // UI Components
     private PreviewView previewView;
-    private TextView repCounter;
-    private TextView feedbackText;
-    private TextView instructionText;
-    private TextView timerText;
     private PoseOverlayView poseOverlay;
-    private LinearLayout permissionLayout;
+    private TextView repCounter, feedbackText, instructionText, timerText;
+    private View permissionLayout;
     private Button requestPermissionButton;
-    private Button settingsButton;
-    private Button voiceButton;
 
-    // Core Components
     private PoseDetector poseDetector;
     private ExerciseDetector exerciseDetector;
-    private VoiceController voiceController;
     private AudioManager audioManager;
 
-    // Exercise State
     private String exerciseType = "squats";
     private String difficultyLevel = "beginner";
     private int targetReps = 10;
-    private boolean exerciseCompleted = false;
-    private boolean isTrackingActive = false;
+    private String questId = null;
 
-    // Constants
-    private static final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.RECORD_AUDIO"};
+    private static final String[] REQUIRED_PERMISSIONS = new String[]{
+            Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO
+    };
     private static final int REQUEST_CODE_PERMISSIONS = 10;
+
+    private ProcessCameraProvider cameraProvider;
+    private CameraSelector cameraSelector;
+    private ExecutorService analysisExecutor;
+
+    // Keep last reported plank seconds so we only report deltas
+    private long lastReportedPlankSeconds = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_exercise_tracking);
 
-        initializeViews();
-        initializeComponents();
-        setupPermissions();
-        setupExerciseFromIntent();
-    }
-
-    private void initializeViews() {
         previewView = findViewById(R.id.previewView);
+        poseOverlay = findViewById(R.id.poseOverlay);
         repCounter = findViewById(R.id.repCounter);
         feedbackText = findViewById(R.id.feedbackText);
         instructionText = findViewById(R.id.instructionText);
         timerText = findViewById(R.id.timerText);
-        poseOverlay = findViewById(R.id.poseOverlay);
         permissionLayout = findViewById(R.id.permission_layout);
         requestPermissionButton = findViewById(R.id.request_permission_button);
 
-        // Add overlay buttons
-        addOverlayButtons();
+        audioManager = new AudioManager(this);
+
+        // Read intent extras
+        if (getIntent().hasExtra("EXERCISE_TYPE")) exerciseType = getIntent().getStringExtra("EXERCISE_TYPE");
+        if (getIntent().hasExtra("MAX_PROGRESS")) targetReps = getIntent().getIntExtra("MAX_PROGRESS", 10);
+        if (getIntent().hasExtra("DIFFICULTY_LEVEL")) difficultyLevel = getIntent().getStringExtra("DIFFICULTY_LEVEL");
+        if (getIntent().hasExtra("QUEST_ID")) questId = getIntent().getStringExtra("QUEST_ID");
+
+        exerciseDetector = new ExerciseDetector(this, difficultyLevel, targetReps);
+        exerciseDetector.setListener(this);
+
+        initializePoseDetector();
+        setupPermissions();
+        setupUiForExercise();
     }
 
-    private void addOverlayButtons() {
-        // Settings button
-        settingsButton = new Button(this);
-        settingsButton.setText("Settings");
-        settingsButton.setOnClickListener(v -> startActivity(new Intent(this, UserSettingsActivity.class)));
-        addContentView(settingsButton, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        ));
-
-        // Voice button
-        voiceButton = new Button(this);
-        voiceButton.setText("🎤 Start Tracking");
-        voiceButton.setOnClickListener(v -> voiceController.toggleTracking());
-        LinearLayout.LayoutParams voiceParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        voiceParams.topMargin = 150;
-        addContentView(voiceButton, voiceParams);
+    private void setupUiForExercise() {
+        repCounter.setText(capitalize(exerciseType) + " Reps: 0/" + targetReps);
+        instructionText.setText("Perform " + targetReps + " " + capitalize(exerciseType));
+        feedbackText.setText("Get ready...");
+        timerText.setVisibility(exerciseType.equals("plank") ? View.VISIBLE : View.GONE);
+        audioManager.speak("Starting " + exerciseType);
     }
 
-    private void initializeComponents() {
-        // Initialize pose detector
+    private void initializePoseDetector() {
         PoseDetectorOptions options = new PoseDetectorOptions.Builder()
                 .setDetectorMode(PoseDetectorOptions.STREAM_MODE)
                 .build();
         poseDetector = PoseDetection.getClient(options);
-
-        // Initialize exercise detector
-        exerciseDetector = new ExerciseDetector(this, difficultyLevel, targetReps);
-
-        // Initialize voice controller
-        voiceController = new VoiceController(this, this::onTrackingStateChanged);
-
-        // Initialize audio manager
-        audioManager = new AudioManager(this);
     }
 
     private void setupPermissions() {
-        requestPermissionButton.setOnClickListener(v -> 
-            ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
-        );
-
         if (allPermissionsGranted()) {
-            hidePermissionUI();
+            permissionLayout.setVisibility(View.GONE);
             startCamera();
-            setupExerciseUI();
         } else {
-            showPermissionUI();
+            permissionLayout.setVisibility(View.VISIBLE);
+            requestPermissionButton.setOnClickListener(v ->
+                    ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS));
         }
     }
 
-    private void setupExerciseFromIntent() {
-        difficultyLevel = User.getDifficultyLevel(this);
-
-        if (getIntent().hasExtra("EXERCISE_TYPE")) {
-            exerciseType = getIntent().getStringExtra("EXERCISE_TYPE");
-        }
-        if (getIntent().hasExtra("MAX_PROGRESS")) {
-            targetReps = getIntent().getIntExtra("MAX_PROGRESS", 10);
-        }
-        if (getIntent().hasExtra("DIFFICULTY_LEVEL")) {
-            difficultyLevel = getIntent().getStringExtra("DIFFICULTY_LEVEL");
-        }
-
-        exerciseDetector.updateExercise(exerciseType, difficultyLevel, targetReps);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        difficultyLevel = User.getDifficultyLevel(this);
-        exerciseDetector.updateExercise(exerciseType, difficultyLevel, targetReps);
-        setupExerciseUI();
-
-        if (allPermissionsGranted()) {
-            hidePermissionUI();
-        }
-    }
-
-    private void onTrackingStateChanged(boolean isActive) {
-        isTrackingActive = isActive;
-        runOnUiThread(() -> {
-            voiceButton.setText(isActive ? "🎤 Stop Tracking" : "🎤 Start Tracking");
-            feedbackText.setText(isActive ? "Tracking started! Get into position." : "Tracking stopped. Say 'Start' to resume.");
-        });
-    }
-
-    private void setupExerciseUI() {
-        String difficultyText = "Difficulty: " + difficultyLevel.substring(0, 1).toUpperCase() + difficultyLevel.substring(1);
-
-        switch (exerciseType) {
-            case "squats":
-                instructionText.setText("Stand with feet shoulder-width apart\nBend your knees and lower your body\nKeep your back straight\n" + difficultyText);
-                repCounter.setVisibility(View.VISIBLE);
-                timerText.setVisibility(View.GONE);
-                repCounter.setText("Squat Reps: " + exerciseDetector.getCurrentReps() + "/" + targetReps);
-                audioManager.speak("Starting squats. " + difficultyText);
-                break;
-            case "pushups":
-                instructionText.setText("Start in plank position\nLower your body by bending elbows\nPush back up to starting position\n" + difficultyText);
-                repCounter.setVisibility(View.VISIBLE);
-                timerText.setVisibility(View.GONE);
-                repCounter.setText("Pushup Reps: " + exerciseDetector.getCurrentReps() + "/" + targetReps);
-                audioManager.speak("Starting push ups. " + difficultyText);
-                break;
-            case "plank":
-                instructionText.setText("Hold your body in a straight line\nKeep your core tight\nDon't let your hips sag\n" + difficultyText);
-                repCounter.setVisibility(View.GONE);
-                timerText.setVisibility(View.VISIBLE);
-                exerciseDetector.startPlankTimer();
-                audioManager.speak("Starting plank. Hold the position.");
-                break;
-            case "crunches":
-                instructionText.setText("Lie on your back\nLift shoulders off the ground\nControl down slowly\n" + difficultyText);
-                repCounter.setVisibility(View.VISIBLE);
-                timerText.setVisibility(View.GONE);
-                repCounter.setText("Crunch Reps: " + exerciseDetector.getCurrentReps() + "/" + targetReps);
-                audioManager.speak("Starting crunches. " + difficultyText);
-                break;
-            case "lunges":
-                instructionText.setText("Step forward\nLower until both knees are bent\nPush back to start\n" + difficultyText);
-                repCounter.setVisibility(View.VISIBLE);
-                timerText.setVisibility(View.GONE);
-                repCounter.setText("Lunge Reps: " + exerciseDetector.getCurrentReps() + "/" + targetReps);
-                audioManager.speak("Starting lunges. " + difficultyText);
-                break;
-        }
-    }
-
-    // Permission handling
     private boolean allPermissionsGranted() {
-        for (String permission : REQUIRED_PERMISSIONS) {
-            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
+        for (String p : REQUIRED_PERMISSIONS) {
+            if (ContextCompat.checkSelfPermission(this, p) != PackageManager.PERMISSION_GRANTED) return false;
         }
         return true;
     }
 
-    private void showPermissionUI() {
-        permissionLayout.setVisibility(View.VISIBLE);
-    }
-
-    private void hidePermissionUI() {
-        permissionLayout.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == REQUEST_CODE_PERMISSIONS) {
-            boolean grantedAll = true;
-            for (int res : grantResults) {
-                if (res != PackageManager.PERMISSION_GRANTED) {
-                    grantedAll = false;
-                    break;
-                }
-            }
-            if (grantedAll) {
-                hidePermissionUI();
-                startCamera();
-                voiceController.startListening();
-            } else {
-                showPermissionUI();
-                Toast.makeText(this, "Permissions required to proceed", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    // Camera setup
     private void startCamera() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
-
         cameraProviderFuture.addListener(() -> {
             try {
-                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-
-                Preview preview = new Preview.Builder().build();
-                preview.setSurfaceProvider(previewView.getSurfaceProvider());
-
-                ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build();
-
-                imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), this::analyzeImage);
-
-                CameraSelector cameraSelector = new CameraSelector.Builder()
-                        .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
-                        .build();
-
-                cameraProvider.unbindAll();
-                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
-
+                cameraProvider = cameraProviderFuture.get();
+                bindCameraUseCases();
             } catch (ExecutionException | InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG, "Camera provider error", e);
             }
         }, ContextCompat.getMainExecutor(this));
     }
 
-    private void analyzeImage(@NonNull ImageProxy imageProxy) {
-        @SuppressWarnings("UnsafeOptInUsageError")
-        InputImage inputImage = InputImage.fromMediaImage(
-                imageProxy.getImage(),
-                imageProxy.getImageInfo().getRotationDegrees()
-        );
+    private void bindCameraUseCases() {
+        if (cameraProvider == null) return;
 
-        // Provide frame info to overlay for correct mapping
-        if (poseOverlay != null && imageProxy.getImage() != null) {
-            int imgW = imageProxy.getImage().getWidth();
-            int imgH = imageProxy.getImage().getHeight();
-            int rot = imageProxy.getImageInfo().getRotationDegrees();
-            boolean front = true; // we use front camera
-            poseOverlay.setFrameInfo(imgW, imgH, rot, front, previewView.getWidth(), previewView.getHeight());
-        }
+        cameraSelector = new CameraSelector.Builder()
+                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                .build();
 
-        poseDetector.process(inputImage)
-                .addOnSuccessListener(this::detectExercise)
-                .addOnFailureListener(e -> Log.e("PoseDetection", "Failed: " + e.getMessage()))
-                .addOnCompleteListener(task -> imageProxy.close());
+        Preview preview = new Preview.Builder().build();
+        preview.setSurfaceProvider(previewView.getSurfaceProvider());
+
+        analysisExecutor = Executors.newSingleThreadExecutor();
+        ImageAnalysis analysis = new ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build();
+
+        analysis.setAnalyzer(analysisExecutor, this::analyzeImage);
+
+        cameraProvider.unbindAll();
+        cameraProvider.bindToLifecycle(this, cameraSelector, preview, analysis);
     }
 
-    private void detectExercise(Pose pose) {
-        // Update pose overlay for joint visualization
-        if (poseOverlay != null) {
-            poseOverlay.setPose(pose);
-        }
+    @OptIn(markerClass = ExperimentalGetImage.class)
+    private void analyzeImage(ImageProxy imageProxy) {
+        try {
+            if (poseDetector == null || imageProxy.getImage() == null) {
+                imageProxy.close();
+                return;
+            }
 
-        // Check if tracking is active
-        if (!isTrackingActive) {
-            runOnUiThread(() -> feedbackText.setText("Say 'Start' to begin tracking"));
-            return;
-        }
+            int rotation = imageProxy.getImageInfo().getRotationDegrees();
+            InputImage inputImage = InputImage.fromMediaImage(imageProxy.getImage(), rotation);
 
-        // Check if we have enough body landmarks for accurate tracking
-        if (!exerciseDetector.hasEnoughBodyLandmarks(pose)) {
-            runOnUiThread(() -> feedbackText.setText("Please stand back to see your full body"));
-            return;
-        }
+            // send detection
+            poseDetector.process(inputImage)
+                    .addOnSuccessListener(pose -> {
+                        // update overlay and detector
+                        poseOverlay.post(() -> {
+                            poseOverlay.setFrameInfo(imageProxy.getWidth(), imageProxy.getHeight(),
+                                    rotation, true, previewView.getWidth(), previewView.getHeight());
+                        });
+                        poseOverlay.post(() -> poseOverlay.setPose(pose));
+                        exerciseDetector.processPose(pose, exerciseType);
+                    })
+                    .addOnFailureListener(e -> Log.e(TAG, "Pose detection failed", e))
+                    .addOnCompleteListener(t -> imageProxy.close());
 
-        // Process exercise detection
-        exerciseDetector.processPose(pose, exerciseType);
-        
-        // Update UI based on exercise state
-        updateExerciseUI();
-        
-        // Check if exercise is completed
-        if (exerciseDetector.isExerciseCompleted()) {
-            completeExercise();
+        } catch (Exception e) {
+            Log.e(TAG, "analyzeImage error", e);
+            imageProxy.close();
         }
     }
 
-    private void updateExerciseUI() {
-        if (exerciseType.equals("plank")) {
-            runOnUiThread(() -> timerText.setText("Plank Time: " + exerciseDetector.getPlankTimeSeconds() + "s"));
-        } else {
-            runOnUiThread(() -> repCounter.setText(
-                exerciseType.substring(0, 1).toUpperCase() + exerciseType.substring(1) + 
-                " Reps: " + exerciseDetector.getCurrentReps() + "/" + targetReps
-            ));
-        }
-        
-        // Update feedback text
-        runOnUiThread(() -> feedbackText.setText(exerciseDetector.getFeedbackText()));
+    // ExerciseListener callbacks
+    @Override
+    public void onRepCountChanged(int currentReps, int target) {
+        runOnUiThread(() -> repCounter.setText(capitalize(exerciseType) + " Reps: " + currentReps + "/" + target));
+        // report one rep to quests (delta)
+        QuestManager.reportExerciseResult(this, exerciseType, 1);
     }
 
-    private void completeExercise() {
-        if (exerciseCompleted) return;
+    @Override
+    public void onPlankTimeUpdated(long seconds, long requiredSeconds) {
+        runOnUiThread(() -> timerText.setText("Plank Time: " + seconds + "s"));
+        // report only delta seconds to avoid overshoot
+        long delta = seconds - lastReportedPlankSeconds;
+        if (delta > 0) {
+            QuestManager.reportExerciseResult(this, exerciseType, (int) delta);
+            lastReportedPlankSeconds = seconds;
+        }
+    }
 
-        exerciseCompleted = true;
-        final String message;
-        if (exerciseType.equals("plank")) {
-            long seconds = exerciseDetector.getPlankTimeSeconds();
-            message = "Plank completed! " + seconds + " seconds held.";
-        } else {
-            message = "Exercise completed! " + exerciseDetector.getCurrentReps() + " reps done.";
+    @Override
+    public void onFeedbackUpdated(String feedback) {
+        runOnUiThread(() -> feedbackText.setText(feedback));
+    }
+
+    @Override
+    public void onExerciseCompleted(String summaryMessage) {
+        runOnUiThread(() -> {
+            feedbackText.setText("🎉 " + summaryMessage);
+            audioManager.speak(summaryMessage, () -> {
+                // Callback after audio finishes
+                finish();
+            });
+            Toast.makeText(this, summaryMessage, Toast.LENGTH_LONG).show();
+        });
+
+        // Finalize and persist progress, without auto-claim
+        QuestManager.reportExerciseResult(this, exerciseType, 0);
+
+        // Auto-apply rewards only for the specific questId if provided and quest became completed
+        if (questId != null && !questId.isEmpty()) {
+            for (QuestModel q : QuestManager.getAll(this)) {
+                if (questId.equals(q.getId()) && q.isCompleted() && !q.isClaimed()) {
+                    boolean leveled = QuestManager.claimQuest(this, q);
+                    QuestRewardManager.showRewardPopup(this, q.getReward());
+                    if (leveled) {
+                        AvatarModel avatar = AvatarManager.loadAvatarOffline(this);
+                        if (avatar != null) QuestRewardManager.showLevelUpPopup(this, avatar.getLevel(), avatar.getRank());
+                    }
+                    break;
+                }
+            }
         }
 
-        runOnUiThread(() -> feedbackText.setText("🎉 " + message));
-        audioManager.speak(message);
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+        new Handler(Looper.getMainLooper()).postDelayed(this::finish, 1400);
+    }
 
-        // Return to main activity after a short delay
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            finish();
-        }, 2000);
+    private String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return s.substring(0,1).toUpperCase() + s.substring(1);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        if (requestCode == REQUEST_CODE_PERMISSIONS) {
+            boolean grantedAll = true;
+            for (int r : grantResults) if (r != PackageManager.PERMISSION_GRANTED) { grantedAll = false; break; }
+            if (grantedAll) {
+                permissionLayout.setVisibility(View.GONE);
+                startCamera();
+            } else {
+                Toast.makeText(this, "Permissions required", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
@@ -399,15 +276,17 @@ public class ExerciseTrackingActivity extends AppCompatActivity {
         super.onDestroy();
         if (poseDetector != null) {
             poseDetector.close();
+            poseDetector = null;
         }
-        if (voiceController != null) {
-            voiceController.destroy();
+        if (cameraProvider != null) {
+            cameraProvider.unbindAll();
+            cameraProvider = null;
         }
-        if (audioManager != null) {
-            audioManager.destroy();
+        if (analysisExecutor != null) {
+            analysisExecutor.shutdown();
+            analysisExecutor = null;
         }
-        if (exerciseDetector != null) {
-            exerciseDetector.destroy();
-        }
+        if (exerciseDetector != null) exerciseDetector.destroy();
+        if (audioManager != null) audioManager.destroy();
     }
 }
