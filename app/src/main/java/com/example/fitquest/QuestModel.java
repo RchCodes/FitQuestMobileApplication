@@ -13,11 +13,15 @@ public class QuestModel implements Serializable {
     // Progress
     private int progress;
     private int target;
-    private boolean isCompleted;
+    private boolean completed;
+    private boolean claimed;
     private long lastCompletedTime;
-    private boolean claimed = false;
 
-    public QuestModel() {} // for Firebase/Gson
+    private String exerciseType; // e.g., "pushups", "squats", "plank"
+
+    public QuestModel() {
+        // Default constructor for Firebase/Gson
+    }
 
     public QuestModel(String id, String title, String description,
                       QuestReward reward, QuestCategory category,
@@ -29,12 +33,11 @@ public class QuestModel implements Serializable {
         this.category = category;
         this.target = Math.max(1, target);
         this.progress = 0;
-        this.isCompleted = false;
+        this.completed = false;
         this.claimed = false;
         this.lastCompletedTime = 0;
         this.exerciseType = exerciseType;
     }
-
 
     // --- Getters ---
     public String getId() { return id; }
@@ -44,12 +47,19 @@ public class QuestModel implements Serializable {
     public QuestCategory getCategory() { return category; }
     public int getProgress() { return progress; }
     public int getTarget() { return target; }
-    public boolean isCompleted() { return isCompleted; }
+    public boolean isCompleted() { return completed; }
+    public boolean isClaimed() { return claimed; }
     public long getLastCompletedTime() { return lastCompletedTime; }
+    public String getExerciseType() { return exerciseType; }
+
+    // --- Setters (for Firebase or manual updates) ---
+    public void setClaimed(boolean claimed) { this.claimed = claimed; }
+    public void setExerciseType(String exerciseType) { this.exerciseType = exerciseType; }
 
     // --- Progress update ---
     public boolean addProgress(int amount) {
-        if (isCompleted) return false;
+        if (completed) return false;
+
         progress = Math.min(target, progress + Math.max(0, amount));
         if (progress >= target) {
             complete();
@@ -58,61 +68,30 @@ public class QuestModel implements Serializable {
         return false;
     }
 
-    public void setProgress(int p) {
-        progress = Math.max(0, Math.min(target, p));
+    public void incrementProgress() {
+        addProgress(1);
+    }
+
+    public void setProgress(int value) {
+        progress = Math.max(0, Math.min(target, value));
         if (progress >= target) complete();
     }
 
     public void complete() {
-        isCompleted = true;
+        completed = true;
         lastCompletedTime = System.currentTimeMillis();
     }
 
     public void reset() {
-        isCompleted = false;
+        completed = false;
+        claimed = false;
         progress = 0;
         lastCompletedTime = 0;
-        this.claimed = false;
     }
 
-
-    // Reset quest
-
+    // --- Helper methods ---
     public int getProgressPercentage() {
-        if (target <= 0) return isCompleted ? 100 : 0;
+        if (target <= 0) return completed ? 100 : 0;
         return (int)((progress * 100f) / target);
-    }
-
-    private boolean isClaimed = false;
-
-    public boolean isClaimed() {
-        return isClaimed;
-    }
-
-    public void setClaimed(boolean claimed) {
-        this.isClaimed = claimed;
-    }
-
-    private String exerciseType; // e.g., "pushups", "squats", "plank"
-
-    public String getExerciseType() {
-        return exerciseType;
-    }
-
-    public void setExerciseType(String exerciseType) {
-        this.exerciseType = exerciseType;
-    }
-
-    // --- Progress Methods ---
-    // Increment progress
-    public void incrementProgress() {
-        if (!isCompleted()) {   // use your existing isCompleted()
-            this.progress++;
-        }
-    }
-
-    public void resetProgress() {
-        progress = 0;
-        claimed = false;
     }
 }

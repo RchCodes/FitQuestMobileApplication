@@ -19,7 +19,11 @@ public class QuestManager {
     public interface QuestProgressListener {
         void onQuestProgressUpdated(QuestModel quest);
         void onQuestCompleted(QuestModel quest, boolean leveledUp);
+
+        // NEW: fires whenever rewards change the avatar (xp, coins, stats)
+        void onAvatarUpdated(AvatarModel updatedAvatar);
     }
+
 
     private static QuestProgressListener progressListener;
 
@@ -65,18 +69,26 @@ public class QuestManager {
         for (QuestModel q : quests) {
             if (q.isCompleted()) continue;
 
-            String lowerTitle = q.getTitle() == null ? "" : q.getTitle().toLowerCase();
-            String lowerDesc  = q.getDescription() == null ? "" : q.getDescription().toLowerCase();
+            // Compare directly with quest's exerciseType
+            if (q.getExerciseType() != null &&
+                    q.getExerciseType().equalsIgnoreCase(exerciseType)) {
 
-            if (lowerTitle.contains(exerciseType.toLowerCase()) || lowerDesc.contains(exerciseType.toLowerCase())) {
                 q.addProgress(amount);
                 changed = true;
+
+                if (progressListener != null) {
+                    progressListener.onQuestProgressUpdated(q);
+                }
             }
         }
 
-        if (changed) persistAll(ctx);
+        if (changed) {
+            persistAll(ctx);
+        }
     }
 
+
+    // --- Claim quest manually ---
     // --- Claim quest manually ---
     public static boolean claimQuest(Context ctx, QuestModel quest) {
         if (quest == null || !quest.isCompleted() || quest.isClaimed()) return false;
@@ -87,13 +99,21 @@ public class QuestManager {
         quest.setClaimed(true);
         persistAll(ctx);
 
-        // Notify listener
+        // 🔥 Notify listener
         if (progressListener != null) {
+            // Send avatar update
+            AvatarModel avatar = AvatarManager.loadAvatarOffline(ctx);
+            if (avatar != null) {
+                progressListener.onAvatarUpdated(avatar);
+            }
+
+            // Still notify quest completion
             progressListener.onQuestCompleted(quest, leveledUp);
         }
 
         return leveledUp;
     }
+
 
     // --- Persistence ---
     private static void persistAll(Context ctx) {

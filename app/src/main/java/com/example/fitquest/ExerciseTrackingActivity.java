@@ -1,13 +1,16 @@
 package com.example.fitquest;
 
 import android.Manifest;
+import android.animation.ObjectAnimator;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,7 +44,11 @@ public class ExerciseTrackingActivity extends AppCompatActivity implements Exerc
 
     private PreviewView previewView;
     private PoseOverlayView poseOverlay;
-    private TextView repCounter, feedbackText, instructionText, timerText;
+
+    private ProgressBar circularProgress;
+    private TextView progressText;
+
+    private TextView feedbackText, instructionText;
     private View permissionLayout;
     private Button requestPermissionButton;
 
@@ -73,12 +80,14 @@ public class ExerciseTrackingActivity extends AppCompatActivity implements Exerc
 
         previewView = findViewById(R.id.previewView);
         poseOverlay = findViewById(R.id.poseOverlay);
-        repCounter = findViewById(R.id.repCounter);
         feedbackText = findViewById(R.id.feedbackText);
         instructionText = findViewById(R.id.instructionText);
-        timerText = findViewById(R.id.timerText);
         permissionLayout = findViewById(R.id.permission_layout);
         requestPermissionButton = findViewById(R.id.request_permission_button);
+
+        circularProgress = findViewById(R.id.circularProgress);
+        progressText = findViewById(R.id.progressText);
+
 
         audioManager = new AudioManager(this);
 
@@ -97,10 +106,16 @@ public class ExerciseTrackingActivity extends AppCompatActivity implements Exerc
     }
 
     private void setupUiForExercise() {
-        repCounter.setText(capitalize(exerciseType) + " Reps: 0/" + targetReps);
+
+        if (exerciseType.equals("plank")) {
+            circularProgress.setMax((int) targetReps); // seconds target
+            progressText.setText("0s");
+        } else {
+            circularProgress.setMax(targetReps);
+            progressText.setText("0/" + targetReps);
+        }
         instructionText.setText("Perform " + targetReps + " " + capitalize(exerciseType));
         feedbackText.setText("Get ready...");
-        timerText.setVisibility(exerciseType.equals("plank") ? View.VISIBLE : View.GONE);
         audioManager.speak("Starting " + exerciseType);
     }
 
@@ -196,21 +211,48 @@ public class ExerciseTrackingActivity extends AppCompatActivity implements Exerc
     // ExerciseListener callbacks
     @Override
     public void onRepCountChanged(int currentReps, int target) {
-        runOnUiThread(() -> repCounter.setText(capitalize(exerciseType) + " Reps: " + currentReps + "/" + target));
-        // report one rep to quests (delta)
+        runOnUiThread(() -> {
+            circularProgress.setMax(target);
+
+            // animate from old progress to new progress
+            int oldProgress = circularProgress.getProgress();
+            animateProgress(circularProgress, oldProgress, currentReps);
+
+            progressText.setText(currentReps + "/" + target);
+        });
+
         QuestManager.reportExerciseResult(this, exerciseType, 1);
     }
 
+
     @Override
     public void onPlankTimeUpdated(long seconds, long requiredSeconds) {
-        runOnUiThread(() -> timerText.setText("Plank Time: " + seconds + "s"));
-        // report only delta seconds to avoid overshoot
+        runOnUiThread(() -> {
+            circularProgress.setMax((int) requiredSeconds);
+
+            int remaining = (int) (requiredSeconds - seconds);
+
+            int oldProgress = circularProgress.getProgress();
+            animateProgress(circularProgress, oldProgress, remaining);
+
+            progressText.setText(remaining + "s");
+        });
+
+    // report only delta seconds to avoid overshoot
         long delta = seconds - lastReportedPlankSeconds;
         if (delta > 0) {
             QuestManager.reportExerciseResult(this, exerciseType, (int) delta);
             lastReportedPlankSeconds = seconds;
         }
     }
+
+    private void animateProgress(ProgressBar progressBar, int from, int to) {
+        ObjectAnimator animation = ObjectAnimator.ofInt(progressBar, "progress", from, to);
+        animation.setDuration(300); // 0.3s smooth transition
+        animation.setInterpolator(new DecelerateInterpolator());
+        animation.start();
+    }
+
 
     @Override
     public void onFeedbackUpdated(String feedback) {

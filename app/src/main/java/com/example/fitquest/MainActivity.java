@@ -60,6 +60,11 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
         // Register as listener when activity resumes
         QuestManager.setQuestProgressListener(this);
         // Refresh profile in case anything changed while paused
+        if (avatar != null) {
+            avatar.setProfileChangeListener(updatedAvatar -> runOnUiThread(this::loadProfileInfo));
+        }
+
+        loadProfileInfo();
         refreshProfile();
     }
 
@@ -68,7 +73,25 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
         super.onPause();
         // Clear listener to avoid memory leaks
         QuestManager.setQuestProgressListener(null);
+        if (avatar != null) {
+            avatar.setProfileChangeListener(null); // avoid leaks
+        }
     }
+
+    @Override
+    public void onAvatarUpdated(AvatarModel updatedAvatar) {
+        if (updatedAvatar == null) return;
+
+        // Update the class-level avatar
+        this.avatar = updatedAvatar;
+
+        // Reload avatar layers visually
+        runOnUiThread(() -> {
+            avatarHelper.loadAvatar(avatar);
+            loadProfileInfo();
+        });
+    }
+
 
     @Override
     public void onQuestProgressUpdated(QuestModel quest) {

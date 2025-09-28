@@ -9,126 +9,123 @@ import android.graphics.PointF;
 import android.util.AttributeSet;
 import android.view.View;
 
+import androidx.annotation.Nullable;
+
 import com.google.mlkit.vision.pose.Pose;
 import com.google.mlkit.vision.pose.PoseLandmark;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class PoseOverlayView extends View {
+
     private Pose pose;
-    private Paint landmarkPaint, connectionPaint, textPaint;
-    private int imageWidth, imageHeight, rotationDegrees, viewWidth, viewHeight;
+    private int imageWidth;
+    private int imageHeight;
+    private int viewWidth;
+    private int viewHeight;
     private boolean isFrontFacing;
-    private Matrix transformMatrix = null;
 
-    public PoseOverlayView(Context context) { super(context); init(); }
-    public PoseOverlayView(Context context, AttributeSet attrs) { super(context, attrs); init(); }
+    private final Paint paintLandmark;
+    private final Paint paintConnection;
 
-    private void init() {
-        landmarkPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        landmarkPaint.setColor(Color.CYAN);
-        landmarkPaint.setStyle(Paint.Style.FILL);
-        landmarkPaint.setStrokeWidth(8f);
+    public PoseOverlayView(Context context, @Nullable AttributeSet attrs) {
+        super(context, attrs);
 
-        connectionPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        connectionPaint.setColor(Color.CYAN);
-        connectionPaint.setStyle(Paint.Style.STROKE);
-        connectionPaint.setStrokeWidth(4f);
+        paintLandmark = new Paint();
+        paintLandmark.setColor(Color.WHITE);
+        paintLandmark.setStyle(Paint.Style.FILL);
+        paintLandmark.setStrokeWidth(12f);
 
-        textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        textPaint.setColor(Color.WHITE);
-        textPaint.setTextSize(28f);
-        textPaint.setStyle(Paint.Style.FILL);
+        paintConnection = new Paint();
+        paintConnection.setColor(Color.WHITE);
+        paintConnection.setStyle(Paint.Style.STROKE);
+        paintConnection.setStrokeWidth(8f);
     }
 
-    public void setPose(Pose pose) { this.pose = pose; postInvalidate(); }
-
-    public void setFrameInfo(int imageWidth, int imageHeight, int rotationDegrees,
-                             boolean isFrontFacing, int viewWidth, int viewHeight) {
-        this.imageWidth = imageWidth;
-        this.imageHeight = imageHeight;
-        this.rotationDegrees = rotationDegrees;
+    public void setFrameInfo(int imageWidth, int imageHeight, int rotation, boolean isFrontFacing, int viewWidth, int viewHeight) {
+        // Swap width/height if the buffer is rotated 90/270
+        if (rotation == 90 || rotation == 270) {
+            this.imageWidth = imageHeight;
+            this.imageHeight = imageWidth;
+        } else {
+            this.imageWidth = imageWidth;
+            this.imageHeight = imageHeight;
+        }
         this.isFrontFacing = isFrontFacing;
         this.viewWidth = viewWidth;
         this.viewHeight = viewHeight;
-        this.transformMatrix = null;
-        postInvalidate();
     }
 
-    public void setTransformMatrix(Matrix matrix) { this.transformMatrix = matrix; postInvalidate(); }
+    public void setPose(Pose pose) {
+        this.pose = pose;
+        invalidate();
+    }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (pose == null || imageWidth == 0 || imageHeight == 0 || viewWidth == 0 || viewHeight == 0) return;
+
+        if (pose == null) return;
 
         List<PoseLandmark> landmarks = pose.getAllPoseLandmarks();
-        if (landmarks == null || landmarks.isEmpty()) return;
+        if (landmarks.isEmpty()) return;
 
-        drawConnections(canvas);
+        // Draw connections first, then landmarks on top
+        drawConnections(canvas, landmarks);
+        drawLandmarks(canvas, landmarks);
+    }
 
-        for (PoseLandmark lm : landmarks) {
-            if (lm == null || lm.getInFrameLikelihood() < 0.2f) continue;
-            PointF mapped = mapPoint(lm.getPosition());
-            canvas.drawCircle(mapped.x, mapped.y, 8f, landmarkPaint);
+    private void drawLandmarks(Canvas canvas, List<PoseLandmark> landmarks) {
+        for (PoseLandmark landmark : landmarks) {
+            PointF point = mapPoint(landmark.getPosition());
+            canvas.drawCircle(point.x, point.y, 12f, paintLandmark);
         }
     }
 
-    private PointF mapPoint(PointF point) {
-        float scaleX = (float) viewWidth / imageWidth;
-        float scaleY = (float) viewHeight / imageHeight;
-        float scale = Math.min(scaleX, scaleY);
-
-        float scaledWidth = imageWidth * scale;
-        float scaledHeight = imageHeight * scale;
-        float offsetX = (viewWidth - scaledWidth) / 2f;
-        float offsetY = (viewHeight - scaledHeight) / 2f;
-
-        float x = point.x * scale + offsetX;
-        float y = point.y * scale + offsetY;
-
-        if (isFrontFacing) x = viewWidth - x;
-
-        if (rotationDegrees != 0) {
-            float cx = viewWidth / 2f;
-            float cy = viewHeight / 2f;
-            double rad = Math.toRadians(rotationDegrees);
-            float dx = x - cx;
-            float dy = y - cy;
-            x = (float) (dx * Math.cos(rad) - dy * Math.sin(rad)) + cx;
-            y = (float) (dx * Math.sin(rad) + dy * Math.cos(rad)) + cy;
-        }
-        return new PointF(x, y);
-    }
-
-    private void drawConnections(Canvas canvas) {
-        if (pose == null) return;
-        int[][] connections = {
-                {PoseLandmark.LEFT_EYE, PoseLandmark.RIGHT_EYE},
-                {PoseLandmark.NOSE, PoseLandmark.LEFT_EYE},
-                {PoseLandmark.NOSE, PoseLandmark.RIGHT_EYE},
+    private void drawConnections(Canvas canvas, List<PoseLandmark> landmarks) {
+        int[][] bodyJoints = {
                 {PoseLandmark.LEFT_SHOULDER, PoseLandmark.RIGHT_SHOULDER},
-                {PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_HIP},
-                {PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_HIP},
-                {PoseLandmark.LEFT_HIP, PoseLandmark.RIGHT_HIP},
                 {PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_ELBOW},
                 {PoseLandmark.LEFT_ELBOW, PoseLandmark.LEFT_WRIST},
                 {PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_ELBOW},
                 {PoseLandmark.RIGHT_ELBOW, PoseLandmark.RIGHT_WRIST},
+                {PoseLandmark.LEFT_SHOULDER, PoseLandmark.LEFT_HIP},
+                {PoseLandmark.RIGHT_SHOULDER, PoseLandmark.RIGHT_HIP},
+                {PoseLandmark.LEFT_HIP, PoseLandmark.RIGHT_HIP},
                 {PoseLandmark.LEFT_HIP, PoseLandmark.LEFT_KNEE},
                 {PoseLandmark.LEFT_KNEE, PoseLandmark.LEFT_ANKLE},
                 {PoseLandmark.RIGHT_HIP, PoseLandmark.RIGHT_KNEE},
                 {PoseLandmark.RIGHT_KNEE, PoseLandmark.RIGHT_ANKLE}
         };
 
-        for (int[] conn : connections) {
-            PoseLandmark a = pose.getPoseLandmark(conn[0]);
-            PoseLandmark b = pose.getPoseLandmark(conn[1]);
-            if (a == null || b == null) continue;
-            if (a.getInFrameLikelihood() < 0.2f || b.getInFrameLikelihood() < 0.2f) continue;
-            PointF pa = mapPoint(a.getPosition());
-            PointF pb = mapPoint(b.getPosition());
-            canvas.drawLine(pa.x, pa.y, pb.x, pb.y, connectionPaint);
+        for (int[] pair : bodyJoints) {
+            PoseLandmark first = pose.getPoseLandmark(pair[0]);
+            PoseLandmark second = pose.getPoseLandmark(pair[1]);
+            if (first != null && second != null) {
+                PointF point1 = mapPoint(first.getPosition());
+                PointF point2 = mapPoint(second.getPosition());
+                canvas.drawLine(point1.x, point1.y, point2.x, point2.y, paintConnection);
+            }
         }
+    }
+
+    private PointF mapPoint(PointF originalPoint) {
+        float x = originalPoint.x;
+        float y = originalPoint.y;
+
+        // Scale factors (fill mode, not fit)
+        float scaleX = (float) viewWidth / imageWidth;
+        float scaleY = (float) viewHeight / imageHeight;
+
+        x *= scaleX;
+        y *= scaleY;
+
+        // Mirror horizontally if front-facing (PreviewView already mirrors)
+        if (isFrontFacing) {
+            x = viewWidth - x;
+        }
+
+        return new PointF(x, y);
     }
 }

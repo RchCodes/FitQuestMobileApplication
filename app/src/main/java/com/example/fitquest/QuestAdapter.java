@@ -10,11 +10,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHolder> {
+public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHolder> implements QuestManager.QuestProgressListener {
 
     private final Context context;
     private List<QuestModel> quests;
@@ -22,11 +23,76 @@ public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHol
     public QuestAdapter(Context context, List<QuestModel> quests) {
         this.context = context;
         this.quests = quests;
+        QuestManager.setQuestProgressListener(this);
     }
 
     public void updateQuests(List<QuestModel> newQuests) {
-        this.quests = newQuests;
-        notifyDataSetChanged();
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override
+            public int getOldListSize() {
+                return quests.size();
+            }
+
+            @Override
+            public int getNewListSize() {
+                return newQuests.size();
+            }
+
+            @Override
+            public boolean areItemsTheSame(int oldItemPos, int newItemPos) {
+                return quests.get(oldItemPos).getId()
+                        .equals(newQuests.get(newItemPos).getId());
+            }
+
+            @Override
+            public boolean areContentsTheSame(int oldItemPos, int newItemPos) {
+                QuestModel oldQ = quests.get(oldItemPos);
+                QuestModel newQ = newQuests.get(newItemPos);
+
+                return oldQ.getProgress() == newQ.getProgress()
+                        && oldQ.isCompleted() == newQ.isCompleted()
+                        && oldQ.isClaimed() == newQ.isClaimed()
+                        && oldQ.getTarget() == newQ.getTarget()
+                        && oldQ.getTitle().equals(newQ.getTitle())
+                        && oldQ.getDescription().equals(newQ.getDescription());
+            }
+        });
+
+        quests.clear();
+        quests.addAll(newQuests);
+        diffResult.dispatchUpdatesTo(this);
+    }
+
+    @Override
+    public void onAvatarUpdated(AvatarModel updatedAvatar) {
+        // Quests list doesn’t directly display avatar info,
+        // so we don’t need to refresh anything here.
+        // Leave it empty, or trigger a UI refresh if you want.
+    }
+
+    @Override
+    public void onQuestProgressUpdated(QuestModel quest) {
+        int pos = findQuestPosition(quest);
+        if (pos >= 0) {
+            quests.set(pos, quest);
+            notifyItemChanged(pos); // triggers onBindViewHolder -> updates button text
+        }
+    }
+
+    private int findQuestPosition(QuestModel quest) {
+        for (int i = 0; i < quests.size(); i++) {
+            if (quests.get(i).getId().equals(quest.getId())) return i;
+        }
+        return -1;
+    }
+
+    @Override
+    public void onQuestCompleted(QuestModel quest, boolean leveledUp) {
+        int pos = findQuestPosition(quest);
+        if (pos >= 0) {
+            quests.set(pos, quest);
+            notifyItemChanged(pos); // rebinds and switches button to CLAIM
+        }
     }
 
     @NonNull

@@ -81,4 +81,6 @@ public class Quest {
 	public void dismiss() {
 		dialog.dismiss();
 	}
+
+
 }

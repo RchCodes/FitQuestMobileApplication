@@ -72,36 +72,37 @@
         android:maxWidth="300dp"
         android:gravity="center" />
 
-    <!-- Rep Counter (top-right) -->
-    <TextView
-        android:id="@+id/repCounter"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Reps: 0/10"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/white"
-        android:background="#80000000"
-        android:padding="10dp"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"/>
+    <!-- Circular Progress with text inside -->
+    <FrameLayout
+        android:id="@+id/progressContainer"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp">
 
-    <!-- Timer Display (for plank, below rep counter) -->
-    <TextView
-        android:id="@+id/timerText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Plank Time: 0s"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/white"
-        android:background="#80000000"
-        android:padding="10dp"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="64dp"
-        android:layout_marginEnd="16dp"
-        android:visibility="gone"/>
+        <ProgressBar
+            android:id="@+id/circularProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:indeterminate="false"
+            android:max="100"
+            android:progress="0"
+            android:rotation="-90"
+            android:progressDrawable="@drawable/circular_progress_drawable"/>
+
+        <TextView
+            android:id="@+id/progressText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="0/10"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:textSize="18sp"/>
+    </FrameLayout>
+    ```
+
 
     <!-- Feedback Text (bottom center) -->
     <TextView

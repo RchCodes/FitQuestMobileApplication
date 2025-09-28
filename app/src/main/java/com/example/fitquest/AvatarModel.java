@@ -44,6 +44,7 @@ public class AvatarModel {
     private int agility = 0;
     private int flexibility = 0;
     private int stamina = 0;
+    private ProfileChangeListener listener;
 
     // Constructors
     public AvatarModel() {
@@ -120,8 +121,8 @@ public class AvatarModel {
     public void setLips(String lips) { this.lips = lips; }
 
     public int getCoins() { return coins; }
-    public void setCoins(int coins) { this.coins = coins; }
-    public void addCoins(int amount) { this.coins += amount; }
+    public void setCoins(int coins) { this.coins = coins; notifyChange(); }
+    public void addCoins(int amount) { this.coins += amount; notifyChange(); }
 
     public int getXp() { return xp; }
     /** Adds XP and returns true if level increased */
@@ -134,6 +135,7 @@ public class AvatarModel {
         xp += amount;
         int oldLevel = level;
         checkLevelUp();
+        notifyChange();
         return level > oldLevel;
     }
 
@@ -191,6 +193,7 @@ public class AvatarModel {
         else if (level >= 15) rank = 2; // Elite
         else if (level >= 10) rank = 1; // Warrior
         else rank = 0; // Novice
+        notifyChange();
     }
 
     public int getXpNeeded() {
@@ -208,15 +211,29 @@ public class AvatarModel {
         if (xp < 0) xp = 0;
         this.xp = xp;
         checkLevelUp(); // Ensure level and rank stay consistent
+        notifyChange();
     }
 
     public void setLevel(int level) {
         this.level = Math.min(level, LevelProgression.getMaxLevel());
         checkLevelUp(); // Adjust XP and rank if needed
+        notifyChange();
     }
 
     public void setRank(int rank) {
         this.rank = Math.max(0, Math.min(rank, 3)); // 0=Novice, 3=Hero
     }
+
+    // Listener setter
+    public void setProfileChangeListener(ProfileChangeListener listener) {
+        this.listener = listener;
+    }
+
+    private void notifyChange() {
+        if (listener != null) {
+            listener.onProfileChanged(this);
+        }
+    }
+
 
 }

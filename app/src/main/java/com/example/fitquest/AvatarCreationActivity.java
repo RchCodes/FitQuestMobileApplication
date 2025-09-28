@@ -96,10 +96,22 @@ public class AvatarCreationActivity extends AppCompatActivity {
 
 
     // Color palette (8 fixed colors)
+    // Custom Color Palette
     private final int[] colors = {
-            Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW,
-            Color.CYAN, Color.MAGENTA, Color.WHITE, Color.BLACK
+            Color.parseColor("#303030"), // BLACK
+            Color.parseColor("#AFBBBC"), // GRAY
+            Color.parseColor("#00B000"), // GREEN
+            Color.parseColor("#001089"), // BLUE
+            Color.parseColor("#FFDD46"), // YELLOW
+            Color.parseColor("#3B0059"), // VIOLET
+            Color.parseColor("#5E0000"), // RED
+            Color.parseColor("#B000B0"), // PINK
+            Color.parseColor("#CF4F00"), // ORANGE
+            Color.parseColor("#D88C00"), // ORANGE
+            Color.parseColor("#613D00"), // BROWN
+            Color.parseColor("#00AC95")  // CYAN
     };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

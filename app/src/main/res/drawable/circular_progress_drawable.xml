@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Background circle (light gray outline) -->
+    <item android:id="@android:id/background">
+        <shape android:shape="oval">
+            <stroke
+                android:width="15dp"
+                android:color="#33FFFFFF" /> <!-- faint white -->
+        </shape>
+    </item>
+
+    <!-- Progress circle (solid white stroke) -->
+    <item android:id="@android:id/progress">
+        <shape android:shape="oval">
+            <stroke
+                android:width="15dp"
+                android:color="@android:color/white" />
+        </shape>
+    </item>
+
+</layer-list>
+
