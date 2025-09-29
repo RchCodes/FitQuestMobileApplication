@@ -63,6 +63,13 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 
+    // Google Fit History API
+    implementation("com.google.android.gms:play-services-fitness:21.1.0")
+    // Google Sign-In (required for Fit)
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    // Facebook Sign-In
+    implementation("com.facebook.android:facebook-android-sdk:latest.release")
+
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:34.2.0"))
     implementation("com.google.firebase:firebase-analytics")

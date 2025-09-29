@@ -77,6 +77,14 @@ public class AuthManager {
                 });
     }
 
+    public FirebaseAuth getFirebaseAuth() {
+        return auth;
+    }
+
+    public DatabaseReference getDbRef() {
+        return dbRef;
+    }
+
     public void logout() {
         auth.signOut();
     }
@@ -84,4 +92,4 @@ public class AuthManager {
     public FirebaseUser getCurrentUser() {
         return auth.getCurrentUser();
     }
-}
+    }

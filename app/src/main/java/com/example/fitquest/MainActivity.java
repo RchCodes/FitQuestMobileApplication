@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
         playerLevel = findViewById(R.id.player_level);
         coins = findViewById(R.id.coins);
         expBar = findViewById(R.id.exp_bar);
-        expText = findViewById(R.id.exp_text); // add TextView for XP display
+        expText = findViewById(R.id.exp_text_overlay); // add TextView for XP display
 
         // Initialize avatar helper with all layers
         avatarHelper = new AvatarDisplayManager(
@@ -148,9 +148,13 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
         findViewById(R.id.store_button).setOnClickListener(v -> new Store(this).show());
         findViewById(R.id.quest_button).setOnClickListener(v -> new Quest(this).show());
         findViewById(R.id.goals_button).setOnClickListener(v -> new Goals(this).show());
-        findViewById(R.id.gear_button).setOnClickListener(v -> new Gear(this).show());
+        findViewById(R.id.gear_button).setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, GearActivity.class))
+        );
         findViewById(R.id.friends_button).setOnClickListener(v -> new Friends(this).show());
-        findViewById(R.id.arena_button).setOnClickListener(v -> new Arena(this).show());
+        findViewById(R.id.arena_button).setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, ArenaActivity.class))
+        );
         findViewById(R.id.challenge_button).setOnClickListener(v -> new Challenge(this).show());
         findViewById(R.id.stats_button).setOnClickListener(v -> new CharacterStats(this,avatar).show());
     }

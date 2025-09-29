@@ -101,6 +101,7 @@ public class Profile {
 
         switchButton.setOnClickListener(v -> {
             // Switching logic here
+
         });
     }
 

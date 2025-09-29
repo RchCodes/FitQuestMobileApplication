@@ -11,7 +11,7 @@
     <!-- PROFILE (top-left) -->
     <LinearLayout
         android:id="@+id/profile_section"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
@@ -20,7 +20,9 @@
         android:clickable="true"
         android:focusable="true"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp">
 
         <ImageView
             android:id="@+id/user_icon"
@@ -72,7 +74,7 @@
     <!-- COINS badge (left of settings) -->
     <LinearLayout
         android:id="@+id/coins_container"
-        android:layout_width="70dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
@@ -102,45 +104,60 @@
             android:textSize="14sp"/>
     </LinearLayout>
 
-    <FrameLayout
+    <!-- EXP container: spans from left edge to just before settings button, placed under profile -->
+    <LinearLayout
         android:id="@+id/expContainer"
-        android:layout_width="125dp"
-        android:layout_height="12dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@id/profile_section"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="@id/profile_section">
+        app:layout_constraintEnd_toEndOf="@id/profile_section"
+        android:layout_marginStart="8dp">
+
+        <!-- Outer frame / border -->
         <FrameLayout
-            android:id="@+id/expFillContainer"
-            android:layout_width="125dp"
+            android:id="@+id/expFrame"
+            android:layout_width="match_parent"
             android:layout_height="12dp"
             android:background="@drawable/progress_bg"
-            android:padding="2dp"
-            app:layout_constraintTop_toBottomOf="@id/expContainer"
-            app:layout_constraintStart_toStartOf="@id/expContainer"
-            app:layout_constraintEnd_toEndOf="@id/expContainer"> <!-- padding ensures ProgressBar is smaller than border -->
+            android:padding="2dp">
 
+            <!-- The actual progress fill -->
             <ProgressBar
                 android:id="@+id/exp_bar"
                 style="@android:style/Widget.ProgressBar.Horizontal"
-                android:layout_width="125dp"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:progress="50"
                 android:max="100"
                 android:progressDrawable="@drawable/progress_fill"
                 android:clipToPadding="false"/>
+
+            <!-- Overlay numeric progress centered on the bar -->
+            <TextView
+                android:id="@+id/exp_text_overlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="50/100"
+                android:textColor="#FFFFFF"
+                android:textSize="8sp"
+                android:includeFontPadding="false"/>
         </FrameLayout>
+
+        <!-- Label under the bar indicating it's the EXP -->
         <TextView
-            android:id="@+id/exp_text"
-            android:layout_width="125dp"
+            android:id="@+id/exp_label"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
-            android:text="50/100"
+            android:text="EXP"
             android:textColor="#FFFFFF"
-            android:textSize="8dp" />
-    </FrameLayout>
-    <!-- EXP bar under profile -->
-
+            android:textSize="10sp"
+            android:layout_marginTop="4dp"/>
+    </LinearLayout>
 
     <!-- Avatar layers stacked in FrameLayout -->
     <FrameLayout
@@ -208,8 +225,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitXY"/>
-    </FrameLayout>
 
+    </FrameLayout>
 
     <!-- LEFT vertical buttons -->
     <LinearLayout
@@ -222,7 +239,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <ImageView android:id="@+id/stats_button"
+        <ImageView
+            android:id="@+id/stats_button"
             android:layout_width="70dp"
             android:layout_height="70dp"
             android:src="@drawable/b_stats2"
@@ -231,7 +249,8 @@
             android:clickable="true"
             android:focusable="true"/>
 
-        <ImageView android:id="@+id/gear_button"
+        <ImageView
+            android:id="@+id/gear_button"
             android:layout_width="70dp"
             android:layout_height="70dp"
             android:src="@drawable/b_gear2"
@@ -240,7 +259,8 @@
             android:clickable="true"
             android:focusable="true"/>
 
-        <ImageView android:id="@+id/arena_button"
+        <ImageView
+            android:id="@+id/arena_button"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:src="@drawable/b_arena"
@@ -260,7 +280,8 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <ImageView android:id="@+id/quest_button"
+        <ImageView
+            android:id="@+id/quest_button"
             android:layout_width="70dp"
             android:layout_height="70dp"
             android:layout_marginBottom="12dp"
@@ -268,7 +289,8 @@
             android:clickable="true"
             android:focusable="true"/>
 
-        <ImageView android:id="@+id/goals_button"
+        <ImageView
+            android:id="@+id/goals_button"
             android:layout_width="70dp"
             android:layout_height="70dp"
             android:layout_marginBottom="12dp"
@@ -276,7 +298,8 @@
             android:clickable="true"
             android:focusable="true"/>
 
-        <ImageView android:id="@+id/store_button"
+        <ImageView
+            android:id="@+id/store_button"
             android:layout_width="70dp"
             android:layout_height="70dp"
             android:layout_marginBottom="12dp"
@@ -284,7 +307,8 @@
             android:clickable="true"
             android:focusable="true"/>
 
-        <ImageView android:id="@+id/friends_button"
+        <ImageView
+            android:id="@+id/friends_button"
             android:layout_width="70dp"
             android:layout_height="70dp"
             android:layout_marginBottom="12dp"
