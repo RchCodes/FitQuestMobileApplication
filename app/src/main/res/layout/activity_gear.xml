@@ -1,138 +1,229 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@drawable/ic_gear_background">
 
-    <!-- Section 1: Back, Avatar, Save -->
-    <LinearLayout
+    <!-- Section 1: Back, Avatar + Item Details, Save -->
+    <FrameLayout
         android:id="@+id/avatarSection"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
+        android:padding="8dp"
         android:background="@drawable/ic_gear_background"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/gearSection"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_default="spread">
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <Button
+        <!-- Back Button -->
+        <ImageView
             android:id="@+id/btnBack"
-            android:layout_width="80dp"
-            android:layout_height="40dp"
-            android:layout_gravity="start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_margin="8dp"
-            android:backgroundTint="#B71C1C"
-            android:text="BACK"
-            android:textColor="#FFFFFF" />
+            android:src="@drawable/button_back"
+            android:layout_gravity="start|top"/>
 
-        <!-- Avatar Preview -->
-        <FrameLayout
-            android:id="@+id/avatar_frame"
-            android:layout_width="200dp"
-            android:layout_height="250dp"
-            android:layout_gravity="center"
-            android:layout_marginBottom="12dp">
+        <!-- Character + Description beside each other -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center">
 
-            <ImageView
-                android:id="@+id/characterStand"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="17dp"
-                android:src="@drawable/ic_stand"
-                android:layout_gravity="bottom"/>
+            <!-- Character Preview -->
+            <FrameLayout
+                android:id="@+id/avatar_frame"
+                android:layout_width="0dp"
+                android:layout_height="250dp"
+                android:layout_weight="1"
+                android:layout_gravity="center_vertical"
+                android:layout_marginBottom="20dp"
+                android:layout_margin="8dp">
 
-            <ImageView
-                android:id="@+id/baseBodyLayer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="fitXY"
-                android:src="@drawable/body_male" />
+                <!-- Stand image pinned to bottom -->
+                <ImageView
+                    android:id="@+id/characterStand"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/ic_stand"
+                    android:layout_gravity="bottom|center"/>
 
-            <ImageView
-                android:id="@+id/outfitLayer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="fitXY" />
+                <!-- Inner Frame for stacked body layers -->
+                <FrameLayout
+                    android:id="@+id/characterLayers"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|center">
 
-            <ImageView
-                android:id="@+id/weaponLayer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="fitXY" />
+                    <ImageView
+                        android:id="@+id/baseBodyLayer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:adjustViewBounds="true"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/body_male"/>
 
-            <ImageView
-                android:id="@+id/hairFillLayer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="fitXY" />
+                    <ImageView
+                        android:id="@+id/outfitLayer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitCenter"/>
 
-            <ImageView
-                android:id="@+id/hairOutlineLayer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="fitXY" />
+                    <ImageView
+                        android:id="@+id/weaponLayer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitCenter"/>
 
-            <ImageView
-                android:id="@+id/eyesFillLayer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="fitXY" />
+                    <ImageView
+                        android:id="@+id/hairFillLayer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitCenter"/>
 
-            <ImageView
-                android:id="@+id/eyesOutlineLayer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="fitXY" />
+                    <ImageView
+                        android:id="@+id/hairOutlineLayer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitCenter"/>
 
-            <ImageView
-                android:id="@+id/noseLayer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="fitXY" />
+                    <ImageView
+                        android:id="@+id/eyesFillLayer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitCenter"/>
 
-            <ImageView
-                android:id="@+id/lipsLayer"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="fitXY" />
-        </FrameLayout>
+                    <ImageView
+                        android:id="@+id/eyesOutlineLayer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitCenter"/>
+
+                    <ImageView
+                        android:id="@+id/noseLayer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitCenter"/>
+
+                    <ImageView
+                        android:id="@+id/lipsLayer"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="fitCenter"/>
+                </FrameLayout>
+            </FrameLayout>
+
+
+
+            <!-- Item Details Box (beside character) -->
+            <LinearLayout
+                android:id="@+id/itemDetails"
+                android:layout_width="0dp"
+                android:layout_height="200dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_item_desc"
+                android:elevation="6dp"
+                android:orientation="vertical"
+                android:padding="28dp"
+                android:layout_margin="8dp">
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/itemName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Phantom Leggings (TANK)"
+                            android:textColor="#000000"
+                            android:textSize="16sp"
+                            android:textStyle="bold"/>
+
+                        <TextView
+                            android:id="@+id/itemDesc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Light as mist, perfect for evasion."
+                            android:textColor="#333333"
+                            android:textSize="14sp"/>
+
+                        <TextView
+                            android:id="@+id/itemBoosts"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Boosts:\n+15% Flexibility"
+                            android:textColor="#111111"
+                            android:textSize="14sp"/>
+
+                        <TextView
+                            android:id="@+id/itemSkill"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="Skill Effect:\n+10% Dodge Chance"
+                            android:textColor="#111111"
+                            android:textSize="14sp"/>
+                    </LinearLayout>
+                </ScrollView>
+            </LinearLayout>
+        </LinearLayout>
 
         <!-- Save Button -->
         <Button
             android:id="@+id/btnSave"
-            android:layout_width="100dp"
-            android:layout_height="40dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
             android:backgroundTint="#FFA000"
             android:text="SAVE"
             android:textColor="#FFFFFF"
-            android:layout_gravity="center|bottom"/>
-    </LinearLayout>
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="65dp"/>
+
+        <Button
+            android:id="@+id/btnEquip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="EQUIP"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#FFA000"
+            android:layout_marginTop="12dp"
+            android:layout_marginRight="70dp"
+            android:layout_marginBottom="20dp"
+            android:layout_gravity="bottom|end" />
+    </FrameLayout>
 
     <!-- Section 2: Gear Tabs + Gear Grid -->
     <LinearLayout
         android:id="@+id/gearSection"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:orientation="vertical"
-        android:background="@drawable/bg_right_panel_target"
+        android:background="@drawable/bg_gear"
         app:layout_constraintTop_toBottomOf="@id/avatarSection"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Gear Type Tabs -->
-
-        <!-- Gear Grid -->
+        <!-- Gear Tabs -->
         <LinearLayout
             android:id="@+id/gearTabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:layout_marginTop="8dp"
             android:orientation="horizontal"
             android:padding="8dp">
 
@@ -140,7 +231,7 @@
                 android:id="@+id/tabAll"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_marginRight="10dp"
+                android:layout_marginRight="8dp"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_all" />
 
@@ -148,7 +239,7 @@
                 android:id="@+id/tabWeapon"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_marginRight="10dp"
+                android:layout_marginRight="8dp"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_weapon" />
 
@@ -156,7 +247,7 @@
                 android:id="@+id/tabArmor"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_marginRight="10dp"
+                android:layout_marginRight="8dp"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_armor" />
 
@@ -164,7 +255,7 @@
                 android:id="@+id/tabPants"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_marginRight="10dp"
+                android:layout_marginRight="8dp"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_pants" />
 
@@ -172,7 +263,7 @@
                 android:id="@+id/tabBoots"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:layout_marginRight="10dp"
+                android:layout_marginRight="8dp"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_boots" />
 
@@ -184,16 +275,16 @@
                 android:src="@drawable/ic_accessory" />
         </LinearLayout>
 
+        <!-- Gear Grid (auto-fit columns) -->
         <GridView
             android:id="@+id/gridGear"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:clipToPadding="false"
-            android:horizontalSpacing="8dp"
+            android:horizontalSpacing="10dp"
             android:numColumns="4"
-            android:padding="12dp"
-            android:verticalSpacing="8dp" />
+            android:padding="10dp"
+            android:verticalSpacing="10dp"/>
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -12,4 +12,12 @@ public class Effect {
     void remove(Character target, CombatContext context) // cleanup
     {
     }
+
+    public char[] getName() {
+        return new char[0];
+    }
+
+    public char[] getValue() {
+        return new char[0];
+    }
 }

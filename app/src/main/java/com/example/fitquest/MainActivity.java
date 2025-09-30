@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
     private void setupButtons() {
         findViewById(R.id.profile_section).setOnClickListener(v -> {profile = new Profile(this, googleSignInLauncher); profile.show();});
         findViewById(R.id.settings_button).setOnClickListener(v -> new Settings(this).show());
-        findViewById(R.id.store_button).setOnClickListener(v -> new Store(this).show());
+        findViewById(R.id.store_button).setOnClickListener(v -> startActivity(new Intent(this, StoreActivity.class)));
         findViewById(R.id.quest_button).setOnClickListener(v -> new Quest(this).show());
         findViewById(R.id.goals_button).setOnClickListener(v -> new Goals(this).show());
         findViewById(R.id.gear_button).setOnClickListener(v -> startActivity(new Intent(this, GearActivity.class)));

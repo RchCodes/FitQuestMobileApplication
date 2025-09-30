@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="80dp"
+    android:layout_height="80dp"
+    android:foregroundGravity="center">
+
+    <!-- Item icon -->
+    <ImageView
+        android:id="@+id/itemIcon"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="10dp"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true" />
+
+    <!-- Frame overlay -->
+    <ImageView
+        android:id="@+id/itemFrame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/bg_item_frame"
+        android:scaleType="fitXY" />
+</FrameLayout>

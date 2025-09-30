@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 public class GearModel {
+    public String description;
     String name;
     GearType type; // Weapon, Armor, Pants, Boots, Accessory
     ClassType allowedClass;
