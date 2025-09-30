@@ -14,7 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class AvatarCreationActivity extends AppCompatActivity {
+public class AvatarCreationActivity extends BaseActivity {
 
     // Texts for current selection
     private TextView tvHair, tvEyes, tvNose, tvLips;

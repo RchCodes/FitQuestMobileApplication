@@ -51,6 +51,7 @@ dependencies {
 
     // ML Kit Pose Detection
     implementation("com.google.mlkit:pose-detection:18.0.0-beta4")
+// or newer
 
     // Lifecycle
     implementation("androidx.lifecycle:lifecycle-livedata:2.8.4")

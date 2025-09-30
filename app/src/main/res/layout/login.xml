@@ -35,7 +35,7 @@
 
     <!-- Forgot Password -->
     <TextView
-        android:id="@+id/text_forgot_password"
+        android:id="@+id/tv_forgot_password"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
@@ -50,7 +50,7 @@
         android:id="@+id/button_login"
         android:layout_width="150dp"
         android:layout_height="50dp"
-        android:layout_below="@id/text_forgot_password"
+        android:layout_below="@id/tv_forgot_password"
         android:layout_centerHorizontal="true"
         android:text="LOGIN"
         android:textStyle="bold"

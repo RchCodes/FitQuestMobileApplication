@@ -2,8 +2,8 @@
     <string name="app_name">FitQuest</string>
 
     <string name="facebook_app_id">24531649919861966</string>
-    <string name="fb_login_protocol_scheme">fb1234</string>
-    <string name="facebook_client_token">56789</string>
+    <string name="fb_login_protocol_scheme">fb24531649919861966</string>
+    <string name="facebook_client_token">c378a05f3644b99ad9b2aa9526865504</string>
 
 
 </resources>

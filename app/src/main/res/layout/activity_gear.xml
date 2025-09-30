@@ -13,7 +13,6 @@
         android:layout_height="0dp"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:padding="8dp"
         android:background="@drawable/ic_gear_background"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/gearSection"
@@ -21,25 +20,22 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_default="spread">
 
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <Button
-                android:id="@+id/btnBack"
-                android:layout_width="80dp"
-                android:layout_height="40dp"
-                android:layout_gravity="start"
-                android:backgroundTint="#B71C1C"
-                android:text="BACK"
-                android:textColor="#FFFFFF"/>
-        </FrameLayout>
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="80dp"
+            android:layout_height="40dp"
+            android:layout_gravity="start"
+            android:layout_margin="8dp"
+            android:backgroundTint="#B71C1C"
+            android:text="BACK"
+            android:textColor="#FFFFFF" />
 
         <!-- Avatar Preview -->
         <FrameLayout
             android:id="@+id/avatar_frame"
             android:layout_width="200dp"
             android:layout_height="250dp"
+            android:layout_gravity="center"
             android:layout_marginBottom="12dp">
 
             <ImageView
@@ -48,7 +44,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="17dp"
                 android:src="@drawable/ic_stand"
-                android:scaleType="fitCenter"
                 android:layout_gravity="bottom"/>
 
             <ImageView
@@ -110,11 +105,12 @@
         <!-- Save Button -->
         <Button
             android:id="@+id/btnSave"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
             android:backgroundTint="#FFA000"
             android:text="SAVE"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"
+            android:layout_gravity="center|bottom"/>
     </LinearLayout>
 
     <!-- Section 2: Gear Tabs + Gear Grid -->
@@ -130,63 +126,64 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <!-- Gear Type Tabs -->
+
+        <!-- Gear Grid -->
         <LinearLayout
             android:id="@+id/gearTabs"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:gravity="center"
+            android:orientation="horizontal"
             android:padding="8dp">
 
             <ImageButton
                 android:id="@+id/tabAll"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@drawable/ic_all"
                 android:layout_marginRight="10dp"
-                android:background="@android:color/transparent"/>
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_all" />
 
             <ImageButton
                 android:id="@+id/tabWeapon"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@drawable/ic_weapon"
                 android:layout_marginRight="10dp"
-                android:background="@android:color/transparent"/>
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_weapon" />
 
             <ImageButton
                 android:id="@+id/tabArmor"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@drawable/ic_armor"
                 android:layout_marginRight="10dp"
-                android:background="@android:color/transparent"/>
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_armor" />
 
             <ImageButton
                 android:id="@+id/tabPants"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@drawable/ic_pants"
                 android:layout_marginRight="10dp"
-                android:background="@android:color/transparent"/>
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_pants" />
 
             <ImageButton
                 android:id="@+id/tabBoots"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@drawable/ic_boots"
                 android:layout_marginRight="10dp"
-                android:background="@android:color/transparent"/>
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_boots" />
 
             <ImageButton
                 android:id="@+id/tabAccessory"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@drawable/ic_accessory"
-                android:background="@android:color/transparent"/>
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_accessory" />
         </LinearLayout>
 
-        <!-- Gear Grid -->
         <GridView
             android:id="@+id/gridGear"
             android:layout_width="match_parent"
@@ -196,7 +193,7 @@
             android:horizontalSpacing="8dp"
             android:numColumns="4"
             android:padding="12dp"
-            android:verticalSpacing="8dp"/>
+            android:verticalSpacing="8dp" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -38,7 +38,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ExerciseTrackingActivity extends AppCompatActivity implements ExerciseDetector.ExerciseListener {
+public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDetector.ExerciseListener {
 
     private static final String TAG = "ExerciseTrackingAct";
 
@@ -219,6 +219,9 @@ public class ExerciseTrackingActivity extends AppCompatActivity implements Exerc
             animateProgress(circularProgress, oldProgress, currentReps);
 
             progressText.setText(currentReps + "/" + target);
+
+            // 🔊 Play a short beep per rep
+            audioManager.playBeep();
         });
 
         QuestManager.reportExerciseResult(this, exerciseType, 1);
@@ -253,11 +256,20 @@ public class ExerciseTrackingActivity extends AppCompatActivity implements Exerc
         animation.start();
     }
 
+    private String lastFeedback = "";
 
     @Override
     public void onFeedbackUpdated(String feedback) {
-        runOnUiThread(() -> feedbackText.setText(feedback));
+        runOnUiThread(() -> {
+            feedbackText.setText(feedback);
+
+            if (!feedback.equals(lastFeedback)) {
+                audioManager.speak(feedback);
+                lastFeedback = feedback;
+            }
+        });
     }
+
 
     @Override
     public void onExerciseCompleted(String summaryMessage) {

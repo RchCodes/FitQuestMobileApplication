@@ -8,21 +8,18 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -30,269 +27,208 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.FacebookAuthProvider;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
 
+public class Login extends BaseActivity {
 
-public class Login extends AppCompatActivity {
-
-    private EditText etUsername, etPassword;
+    private EditText etEmail, etPassword;
     private Button btnLogin, btnSignup;
-    private ImageView btnFacebook, btnGoogle;
-
+    private ImageView btnGoogle, btnFacebook;
+    private FrameLayout progressOverlay;
+    private AuthManager authManager;
+    private CallbackManager callbackManager;
     private GoogleSignInClient googleSignInClient;
     private static final int RC_SIGN_IN = 1001;
-
-    private FrameLayout progressOverlay;
-
-    private AuthManager authManager;
-
-    CallbackManager callbackManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login);
 
-        callbackManager = CallbackManager.Factory.create();
-
-
-        callbackManager = CallbackManager.Factory.create();
-
-        LoginManager.getInstance().registerCallback(callbackManager,
-                new FacebookCallback<LoginResult>() {
-                    @Override
-                    public void onSuccess(LoginResult loginResult) {
-                        // App code
-                    }
-
-                    @Override
-                    public void onCancel() {
-                        // App code
-                    }
-
-                    @Override
-                    public void onError(FacebookException exception) {
-                        // App code
-                    }
-                });
-
-        // 🔹 Match with new XML IDs
-        etUsername = findViewById(R.id.edit_username);
+        etEmail = findViewById(R.id.edit_username);
         etPassword = findViewById(R.id.edit_password);
-
         btnLogin = findViewById(R.id.button_login);
         btnSignup = findViewById(R.id.button_signup);
-        btnFacebook = findViewById(R.id.fb_icon);
         btnGoogle = findViewById(R.id.google_icon);
+        btnFacebook = findViewById(R.id.fb_icon);
         progressOverlay = findViewById(R.id.progressOverlay);
+        TextView tvForgotPassword = findViewById(R.id.tv_forgot_password);
 
         authManager = new AuthManager();
 
-        // Configure Google Sign In
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id)) // from google-services.json
-                .requestEmail()
-                .build();
+        setupGoogleSignIn();
+        setupFacebookSignIn();
 
-        googleSignInClient = GoogleSignIn.getClient(this, gso);
-
-        // Google button click
+        btnLogin.setOnClickListener(v -> loginWithEmail());
+        btnSignup.setOnClickListener(v -> startActivity(new Intent(Login.this, AccountCreation.class)));
         btnGoogle.setOnClickListener(v -> signInWithGoogle());
+        btnFacebook.setOnClickListener(v -> LoginManager.getInstance().logInWithReadPermissions(Login.this,
+                Arrays.asList("email", "public_profile")));
 
+        tvForgotPassword.setOnClickListener(v -> {
+            String email = etEmail.getText().toString().trim();
 
-        // 🔹 Login button
-        btnLogin.setOnClickListener(v -> {
-            String username = etUsername.getText().toString().trim();
-            String password = etPassword.getText().toString().trim();
-
-            // Validation
-            if (username.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Please enter both username and password", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (!Patterns.EMAIL_ADDRESS.matcher(username).matches()) {
-                Toast.makeText(this, "Invalid email address", Toast.LENGTH_SHORT).show();
+            if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                etEmail.setError("Enter a valid email");
+                etEmail.requestFocus();
                 return;
             }
 
-            progressOverlay.setVisibility(View.VISIBLE);
-
-            authManager.login(username, password, new AuthManager.AuthCallback() {
-                @Override
-                public void onSuccess(FirebaseUser user) {
-                    // Check if user has an avatar
-                    FirebaseDatabase.getInstance().getReference("users")
-                            .child(user.getUid())
-                            .child("avatar")
-                            .addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                                    progressOverlay.setVisibility(View.GONE);
-                                    if (snapshot.exists()) {
-                                        // Avatar exists → go to MainActivity
-                                        startActivity(new Intent(Login.this, MainActivity.class));
-                                    } else {
-                                        // No avatar → force creation
-                                        startActivity(new Intent(Login.this, AvatarCreationActivity.class));
-                                    }
-                                    finish();
-                                }
-
-                                @Override
-                                public void onCancelled(@NonNull DatabaseError error) {
-                                    progressOverlay.setVisibility(View.GONE);
-                                    Toast.makeText(Login.this, "Failed to check avatar: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                                }
-                            });
-                }
-
-                @Override
-                public void onFailure(String errorMessage) {
-                    progressOverlay.setVisibility(View.GONE);
-                    Toast.makeText(Login.this, "Login failed: " + errorMessage, Toast.LENGTH_LONG).show();
-                }
-            });
-        });
-
-        // 🔹 Signup button
-        btnSignup.setOnClickListener(v ->
-                startActivity(new Intent(Login.this, AccountCreation.class))
-        );
-
-        // 🔹 Placeholder for social login
-        btnFacebook.setOnClickListener(v -> {
-            LoginManager.getInstance().logInWithReadPermissions(
-                    Login.this,
-                    Arrays.asList("email", "public_profile")
-            );
-
-            LoginManager.getInstance().registerCallback(callbackManager,
-                    new FacebookCallback<LoginResult>() {
-                        @Override
-                        public void onSuccess(LoginResult loginResult) {
-                            handleFacebookAccessToken(loginResult.getAccessToken());
-                        }
-
-                        @Override
-                        public void onCancel() {
-                            Toast.makeText(Login.this, "Facebook login canceled", Toast.LENGTH_SHORT).show();
-                        }
-
-                        @Override
-                        public void onError(FacebookException exception) {
-                            Toast.makeText(Login.this, "Facebook login failed: " + exception.getMessage(), Toast.LENGTH_LONG).show();
+            FirebaseAuth.getInstance().fetchSignInMethodsForEmail(email)
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            boolean emailPasswordUser = task.getResult().getSignInMethods().contains("password");
+                            if (emailPasswordUser) {
+                                FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                                        .addOnCompleteListener(resetTask -> {
+                                            if (resetTask.isSuccessful()) {
+                                                Toast.makeText(this, "Password reset email sent to " + email, Toast.LENGTH_LONG).show();
+                                            } else {
+                                                Toast.makeText(this, "Error: " + resetTask.getException().getMessage(), Toast.LENGTH_LONG).show();
+                                            }
+                                        });
+                            } else {
+                                Toast.makeText(this, "This email is linked with Google/Facebook login. Reset your password there.", Toast.LENGTH_LONG).show();
+                            }
+                        } else {
+                            Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
         });
 
     }
 
-    private void handleFacebookAccessToken(com.facebook.AccessToken token) {
+    // ─────────────── Email Login ───────────────
+    private void loginWithEmail() {
+        String email = etEmail.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            Toast.makeText(this, "Invalid email address", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         progressOverlay.setVisibility(View.VISIBLE);
 
-        AuthCredential credential = com.google.firebase.auth.FacebookAuthProvider.getCredential(token.getToken());
-        authManager.getFirebaseAuth().signInWithCredential(credential)
-                .addOnCompleteListener(this, task -> {
-                    progressOverlay.setVisibility(View.GONE);
-                    if (task.isSuccessful()) {
-                        FirebaseUser user = authManager.getFirebaseAuth().getCurrentUser();
-                        if (user != null) {
-                            // Save user in Realtime DB if first login
-                            String uid = user.getUid();
-                            authManager.getDbRef().child(uid).child("email").setValue(user.getEmail());
-
-                            // Check avatar
-                            checkAvatarAndProceed(user);
-                        }
-                    } else {
-                        Toast.makeText(Login.this, "Facebook authentication failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+        // Check which providers are linked to this email
+        FirebaseAuth.getInstance().fetchSignInMethodsForEmail(email)
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        progressOverlay.setVisibility(View.GONE);
+                        Toast.makeText(this, "Error: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"), Toast.LENGTH_LONG).show();
+                        return;
                     }
+
+                    if (task.getResult() == null || task.getResult().getSignInMethods().isEmpty()) {
+                        progressOverlay.setVisibility(View.GONE);
+                        Toast.makeText(this, "No account found with this email", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    if (!task.getResult().getSignInMethods().contains("password")) {
+                        progressOverlay.setVisibility(View.GONE);
+                        Toast.makeText(this, "This email is linked with Google/Facebook. Please login with the respective provider.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    // Email uses password, proceed with login
+                    authManager.login(email, password, new AuthManager.AuthCallback() {
+                        @Override
+                        public void onSuccess(FirebaseUser user) {
+                            progressOverlay.setVisibility(View.GONE);
+                            UserUtils.checkAvatarAndProceed(user, Login.this);
+                        }
+
+                        @Override
+                        public void onFailure(String errorMessage) {
+                            progressOverlay.setVisibility(View.GONE);
+                            Toast.makeText(Login.this, "Login failed: " + errorMessage, Toast.LENGTH_LONG).show();
+                        }
+                    });
                 });
     }
 
+
+
+    // ─────────────── Google Login ───────────────
+    private void setupGoogleSignIn() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        googleSignInClient = GoogleSignIn.getClient(this, gso);
+    }
+
     private void signInWithGoogle() {
-        Intent signInIntent = googleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+        startActivityForResult(googleSignInClient.getSignInIntent(), RC_SIGN_IN);
+    }
+
+    private void handleGoogleSignIn(GoogleSignInAccount account) {
+        AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
+        loginWithCredential(credential);
+    }
+
+    // ─────────────── Facebook Login ───────────────
+    private void setupFacebookSignIn() {
+        callbackManager = CallbackManager.Factory.create();
+        LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                AuthCredential credential = FacebookAuthProvider.getCredential(loginResult.getAccessToken().getToken());
+                loginWithCredential(credential);
+            }
+
+            @Override
+            public void onCancel() {
+                Toast.makeText(Login.this, "Facebook login canceled", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(FacebookException error) {
+                Toast.makeText(Login.this, "Facebook login failed: " + error.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    // ─────────────── Unified OAuth Login ───────────────
+    private void loginWithCredential(AuthCredential credential) {
+        progressOverlay.setVisibility(View.VISIBLE);
+        authManager.loginWithCredential(credential, new AuthManager.AuthCallback() {
+            @Override
+            public void onSuccess(FirebaseUser user) {
+                progressOverlay.setVisibility(View.GONE);
+                UserUtils.checkAvatarAndProceed(user, Login.this);
+            }
+
+            @Override
+            public void onFailure(String errorMessage) {
+                progressOverlay.setVisibility(View.GONE);
+                Toast.makeText(Login.this, "Authentication failed: " + errorMessage, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
 
-        // ────────────── Facebook Login ──────────────
-        if (callbackManager != null) {
-            callbackManager.onActivityResult(requestCode, resultCode, data);
-        }
-
-        // ────────────── Google Login ──────────────
         if (requestCode == RC_SIGN_IN) {
             try {
-                GoogleSignInAccount account = GoogleSignIn
-                        .getSignedInAccountFromIntent(data)
-                        .getResult(ApiException.class);
-                if (account != null) {
-                    firebaseAuthWithGoogle(account);
-                }
+                GoogleSignInAccount account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException.class);
+                if (account != null) handleGoogleSignIn(account);
             } catch (ApiException e) {
                 Toast.makeText(this, "Google sign in failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
             }
         }
     }
-
-
-    private void firebaseAuthWithGoogle(GoogleSignInAccount account) {
-        progressOverlay.setVisibility(View.VISIBLE);
-        AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
-        authManager.getFirebaseAuth().signInWithCredential(credential)
-                .addOnCompleteListener(task -> {
-                    progressOverlay.setVisibility(View.GONE);
-                    if (task.isSuccessful()) {
-                        FirebaseUser user = task.getResult().getUser();
-                        if (user != null) {
-                            // Save user in Realtime DB if first login
-                            String uid = user.getUid();
-                            authManager.getDbRef().child(uid).child("email").setValue(user.getEmail());
-
-                            // Go to Avatar check logic
-                            checkAvatarAndProceed(user);
-                        }
-                    } else {
-                        Toast.makeText(Login.this, "Authentication Failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
-    }
-
-    private void checkAvatarAndProceed(FirebaseUser user) {
-        progressOverlay.setVisibility(View.VISIBLE);
-
-        authManager.getDbRef()
-                .child(user.getUid())
-                .child("avatar")
-                .addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull com.google.firebase.database.DataSnapshot snapshot) {
-                        progressOverlay.setVisibility(View.GONE);
-                        if (snapshot.exists()) {
-                            // Avatar exists → go to MainActivity
-                            startActivity(new Intent(Login.this, MainActivity.class));
-                        } else {
-                            // No avatar → force creation
-                            startActivity(new Intent(Login.this, AvatarCreationActivity.class));
-                        }
-                        finish();
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull com.google.firebase.database.DatabaseError error) {
-                        progressOverlay.setVisibility(View.GONE);
-                        Toast.makeText(Login.this, "Failed to check avatar: " + error.getMessage(), Toast.LENGTH_LONG).show();
-                    }
-                });
-    }
-
-
-
-
 }

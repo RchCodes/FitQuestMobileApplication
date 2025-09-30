@@ -18,12 +18,13 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@drawable/quest_header_background"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:backgroundTint="@null">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🏆 QUESTS"
+            android:text="QUESTS"
             android:textAlignment="center"
             android:textSize="24sp"
             android:textStyle="bold"
@@ -54,10 +55,11 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="40dp"
-            android:text="📅 DAILY"
+            android:text="DAILY"
             android:textSize="12sp"
             android:background="@drawable/tab_button_background"
             android:textColor="@android:color/white"
+            android:backgroundTint="@null"
             android:layout_marginEnd="4dp" />
 
         <Button
@@ -65,23 +67,25 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="40dp"
-            android:text="📊 WEEKLY"
+            android:text="WEEKLY"
             android:textSize="12sp"
             android:background="@drawable/tab_button_background"
             android:textColor="@android:color/white"
             android:layout_marginStart="4dp"
-            android:layout_marginEnd="4dp" />
+            android:layout_marginEnd="4dp"
+            android:backgroundTint="@null"/>
 
         <Button
             android:id="@+id/monthly_button"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="40dp"
-            android:text="📈 MONTHLY"
-            android:textSize="12sp"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
             android:background="@drawable/tab_button_background"
+            android:text="MONTHLY"
             android:textColor="@android:color/white"
-            android:layout_marginStart="4dp" />
+            android:textSize="12sp"
+            android:backgroundTint="@null"/>
     </LinearLayout>
 
     <!-- Quest List Recycler -->

@@ -96,6 +96,7 @@
         android:textSize="14sp"
         android:textStyle="bold"
         android:background="@drawable/action_button_background"
-        android:textColor="@android:color/white" />
+        android:textColor="@android:color/white"
+        android:backgroundTint="@null"/>
 
 </LinearLayout>

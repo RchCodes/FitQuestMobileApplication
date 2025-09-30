@@ -3,6 +3,7 @@ package com.example.fitquest;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.google.mlkit.vision.pose.Pose;
 import com.google.mlkit.vision.pose.PoseLandmark;
@@ -22,6 +23,10 @@ public class ExerciseDetector {
     private Context context;
 
     private String exerciseType = "squats";
+
+    // Add this field near the top with other states
+    private boolean distanceReady = false;
+
     private String difficultyLevel = "beginner";
     private int target = 10;
     private int currentReps = 0;
@@ -38,6 +43,21 @@ public class ExerciseDetector {
     private long plankAccumMs = 0;
     private long plankGraceStart = 0;
     private static final long PLANK_GRACE_MS = 2500;
+
+    // smoothing & fallback constants
+    private float smoothedDistance = -1f;
+    private static final float DISTANCE_SMOOTHING_ALPHA = 0.18f; // 0 = no update, 1 = raw only
+
+    // shoulder calibration (closer -> bigger px)
+    private static final float MIN_SHOULDER_PX = 60f;      // ignore if too small
+    private static final float SHOULDER_1_5M_PX = 90f;     // observed at ~1.5m
+    private static final float SHOULDER_2_5M_PX = 80f;     // observed at ~2.0m
+
+    // torso (left shoulder -> left hip) fallback (closer -> bigger px)
+    private static final float TORSO_1_5M_PX = 180f;       // adjust with testing
+    private static final float TORSO_2_5M_PX = 120f;       // adjust with testing
+
+
 
     private String feedback = "Ready";
 
@@ -65,16 +85,35 @@ public class ExerciseDetector {
         plankStart = 0;
         plankAccumMs = 0;
         plankGraceStart = 0;
-        feedback = "Ready to start!";
+        distanceReady = false; // 🔹 reset distance readiness
+        feedback = "Step back until 1.5–2.5m from camera";
         if (listener != null) {
             listener.onRepCountChanged(currentReps, target);
             listener.onFeedbackUpdated(feedback);
         }
     }
 
+
     public void processPose(Pose pose, String exercise) {
         if (pose == null || completed) return;
 
+        // Phase 1: Distance check (only until user is "ready")
+        if (!distanceReady) {
+            float distanceM = estimateDistanceMeters(pose);
+            if (distanceM < 1.5f || distanceM > 2.5f) {
+                feedback = "Move between 1.5m–2.5m from camera";
+                if (listener != null) listener.onFeedbackUpdated(feedback);
+                return;
+            } else {
+                distanceReady = true;
+                feedback = "Good! Now get into starting position";
+                if (listener != null) listener.onFeedbackUpdated(feedback);
+                // 🚫 Don't return here — allow starting pose + detection to run
+            }
+        }
+
+
+        // ✅ Phase 3: Actual exercise detection
         switch (exercise) {
             case "pushups": detectPushup(pose); break;
             case "squats": detectSquat(pose); break;
@@ -245,4 +284,54 @@ public class ExerciseDetector {
         handler.removeCallbacksAndMessages(null);
         listener = null;
     }
+
+    // Estimate distance in meters from shoulder width
+    // Estimate distance in meters from shoulder width or fallback to left shoulder->hip height
+    private float estimateDistanceMeters(Pose pose) {
+        if (pose == null) return -1f;
+
+        PoseLandmark leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
+        PoseLandmark rightShoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER);
+        float rawDistance = -1f;
+
+        // 1) Primary: shoulder horizontal width
+        if (leftShoulder != null && rightShoulder != null) {
+            float shoulderWidthPx = Math.abs(leftShoulder.getPosition().x - rightShoulder.getPosition().x);
+            Log.d("DistanceCheck", "Shoulder px width: " + shoulderWidthPx);
+
+            if (shoulderWidthPx >= MIN_SHOULDER_PX) {
+                rawDistance = 1.5f + (SHOULDER_1_5M_PX - shoulderWidthPx)
+                        * (2.5f - 1.5f) / (SHOULDER_1_5M_PX - SHOULDER_2_5M_PX);
+                Log.d("DistanceCheck", "Using shoulders -> rawDist=" + rawDistance);
+            }
+        }
+
+        // 2) Fallback: left shoulder -> left hip vertical distance (useful for side/partial views)
+        if (rawDistance <= 0f) {
+            PoseLandmark leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
+            if (leftShoulder != null && leftHip != null && TORSO_1_5M_PX > TORSO_2_5M_PX) {
+                float torsoPx = Math.abs(leftShoulder.getPosition().y - leftHip.getPosition().y);
+                Log.d("DistanceCheck", "Torso px height: " + torsoPx);
+
+                // map torsoPx linearly between 1.5m and 2.5m (adjust constants via calibration)
+                rawDistance = 1.5f + (TORSO_1_5M_PX - torsoPx) * (2.5f - 1.5f)
+                        / (TORSO_1_5M_PX - TORSO_2_5M_PX);
+                Log.d("DistanceCheck", "Using torso -> rawDist=" + rawDistance);
+            }
+        }
+
+        // If still couldn't compute, return -1 to indicate "unknown"
+        if (rawDistance <= 0f || Float.isNaN(rawDistance) || Float.isInfinite(rawDistance)) {
+            return -1f;
+        }
+
+        // 3) Smooth the distance to reduce flicker
+        if (smoothedDistance < 0f) smoothedDistance = rawDistance;
+        else smoothedDistance = smoothedDistance * (1f - DISTANCE_SMOOTHING_ALPHA)
+                + rawDistance * DISTANCE_SMOOTHING_ALPHA;
+
+        Log.d("DistanceCheck", "Smoothed distance: " + smoothedDistance + " m");
+        return smoothedDistance;
+    }
+
 }

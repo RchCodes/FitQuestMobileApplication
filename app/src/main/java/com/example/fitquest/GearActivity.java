@@ -6,7 +6,7 @@ import android.widget.GridView;
 import android.widget.ImageButton;
 import androidx.appcompat.app.AppCompatActivity;
 
-public class GearActivity extends AppCompatActivity {
+public class GearActivity extends BaseActivity {
 
     private AvatarDisplayManager avatarHelper;
     private AvatarModel avatar;

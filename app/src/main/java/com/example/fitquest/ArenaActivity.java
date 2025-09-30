@@ -9,9 +9,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import androidx.appcompat.app.AppCompatActivity;
 
-public class ArenaActivity extends AppCompatActivity {
+public class ArenaActivity extends BaseActivity {
 
     private static final String PREF_NAME = "FitQuestPrefs";
     private static final String KEY_USERNAME = "username";
@@ -78,7 +79,7 @@ public class ArenaActivity extends AppCompatActivity {
             playerLevel.setText("LV. " + avatar.getLevel());
         } else {
             // Redirect to avatar creation
-            Intent intent = new Intent(this, AvatarCreationActivity.class);
+            Intent intent = new Intent(this, AvatarCreationActivity.class); // this causes problem if the data is not available
             startActivity(intent);
             finish();
         }
@@ -102,14 +103,16 @@ public class ArenaActivity extends AppCompatActivity {
     private void setupButtons() {
         backBtn.setOnClickListener(v -> finish());
 
-        leaderboardButton.setOnClickListener(v ->
-                Toast.makeText(this, "Opening Leaderboards...", Toast.LENGTH_SHORT).show()
-        );
+        leaderboardButton.setOnClickListener(v -> {
+            LeaderboardDialog dialog = new LeaderboardDialog();
+            dialog.show(getSupportFragmentManager(), "LeaderboardDialog");
+        });
 
         fightButton.setOnClickListener(v ->
                 Toast.makeText(this, "Combat Started!", Toast.LENGTH_SHORT).show()
         );
     }
+
 
     /** Launch method */
     public static void start(Context context) {
