@@ -1,45 +1,57 @@
 package com.example.fitquest;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.GridView;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
-public class GearActivity extends BaseActivity {
+/**
+ * GearActivity - shows owned gear (no price) and allows equipping.
+ */
+public class GearActivity extends AppCompatActivity {
 
-    private AvatarDisplayManager avatarHelper;
     private AvatarModel avatar;
+    private AvatarDisplayManager avatarHelper;
 
     // UI
     private ImageView btnBack;
     private Button btnSave, btnEquip;
     private GridView gridGear;
-    private ImageButton tabAll, tabWeapon, tabArmor, tabPants, tabBoots, tabAccessory;
-
+    private ImageView tabAll, tabWeapon, tabArmor, tabPants, tabBoots, tabAccessory;
     private TextView itemName, itemDesc, itemBoosts, itemSkill;
 
     // Data
-    private List<GearModel> allGear;
-    private List<GearModel> filteredGear;
+    private List<GearModel> ownedGearList = new ArrayList<>();
+    private List<GearModel> filteredGear = new ArrayList<>();
     private GearAdapter gearAdapter;
+    private GearModel selectedGear;
+    private GearType currentFilter = null; // null = ALL
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gear);
 
-        // ==== Bind UI ====
+        // --- avatar preview helper (same layering as Store/Main) ---
+        setupAvatarHelper();
+        loadAvatarIfExists();
+
+        // --- bind UI ---
         btnBack = findViewById(R.id.btnBack);
         btnSave = findViewById(R.id.btnSave);
+        btnEquip = findViewById(R.id.btnEquip);
+
+        gridGear = findViewById(R.id.gridGear);
 
         tabAll = findViewById(R.id.tabAll);
         tabWeapon = findViewById(R.id.tabWeapon);
@@ -48,14 +60,80 @@ public class GearActivity extends BaseActivity {
         tabBoots = findViewById(R.id.tabBoots);
         tabAccessory = findViewById(R.id.tabAccessory);
 
-        gridGear = findViewById(R.id.gridGear);
         itemName = findViewById(R.id.itemName);
         itemDesc = findViewById(R.id.itemDesc);
         itemBoosts = findViewById(R.id.itemBoosts);
         itemSkill = findViewById(R.id.itemSkill);
-        btnEquip = findViewById(R.id.btnEquip);
 
-        // ==== Avatar ====
+        // --- load owned gear from avatar & repository ---
+        loadOwnedGear();
+
+        // --- adapter & grid ---
+        filteredGear = new ArrayList<>(ownedGearList);
+        gearAdapter = new GearAdapter(this, filteredGear, avatar, gear -> onGearClicked(gear));
+
+        gridGear.setAdapter(gearAdapter);
+
+        // --- handlers ---
+        btnBack.setOnClickListener(v -> finish());
+
+        tabAll.setOnClickListener(v -> applyFilter(null));
+        tabWeapon.setOnClickListener(v -> applyFilter(GearType.WEAPON));
+        tabArmor.setOnClickListener(v -> applyFilter(GearType.ARMOR));
+        tabPants.setOnClickListener(v -> applyFilter(GearType.PANTS));
+        tabBoots.setOnClickListener(v -> applyFilter(GearType.BOOTS));
+        tabAccessory.setOnClickListener(v -> applyFilter(GearType.ACCESSORY));
+
+        btnEquip.setOnClickListener(v -> {
+            if (selectedGear == null) {
+                Toast.makeText(this, "Select gear to equip.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            boolean currentlyEquipped = avatar.isEquipped(selectedGear);
+
+            if (currentlyEquipped) {
+                // Unequip
+                avatar.unequipGear(selectedGear.getType());
+                Toast.makeText(this, "Unequipped " + selectedGear.getName(), Toast.LENGTH_SHORT).show();
+            } else {
+                // Equip
+                avatar.equipGear(selectedGear.getType(), selectedGear.getId());
+                Toast.makeText(this, "Equipped " + selectedGear.getName(), Toast.LENGTH_SHORT).show();
+            }
+
+            avatar.checkOutfitCompletion();
+            AvatarManager.saveAvatarOffline(this, avatar);
+            avatarHelper.loadAvatar(avatar);
+
+            gearAdapter.updateData(filteredGear); // refresh highlighting
+
+            updateEquipButtonText();
+        });
+
+        btnSave.setOnClickListener(v -> {
+            AvatarManager.saveAvatarOffline(this, avatar);
+            Toast.makeText(this, "Saved.", Toast.LENGTH_SHORT).show();
+            finish();
+        });
+    }
+
+    private void updateEquipButtonText() {
+        if (selectedGear == null) {
+            btnEquip.setText("Equip");
+            btnEquip.setEnabled(false);
+        } else if (avatar.isEquipped(selectedGear)) {
+            btnEquip.setText("Unequip");
+            btnEquip.setEnabled(true);
+        } else {
+            btnEquip.setText("Equip");
+            btnEquip.setEnabled(true);
+        }
+    }
+
+    // Call updateEquipButtonText() whenever selection changes
+
+    private void setupAvatarHelper() {
         avatarHelper = new AvatarDisplayManager(
                 this,
                 findViewById(R.id.baseBodyLayer),
@@ -68,142 +146,111 @@ public class GearActivity extends BaseActivity {
                 findViewById(R.id.noseLayer),
                 findViewById(R.id.lipsLayer)
         );
-        loadAvatarIfExists();
-
-        // ==== Data ====
-        buildGearItems(); // fill allGear
-        filteredGear = new ArrayList<>(allGear);
-
-        gearAdapter = new GearAdapter(this, filteredGear);
-        gridGear.setAdapter(gearAdapter);
-
-        // ==== Handlers ====
-        gridGear.setOnItemClickListener((parent, view, position, id) -> {
-            GearModel gear = filteredGear.get(position);
-            showGearDetails(gear);
-        });
-
-        btnEquip.setOnClickListener(v -> {
-            // TODO: implement equipping logic
-            // Example:
-            // avatar.equip(selectedGear);
-            // avatarHelper.loadAvatar(avatar);
-        });
-
-        setupListeners();
     }
 
-    /** Load avatar */
     private void loadAvatarIfExists() {
         avatar = AvatarManager.loadAvatarOffline(this);
         if (avatar != null) {
             avatarHelper.loadAvatar(avatar);
-        }
-    }
-
-    /** Populate some test gear (like in StoreActivity) */
-    private void buildGearItems() {
-        allGear = new ArrayList<>();
-
-        Map<String, Float> boosts1 = new HashMap<>();
-        boosts1.put("AGI", 15f);
-        GearModel leggings = new GearModel();
-        leggings.name = "Phantom Leggings";
-        leggings.type = GearType.PANTS;
-        leggings.allowedClass = ClassType.TANK;
-        leggings.statBoosts = boosts1;
-        leggings.skillAugments = new ArrayList<>();
-        leggings.description = "Light as mist, perfect for evasion.";
-        allGear.add(leggings);
-
-        Map<String, Float> boosts2 = new HashMap<>();
-        boosts2.put("ATK", 20f);
-        GearModel sword = new GearModel();
-        sword.name = "Iron Sword";
-        sword.type = GearType.WEAPON;
-        sword.allowedClass = ClassType.WARRIOR;
-        sword.statBoosts = boosts2;
-        sword.skillAugments = new ArrayList<>();
-        sword.description = "A sturdy blade forged from iron.";
-        allGear.add(sword);
-
-        Map<String, Float> boosts3 = new HashMap<>();
-        boosts3.put("INT", 25f);
-        GearModel robe = new GearModel();
-        robe.name = "Mystic Robe";
-        robe.type = GearType.ARMOR;
-        robe.allowedClass = ClassType.ROGUE;
-        robe.statBoosts = boosts3;
-        robe.skillAugments = new ArrayList<>();
-        robe.description = "A robe infused with arcane power.";
-        allGear.add(robe);
-    }
-
-    /** Show gear details */
-    private void showGearDetails(GearModel gear) {
-        itemName.setText(gear.name + " (" + gear.allowedClass.name() + ")");
-        itemDesc.setText(gear.description != null ? gear.description : "No description");
-
-        StringBuilder boostText = new StringBuilder("Boosts:\n");
-        if (gear.statBoosts != null && !gear.statBoosts.isEmpty()) {
-            for (Map.Entry<String, Float> entry : gear.statBoosts.entrySet()) {
-                boostText.append("+").append(entry.getValue()).append("% ").append(entry.getKey()).append("\n");
-            }
         } else {
-            boostText.append("None");
+            // If avatar is missing, send to creation
+            startActivity(new Intent(this, AvatarCreationActivity.class));
+            finish();
         }
-        itemBoosts.setText(boostText.toString().trim());
-
-        StringBuilder skillText = new StringBuilder("Skill Effect:\n");
-        if (gear.skillAugments != null && !gear.skillAugments.isEmpty()) {
-            for (Effect effect : gear.skillAugments) {
-                skillText.append(effect.getName()).append(" ").append(effect.getValue()).append("\n");
-            }
-        } else {
-            skillText.append("None");
-        }
-        itemSkill.setText(skillText.toString().trim());
     }
 
-    /** Tabs filtering */
-    private void filterGear(GearType... types) {
+    private void loadOwnedGear() {
+        ownedGearList.clear();
+        if (avatar == null) return;
+
+        Set<String> ownedIds = avatar.getOwnedGear();
+        if (ownedIds == null || ownedIds.isEmpty()) return;
+
+        for (String id : ownedIds) {
+            GearModel g = GearRepository.getGearById(id);
+            if (g != null) ownedGearList.add(g);
+        }
+    }
+
+    private void applyFilter(GearType type) {
+        currentFilter = type;
         filteredGear.clear();
-        for (GearModel gear : allGear) {
-            for (GearType t : types) {
-                if (gear.type == t) {
-                    filteredGear.add(gear);
-                }
-            }
-            if (types.length == GearType.values().length) {
-                filteredGear.addAll(allGear);
-                break;
+        for (GearModel g : ownedGearList) {
+            if (g == null) continue;
+            if (type == null) {
+                filteredGear.add(g);
+            } else {
+                if (g.getType() == type) filteredGear.add(g);
             }
         }
+        // clear selection on filter change
+        selectedGear = null;
+        gearAdapter.setSelectedGear(null);
+        gearAdapter.updateData(filteredGear);
+        clearDetailsPane();
+    }
+
+    private void onGearClicked(GearModel gear) {
+        selectedGear = gear;
+        gearAdapter.setSelectedGear(gear);
+        showDetails(gear);
+        updateEquipButtonText();
+    }
+
+    private void showDetails(GearModel gear) {
+        if (gear == null) {
+            clearDetailsPane();
+            return;
+        }
+        itemName.setText(gear.getName() + " (" + gear.getClassRestriction() + ")");
+        itemDesc.setText(gear.getDesc() != null ? gear.getDesc() : "");
+        itemBoosts.setText(gear.getBoostsString());
+        itemSkill.setText(gear.getSkillString());
+    }
+
+    private void clearDetailsPane() {
+        itemName.setText("");
+        itemDesc.setText("");
+        itemBoosts.setText("");
+        itemSkill.setText("");
+    }
+
+    private void equipSelectedGear() {
+        if (avatar == null || selectedGear == null) return;
+
+        // Must own the item (guard)
+        if (!avatar.ownsGear(selectedGear.getId())) {
+            Toast.makeText(this, "You don't own this item.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Equip via existing AvatarModel method (one per GearType is enforced by the map)
+        avatar.equipGear(selectedGear.getType(), selectedGear.getId());
+
+        // Check outfit completion and other side effects
+        avatar.checkOutfitCompletion();
+
+        // Save and refresh avatar preview
+        AvatarManager.saveAvatarOffline(this, avatar);
+        avatarHelper.loadAvatar(avatar);
+
+        Toast.makeText(this, "Equipped " + selectedGear.getName(), Toast.LENGTH_SHORT).show();
+
+        // update UI (if you want to show equipped state somewhere)
         gearAdapter.notifyDataSetChanged();
     }
 
-    private void setupListeners() {
-        btnBack.setOnClickListener(v -> finish());
-        btnSave.setOnClickListener(v -> {
-            if (avatar != null) {
-                AvatarManager.saveAvatarOffline(this, avatar);
-            }
-            finish();
-        });
-
-        tabAll.setOnClickListener(v -> filterGear(GearType.values()));
-        tabWeapon.setOnClickListener(v -> filterGear(GearType.WEAPON));
-        tabArmor.setOnClickListener(v -> filterGear(GearType.ARMOR));
-        tabPants.setOnClickListener(v -> filterGear(GearType.PANTS));
-        tabBoots.setOnClickListener(v -> filterGear(GearType.BOOTS));
-        tabAccessory.setOnClickListener(v -> filterGear(GearType.ACCESSORY));
+    public GearModel getSelectedGear() {
+        return selectedGear;
     }
 
-    public AvatarDisplayManager getAvatarHelper() {
-        return avatarHelper;
-    }
-
-    public AvatarModel getAvatar() {
-        return avatar;
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh owned gear list in case purchases happened elsewhere
+        loadAvatarIfExists();
+        loadOwnedGear();
+        applyFilter(currentFilter); // reapply same filter (or ALL if null)
+        avatarHelper.loadAvatar(avatar);
     }
 }

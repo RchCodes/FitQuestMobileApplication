@@ -229,50 +229,51 @@
 
             <ImageButton
                 android:id="@+id/tabAll"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginRight="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
                 android:background="@android:color/transparent"
-                android:src="@drawable/ic_all" />
+                android:src="@drawable/ic_gear_all" />
 
             <ImageButton
                 android:id="@+id/tabWeapon"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginRight="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
                 android:background="@android:color/transparent"
-                android:src="@drawable/ic_weapon" />
+                android:src="@drawable/ic_gear_weapon" />
 
             <ImageButton
                 android:id="@+id/tabArmor"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginRight="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
                 android:background="@android:color/transparent"
-                android:src="@drawable/ic_armor" />
+                android:src="@drawable/ic_gear_armor" />
 
             <ImageButton
                 android:id="@+id/tabPants"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginRight="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
                 android:background="@android:color/transparent"
-                android:src="@drawable/ic_pants" />
+                android:src="@drawable/ic_gear_pants" />
 
             <ImageButton
                 android:id="@+id/tabBoots"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginRight="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
                 android:background="@android:color/transparent"
-                android:src="@drawable/ic_boots" />
+                android:src="@drawable/ic_gear_boots" />
 
             <ImageButton
                 android:id="@+id/tabAccessory"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
                 android:background="@android:color/transparent"
-                android:src="@drawable/ic_accessory" />
+                android:src="@drawable/ic_gear_accessory" />
         </LinearLayout>
 
         <!-- Gear Grid (auto-fit columns) -->

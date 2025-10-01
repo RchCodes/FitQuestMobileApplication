@@ -1,7 +1,9 @@
 package com.example.fitquest;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageView;
@@ -21,7 +23,7 @@ import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
 
-public class MainActivity extends AppCompatActivity implements QuestManager.QuestProgressListener {
+public class MainActivity extends BaseActivity implements QuestManager.QuestProgressListener {
 
     private static final String PREFS_NAME = "fitquest_prefs";
     private static final String KEY_FIT_AUTHORIZED = "fit_authorized";
@@ -36,7 +38,6 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
 
     private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1001;
 
-    // Launchers
     private ActivityResultLauncher<Intent> googleSignInLauncher;
 
     @Override
@@ -47,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
         bindViews();
         setupAvatarHelper();
         setupLaunchers();
-        loadAvatarOrRedirect();
+        loadAvatarWithOnlineFallback();
         loadProfileInfo();
         setupButtons();
         initGoogleFit();
@@ -98,16 +99,56 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
         );
     }
 
-    private void loadAvatarOrRedirect() {
-        avatar = AvatarManager.loadAvatarOffline(this);
-        if (avatar != null) {
+    private void loadAvatarWithOnlineFallback() {
+        // Try loading offline first
+        AvatarModel offlineAvatar = AvatarManager.loadAvatarOffline(this);
+        if (offlineAvatar != null) {
+            avatar = offlineAvatar;
             avatarHelper.loadAvatar(avatar);
-        } else {
-            startActivity(new Intent(this, AvatarCreationActivity.class));
-            finish();
+            loadProfileInfo();
+        }
+
+        // Always attempt online fetch to update avatar
+        AvatarManager.loadAvatarOnline(new AvatarManager.AvatarLoadCallback() {
+            @Override
+            public void onLoaded(AvatarModel onlineAvatar) {
+                runOnUiThread(() -> {
+                    if (onlineAvatar != null) {
+                        avatar = onlineAvatar;
+                        avatarHelper.loadAvatar(avatar);
+                        loadProfileInfo();
+                        AvatarManager.saveAvatarOffline(MainActivity.this, avatar);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() -> {
+                    Log.e("MainActivity", "Online avatar load failed: " + message);
+                    // Only redirect to creation if offline was missing and online failed
+                    if (offlineAvatar == null && avatar == null) {
+                        Toast.makeText(MainActivity.this, "No avatar found. Redirecting to creation.", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(MainActivity.this, AvatarCreationActivity.class));
+                        finish();
+                    }
+                });
+            }
+        });
+
+        // If offline is missing, start a short timeout in case online fails silently
+        if (offlineAvatar == null) {
+            new android.os.Handler().postDelayed(() -> {
+                if (avatar == null) {
+                    startActivity(new Intent(MainActivity.this, AvatarCreationActivity.class));
+                    finish();
+                }
+            }, 4000); // 4 sec buffer for online fetch
         }
     }
 
+
+    // ------------------ PROFILE INFO ------------------
     private void loadProfileInfo() {
         if (avatar == null) return;
 
@@ -135,11 +176,14 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
     }
 
     private void setupButtons() {
-        findViewById(R.id.profile_section).setOnClickListener(v -> {profile = new Profile(this, googleSignInLauncher); profile.show();});
+        findViewById(R.id.profile_section).setOnClickListener(v -> {
+            profile = new Profile(this, googleSignInLauncher);
+            profile.show();
+        });
         findViewById(R.id.settings_button).setOnClickListener(v -> new Settings(this).show());
         findViewById(R.id.store_button).setOnClickListener(v -> startActivity(new Intent(this, StoreActivity.class)));
         findViewById(R.id.quest_button).setOnClickListener(v -> new Quest(this).show());
-        findViewById(R.id.goals_button).setOnClickListener(v -> new Goals(this).show());
+        findViewById(R.id.goals_button).setOnClickListener(v -> new Goals(this, avatar).show());
         findViewById(R.id.gear_button).setOnClickListener(v -> startActivity(new Intent(this, GearActivity.class)));
         findViewById(R.id.friends_button).setOnClickListener(v -> new Friends(this).show());
         findViewById(R.id.arena_button).setOnClickListener(v -> startActivity(new Intent(this, ArenaActivity.class)));
@@ -158,30 +202,25 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
     @Override
     protected void onPause() {
         super.onPause();
+        if (avatar != null) {
+            // Save offline always
+            AvatarManager.saveAvatarOffline(this, avatar);
+
+            // Save online only if internet is available
+            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+            boolean hasInternet = cm != null
+                    && cm.getActiveNetworkInfo() != null
+                    && cm.getActiveNetworkInfo().isConnected();
+
+            if (hasInternet) {
+                AvatarManager.saveAvatarOnline(avatar);
+            }
+        }
+
         QuestManager.setQuestProgressListener(null);
     }
 
-    @Override
-    public void onAvatarUpdated(AvatarModel updatedAvatar) {
-        if (updatedAvatar == null) return;
-        this.avatar = updatedAvatar;
-        avatarHelper.loadAvatar(avatar);
-        loadProfileInfo();
-    }
-
-    @Override
-    public void onQuestProgressUpdated(QuestModel quest) {}
-
-    @Override
-    public void onQuestCompleted(QuestModel quest, boolean leveledUp) {
-        avatar = AvatarManager.loadAvatarOffline(this);
-        refreshProfile();
-    }
-
-    public void refreshProfile() {
-        loadProfileInfo();
-    }
-
+    // ------------------ GOOGLE FIT ------------------
     private boolean isFitAuthorized() {
         return getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                 .getBoolean(KEY_FIT_AUTHORIZED, false);
@@ -202,12 +241,8 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
 
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
 
-        if (account == null) {
-            // User not signed in via Google; you can link Firebase account here if needed
-            return;
-        }
+        if (account == null) return;
 
-        // Only request permissions if user hasn't authorized yet
         if (!isFitAuthorized() && !GoogleSignIn.hasPermissions(account, fitnessOptions)) {
             GoogleSignIn.requestPermissions(
                     this,
@@ -224,7 +259,6 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // Handle Google Fit permissions
         if (requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 setFitAuthorized(true);
@@ -234,14 +268,11 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
             }
         }
 
-        // Handle Facebook callback
         if (profile != null) {
             CallbackManager fbManager = profile.getFacebookCallbackManager();
             if (fbManager != null) fbManager.onActivityResult(requestCode, resultCode, data);
         }
-
     }
-
 
     private void readDailySteps() {
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
@@ -256,5 +287,27 @@ public class MainActivity extends AppCompatActivity implements QuestManager.Ques
                     QuestManager.reportExerciseResult(this, "steps", totalSteps);
                 })
                 .addOnFailureListener(e -> Log.e("FitQuest", "Failed to read steps", e));
+    }
+
+    // ------------------ QUEST LISTENER ------------------
+    @Override
+    public void onAvatarUpdated(AvatarModel updatedAvatar) {
+        if (updatedAvatar == null) return;
+        this.avatar = updatedAvatar;
+        avatarHelper.loadAvatar(avatar);
+        loadProfileInfo();
+    }
+
+    @Override
+    public void onQuestProgressUpdated(QuestModel quest) {}
+
+    @Override
+    public void onQuestCompleted(QuestModel quest, boolean leveledUp) {
+        avatar = AvatarManager.loadAvatarOffline(this);
+        refreshProfile();
+    }
+
+    public void refreshProfile() {
+        loadProfileInfo();
     }
 }

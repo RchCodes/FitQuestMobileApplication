@@ -112,7 +112,8 @@ enum SkillType {
 enum ClassType {
     TANK,
     ROGUE,
-    WARRIOR
+    WARRIOR,
+    UNIVERSAL
 }
 
 /*

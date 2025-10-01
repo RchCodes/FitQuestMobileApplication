@@ -5,8 +5,11 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
 import java.util.HashMap;
@@ -84,6 +87,82 @@ public class AvatarManager {
         ref.updateChildren(avatarMap)
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "Avatar saved online successfully"))
                 .addOnFailureListener(e -> Log.e(TAG, "Failed to save avatar online", e));
+    }
+
+    // Callback interface for async loading
+    public interface AvatarLoadCallback {
+        void onLoaded(AvatarModel avatar);
+        void onError(String message);
+    }
+
+    /** Load avatar from Firebase Realtime Database */
+    public static void loadAvatarOnline(AvatarLoadCallback callback) {
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            if (callback != null) callback.onError("User not signed in");
+            return;
+        }
+
+        String uid = auth.getCurrentUser().getUid();
+        DatabaseReference ref = FirebaseDatabase.getInstance()
+                .getReference("users")
+                .child(uid);
+
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (!snapshot.exists()) {
+                    if (callback != null) callback.onError("No avatar data found");
+                    return;
+                }
+
+                try {
+                    AvatarModel avatar = new AvatarModel();
+
+                    avatar.setUsername(snapshot.child("username").getValue(String.class));
+                    avatar.setGender(snapshot.child("gender").getValue(String.class));
+                    avatar.setPlayerClass(snapshot.child("playerClass").getValue(String.class));
+
+                    avatar.setBodyStyle(snapshot.child("avatar/body").getValue(String.class));
+                    avatar.setOutfit(snapshot.child("avatar/outfit").getValue(String.class));
+                    avatar.setWeapon(snapshot.child("avatar/weapon").getValue(String.class));
+
+                    avatar.setHairOutline(snapshot.child("avatar/hair/outline").getValue(String.class));
+                    avatar.setHairFill(snapshot.child("avatar/hair/fill").getValue(String.class));
+                    avatar.setHairColor(snapshot.child("avatar/hair/color").getValue(String.class));
+
+                    avatar.setEyesOutline(snapshot.child("avatar/eyes/outline").getValue(String.class));
+                    avatar.setEyesFill(snapshot.child("avatar/eyes/fill").getValue(String.class));
+                    avatar.setEyesColor(snapshot.child("avatar/eyes/color").getValue(String.class));
+
+                    avatar.setNose(snapshot.child("avatar/nose").getValue(String.class));
+                    avatar.setLips(snapshot.child("avatar/lips").getValue(String.class));
+
+                    // Stats
+                    Long coins = snapshot.child("coins").getValue(Long.class);
+                    Long xp = snapshot.child("xp").getValue(Long.class);
+                    Long level = snapshot.child("level").getValue(Long.class);
+                    Long rank = snapshot.child("rank").getValue(Long.class);
+
+                    avatar.setCoins(coins != null ? coins.intValue() : 0);
+                    avatar.setXp(xp != null ? xp.intValue() : 0);
+                    avatar.setLevel(level != null ? level.intValue() : 1);
+                    avatar.setRank(rank != null ? rank.intValue() : 0);
+
+                    if (callback != null) callback.onLoaded(avatar);
+
+                } catch (Exception e) {
+                    Log.e(TAG, "Failed to parse avatar from Firebase", e);
+                    if (callback != null) callback.onError("Failed to parse avatar");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.e(TAG, "Failed to load avatar from Firebase", error.toException());
+                if (callback != null) callback.onError(error.getMessage());
+            }
+        });
     }
 
     public static void saveAvatar(Context context, AvatarModel avatar) {

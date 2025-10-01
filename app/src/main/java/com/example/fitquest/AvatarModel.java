@@ -1,5 +1,10 @@
 package com.example.fitquest;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 public class AvatarModel {
 
     private String username;
@@ -45,6 +50,14 @@ public class AvatarModel {
     private int flexibility = 0;
     private int stamina = 0;
     private ProfileChangeListener listener;
+
+    // --- Inventory ---
+    private Set<String> ownedGearIds = new HashSet<>(); // all owned items (by ID)
+
+    // --- Equipped gear per slot ---
+    private Map<GearType, String> equippedGear = new HashMap<>();
+
+    private Map<String, GoalState> goalProgress = new HashMap<>();
 
     // Constructors
     public AvatarModel() {
@@ -235,5 +248,110 @@ public class AvatarModel {
         }
     }
 
+    // --- Methods ---
+    public void addGear(String gearId) {
+        ownedGearIds.add(gearId);
+    }
+
+    public boolean ownsGear(String gearId) {
+        return ownedGearIds.contains(gearId);
+    }
+
+    public void equipGear(GearType slot, String gearId) {
+        if (ownsGear(gearId)) {
+            equippedGear.put(slot, gearId);
+        }
+    }
+
+    public void unequipGear(GearType slot) {
+        equippedGear.remove(slot);
+    }
+
+    public Map<GearType, String> getEquippedGear() {
+        return equippedGear;
+    }
+
+    public Set<String> getOwnedGear() {
+        return ownedGearIds;
+    }
+
+
+    public ClassType getClassType() {
+        return ClassType.valueOf(playerClass);
+    }
+
+    public String getFormattedCoins() {
+        if (coins >= 1_000_000_000) {
+            return (coins / 1_000_000_000) + "B";
+        } else if (coins >= 1_000_000) {
+            return (coins / 1_000_000) + "M";
+        } else if (coins >= 1_000) {
+            return (coins / 1_000) + "K";
+        } else {
+            return String.valueOf(coins);
+        }
+    }
+
+    public void checkOutfitCompletion() {
+        // Get equipped gear by type
+        String armorId = equippedGear.get(GearType.ARMOR);
+        String pantsId = equippedGear.get(GearType.PANTS);
+        String bootsId = equippedGear.get(GearType.BOOTS);
+
+        if (armorId == null || pantsId == null || bootsId == null) return;
+
+        GearModel armor = GearRepository.getGearById(armorId);
+        GearModel pants = GearRepository.getGearById(pantsId);
+        GearModel boots = GearRepository.getGearById(bootsId);
+
+        // All 3 must exist and share the same setId
+        if (armor != null && pants != null && boots != null) {
+            if (armor.getSetId() != null
+                    && armor.getSetId().equals(pants.getSetId())
+                    && armor.getSetId().equals(boots.getSetId())) {
+
+                // If the set defines an outfit
+                if (armor.isCompletesOutfit() && pants.isCompletesOutfit() && boots.isCompletesOutfit()) {
+                    // Change avatar outfit sprite
+                    this.outfit = "res://" + armor.getOutfitSpriteRes();
+                    notifyChange();
+                }
+            }
+        }
+
+    }
+
+    public boolean isEquipped(GearModel gear) {
+        if (gear == null || equippedGear == null) return false;
+        // get the currently equipped gear ID for this type
+        String equippedId = equippedGear.get(gear.getType());
+        return equippedId != null && equippedId.equals(gear.getId());
+    }
+
+    public Map<String, GoalState> getGoalProgress() {
+        return goalProgress;
+    }
+
+    public GoalState getGoalState(String goalId) {
+        return goalProgress.getOrDefault(goalId, GoalState.PENDING);
+    }
+
+    public void setGoalState(String goalId, GoalState state) {
+        goalProgress.put(goalId, state);
+    }
+
+    public boolean isGoalCompleted(String goalId) {
+        return goalProgress.getOrDefault(goalId, GoalState.PENDING) == GoalState.COMPLETED;
+    }
+
+    public boolean isGoalClaimed(String goalId) {
+        return goalProgress.getOrDefault(goalId, GoalState.PENDING) == GoalState.CLAIMED;
+    }
+
+    public void resetGoals() {
+        goalProgress.clear();
+    }
+
 
 }
+

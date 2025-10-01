@@ -2,75 +2,96 @@ package com.example.fitquest;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
-
+import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class StoreActivity extends AppCompatActivity {
 
-    private GridView gridStore;
-    private TextView itemName, itemDesc, itemBoosts, itemSkill, txtCoins;
-    private ImageView btnBuy, btnBack;
-
-    private List<GearModel> storeItems;
-    private int playerCoins = 999000000; // example coins
-
-    // Avatar handling
     private AvatarModel avatar;
     private AvatarDisplayManager avatarHelper;
+
+    private TextView txtCoins;
+    private GridView gridStore;
+    private ImageView btnBack, btnBuy, tabAll, tabWeapons, tabArmor, tabLeggings, tabBoots, tabNecklace;
+
+    private List<GearModel> allGear = new ArrayList<>();
+    private List<GearModel> filteredGear = new ArrayList<>();
+    private StoreAdapter storeAdapter;
+
+    private GearModel selectedGear;
+    private String currentFilter = "ALL"; // "ALL", "WEAPON", "ARMOR", "PANTS", "BOOTS", "ACCESSORY"
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_store);
 
-        // ==== Avatar ====
+        // Avatar + avatar preview helper (same approach used in MainActivity)
         setupAvatarHelper();
         loadAvatar();
 
-        // ==== UI refs ====
-        gridStore = findViewById(R.id.gridStore);
-        itemName = findViewById(R.id.itemName);
-        itemDesc = findViewById(R.id.itemDesc);
-        itemBoosts = findViewById(R.id.itemBoosts);
-        itemSkill = findViewById(R.id.itemSkill);
+        // UI refs
         txtCoins = findViewById(R.id.txtCoins);
-        btnBuy = findViewById(R.id.btnBuy);
+        gridStore = findViewById(R.id.gridStore);
         btnBack = findViewById(R.id.btnBack);
+        btnBuy = findViewById(R.id.btnBuy);
 
-        txtCoins.setText(playerCoins / 1000000 + "M");
+        tabAll = findViewById(R.id.tabAll);
+        tabWeapons = findViewById(R.id.tabWeapons);
+        tabArmor = findViewById(R.id.tabArmor);
+        tabLeggings = findViewById(R.id.tabLeggings);
+        tabBoots = findViewById(R.id.tabBoots);
+        tabNecklace = findViewById(R.id.tabNecklace);
 
-        // build store items
-        buildStoreItems();
+        // Load master gear list (repository)
+        allGear = GearRepository.getAllGear();
 
-        // adapter for grid
-        GearAdapter adapter = new GearAdapter(this, storeItems);
-        gridStore.setAdapter(adapter);
+        // Prepare adapter & grid
+        filteredGear = new ArrayList<>();
+        storeAdapter = new StoreAdapter(this, filteredGear, avatar);
+        gridStore.setAdapter(storeAdapter);
 
-        // click handler for grid
+        // Initial UI
+        refreshCoinsText();
+        filterAndRefresh(currentFilter);
+
+        // Grid click -> show details + mark selected
         gridStore.setOnItemClickListener((parent, view, position, id) -> {
-            GearModel gear = storeItems.get(position);
+            GearModel gear = filteredGear.get(position);
+            selectedGear = gear;
             showGearDetails(gear);
+            storeAdapter.setSelectedPosition(position);
         });
 
+        // Buy button
+        btnBuy.setOnClickListener(v -> {
+            if (selectedGear == null) {
+                Toast.makeText(this, "Select an item first!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            showPurchaseDialog(selectedGear);
+        });
+
+        // Back
         btnBack.setOnClickListener(v -> {
             startActivity(new Intent(StoreActivity.this, MainActivity.class));
+            finish();
         });
 
-        btnBuy.setOnClickListener(v -> {
-            // TODO: handle purchase logic
-        });
+        // Tabs
+        tabAll.setOnClickListener(v -> filterAndRefresh("ALL"));
+        tabWeapons.setOnClickListener(v -> filterAndRefresh("WEAPON"));
+        tabArmor.setOnClickListener(v -> filterAndRefresh("ARMOR"));
+        tabLeggings.setOnClickListener(v -> filterAndRefresh("PANTS"));
+        tabBoots.setOnClickListener(v -> filterAndRefresh("BOOTS"));
+        tabNecklace.setOnClickListener(v -> filterAndRefresh("ACCESSORY"));
     }
 
     private void setupAvatarHelper() {
@@ -93,99 +114,101 @@ public class StoreActivity extends AppCompatActivity {
         if (avatar != null) {
             avatarHelper.loadAvatar(avatar);
         } else {
+            // If no avatar, go back to creation (same behaviour as MainActivity)
             startActivity(new Intent(this, AvatarCreationActivity.class));
             finish();
         }
     }
 
+    private void refreshCoinsText() {
+        if (avatar != null && txtCoins != null) {
+            txtCoins.setText(avatar.getFormattedCoins());
+        }
+    }
+
+    private void filterAndRefresh(String type) {
+        currentFilter = type;
+        filterStoreGear(type);
+        storeAdapter.updateData(filteredGear);
+        selectedGear = null; // clear selection when switching tabs
+        // clear details UI if you're displaying it; for brevity we leave that to showGearDetails when clicked
+    }
+
+    /**
+     * Filter allGear into filteredGear by:
+     *  - hiding items the avatar already owns,
+     *  - enforcing classRestriction (UNIVERSAL or matches avatar class),
+     *  - applying the type filter.
+     */
+    private void filterStoreGear(String type) {
+        filteredGear.clear();
+        if (allGear == null) return;
+        String playerClass = avatar != null ? avatar.getPlayerClass() : "UNIVERSAL";
+        for (GearModel gear : allGear) {
+            if (gear == null) continue;
+            // hide already owned
+            if (avatar != null && avatar.ownsGear(gear.getId())) continue;
+            // class restriction
+            if (gear.getClassRestriction() != null &&
+                    !gear.getClassRestriction().equalsIgnoreCase("UNIVERSAL") &&
+                    avatar != null &&
+                    !gear.getClassRestriction().equalsIgnoreCase(avatar.getPlayerClass())) {
+                continue;
+            }
+            // type filter
+            if (!"ALL".equalsIgnoreCase(type)) {
+                if (!gear.getType().name().equalsIgnoreCase(type)) continue;
+            }
+            filteredGear.add(gear);
+        }
+    }
+
     private void showGearDetails(GearModel gear) {
-        // Set name with class
-        itemName.setText(gear.name + " (" + gear.allowedClass.name() + ")");
+        if (gear == null) return;
+        TextView itemName = findViewById(R.id.itemName);
+        TextView itemDesc = findViewById(R.id.itemDesc);
+        TextView itemBoosts = findViewById(R.id.itemBoosts);
+        TextView itemSkill = findViewById(R.id.itemSkill);
 
-        // Description (if you want per-item descriptions, add a field to GearModel)
-        if (gear.description != null) {
-            itemDesc.setText(gear.description);
-        } else {
-            itemDesc.setText("A fine piece of gear.");
-        }
-
-        // Build stat boosts
-        StringBuilder boostText = new StringBuilder("Boosts:\n");
-        if (gear.statBoosts != null && !gear.statBoosts.isEmpty()) {
-            for (Map.Entry<String, Float> entry : gear.statBoosts.entrySet()) {
-                boostText.append("+")
-                        .append(entry.getValue())
-                        .append("% ")
-                        .append(entry.getKey())
-                        .append("\n");
-            }
-        } else {
-            boostText.append("None");
-        }
-        itemBoosts.setText(boostText.toString().trim());
-
-        // Build skill augments
-        StringBuilder skillText = new StringBuilder("Skill Effect:\n");
-        if (gear.skillAugments != null && !gear.skillAugments.isEmpty()) {
-            for (Effect effect : gear.skillAugments) {
-                skillText.append(effect.getName())
-                        .append(" ")
-                        .append(effect.getValue())
-                        .append("\n");
-            }
-        } else {
-            skillText.append("None");
-        }
-        itemSkill.setText(skillText.toString().trim());
+        itemName.setText(gear.getName() + " (" + gear.getClassRestriction() + ")");
+        itemDesc.setText(gear.getDesc() != null ? gear.getDesc() : "");
+        itemBoosts.setText(gear.getBoostsString());
+        itemSkill.setText(gear.getSkillString());
     }
 
+    private void showPurchaseDialog(GearModel gear) {
+        if (gear == null || avatar == null) return;
 
-    private void buildStoreItems() {
-        storeItems = new ArrayList<>();
+        // Check affordability first
+        if (avatar.getCoins() < gear.getPrice()) {
+            Toast.makeText(this, "Not enough coins!", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        // Example 1: Phantom Leggings
-        Map<String, Float> boosts1 = new HashMap<>();
-        boosts1.put("AGI", 15f);
-
-        List<Effect> effects1 = new ArrayList<>();
-        //effects1.add(new Effect("Dodge Chance", "+10%"));
-
-        GearModel leggings = new GearModel();
-        leggings.name = "Phantom Leggings";
-        leggings.type = GearType.PANTS;
-        leggings.allowedClass = ClassType.TANK;
-        leggings.statBoosts = boosts1;
-        leggings.skillAugments = effects1;
-        leggings.description = "Light as mist, perfect for evasion.";
-        storeItems.add(leggings);
-
-        // Example 2: Iron Sword
-        Map<String, Float> boosts2 = new HashMap<>();
-        boosts2.put("ATK", 20f);
-
-        GearModel sword = new GearModel();
-        sword.name = "Iron Sword";
-        sword.type = GearType.WEAPON;
-        sword.allowedClass = ClassType.WARRIOR;
-        sword.statBoosts = boosts2;
-        sword.skillAugments = new ArrayList<>();
-        sword.description = "A sturdy blade forged from iron.";
-        storeItems.add(sword);
-
-        // Example 3: Mystic Robe
-        Map<String, Float> boosts3 = new HashMap<>();
-        boosts3.put("INT", 25f);
-
-        GearModel robe = new GearModel();
-        robe.name = "Mystic Robe";
-        robe.type = GearType.ARMOR;
-        robe.allowedClass = ClassType.ROGUE;
-        robe.statBoosts = boosts3;
-        robe.skillAugments = new ArrayList<>();
-        robe.description = "A robe infused with arcane power.";
-        storeItems.add(robe);
+        new AlertDialog.Builder(this)
+                .setTitle("Confirm Purchase")
+                .setMessage("Buy " + gear.getName() + " for " + formatCoins(gear.getPrice()) + " ?")
+                .setPositiveButton("Buy", (dialog, which) -> {
+                    // Deduct coins
+                    avatar.setCoins(avatar.getCoins() - gear.getPrice());
+                    // Add gear to avatar inventory
+                    avatar.addGear(gear.getId());
+                    // Save avatar
+                    AvatarManager.saveAvatarOffline(StoreActivity.this, avatar);
+                    // Refresh UI
+                    refreshCoinsText();
+                    filterAndRefresh(currentFilter);
+                    Toast.makeText(StoreActivity.this, "Purchased " + gear.getName() + "!", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .show();
     }
 
-    // ==== rest of your store methods (buildStoreItems, showGearDetails, GearAdapter) unchanged ====
+    // Utility: format price for UI like 1.2K / 3M / 1B
+    private static String formatCoins(long n) {
+        if (n >= 1_000_000_000L) return (n / 1_000_000_000L) + "B";
+        if (n >= 1_000_000L) return (n / 1_000_000L) + "M";
+        if (n >= 1_000L) return (n / 1_000L) + "K";
+        return String.valueOf(n);
+    }
 }
-

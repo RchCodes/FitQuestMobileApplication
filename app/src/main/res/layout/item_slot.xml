@@ -4,15 +4,6 @@
     android:layout_height="80dp"
     android:foregroundGravity="center">
 
-    <!-- Item icon -->
-    <ImageView
-        android:id="@+id/itemIcon"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="10dp"
-        android:scaleType="fitCenter"
-        android:adjustViewBounds="true" />
-
     <!-- Frame overlay -->
     <ImageView
         android:id="@+id/itemFrame"
@@ -20,4 +11,23 @@
         android:layout_height="match_parent"
         android:src="@drawable/bg_item_frame"
         android:scaleType="fitXY" />
+
+    <!-- Item icon -->
+    <ImageView
+        android:id="@+id/itemIcon"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true" />
+
+    <TextView
+        android:drawableLeft="@drawable/currency"
+        android:id="@+id/itemPrice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
+        android:text=" 200"
+        android:textColor="@color/white"
+        android:background="@drawable/bg_price"/>
 </FrameLayout>

@@ -223,6 +223,15 @@ public class QuestManager {
         return list;
     }
 
+    // In QuestManager.java
+    public static int getIncompleteQuestCount(Context ctx) {
+        ensureLoaded(ctx);
+        int count = 0;
+        for (QuestModel q : quests) {
+            if (!q.isCompleted()) count++;
+        }
+        return count;
+    }
 
 
 
