@@ -1,0 +1,100 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@drawable/dialog_background"
+    android:padding="12dp"
+    android:layout_gravity="center"
+    android:minWidth="280dp">
+
+    <!-- Skill Header Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Skill Icon -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/skillIcon"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_warrior_skill_4"
+            app:shapeAppearanceOverlay="@style/RoundImage"
+            app:strokeColor="#FFD700"
+            app:strokeWidth="2.5dp"/>
+
+        <!-- Skill Name -->
+        <TextView
+            android:id="@+id/skillName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:text="Battle Cry"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:textSize="20sp"/>
+    </LinearLayout>
+
+    <!-- Info Texts -->
+    <TextView
+        android:id="@+id/skillType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Type: Buff"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:paddingTop="6dp"/>
+
+    <TextView
+        android:id="@+id/skillDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Description: Roar boosts strength."
+        android:textColor="@android:color/white"
+        android:textSize="14sp"/>
+
+    <TextView
+        android:id="@+id/skillScaling"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Scaling: Buff only"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"/>
+
+    <TextView
+        android:id="@+id/skillABImpact"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="AB/Turn Impact: 50%"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"/>
+
+    <TextView
+        android:id="@+id/skillCooldown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Cooldown: 3"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"/>
+
+    <TextView
+        android:id="@+id/skillEffect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Effect: +20% STR 2 turns"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"/>
+
+    <TextView
+        android:id="@+id/skillUnlock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Level Unlock: 4"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"/>
+
+</LinearLayout>

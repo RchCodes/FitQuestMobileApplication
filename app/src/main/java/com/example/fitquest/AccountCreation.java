@@ -62,6 +62,7 @@ public class AccountCreation extends AppCompatActivity {
 
         setupGoogleSignIn();
         setupFacebookSignIn();
+        MusicManager.start(this);
 
         btnSignUp.setOnClickListener(v -> signUpWithEmail());
         btnGoogle.setOnClickListener(v -> startActivityForResult(googleSignInClient.getSignInIntent(), RC_SIGN_IN));

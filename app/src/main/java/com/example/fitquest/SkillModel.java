@@ -1,5 +1,7 @@
 package com.example.fitquest;
 
+import java.util.List;
+
 /**
  * Base abstract model for all skills in FitQuest combat.
  * Each concrete skill defines its own execution logic.
@@ -15,6 +17,8 @@ public abstract class SkillModel {
     private final boolean isUltimate;   // true = ultimate skill
     private final int levelUnlock;      // required level to unlock
 
+    private int iconRes;
+
     // --- Costs & Cooldowns ---
     private final int abCost;           // Action Bar cost (e.g. 50% for buffs, 100% for attacks)
     private final int baseCooldown;     // base cooldown in turns
@@ -27,12 +31,15 @@ public abstract class SkillModel {
     private final float flxScaling;
     private final float staScaling;
 
+    private List<SkillEffect> effects;
+
     // --- Constructor ---
     protected SkillModel(String id,
                          String name,
                          String description,
                          SkillType type,
                          ClassType allowedClass,
+                         int iconRes,
                          boolean isUltimate,
                          int levelUnlock,
                          int abCost,
@@ -41,12 +48,14 @@ public abstract class SkillModel {
                          float endScaling,
                          float agiScaling,
                          float flxScaling,
-                         float staScaling) {
+                         float staScaling,
+                         List<SkillEffect> effects) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.type = type;
         this.allowedClass = allowedClass;
+        this.iconRes = iconRes;
         this.isUltimate = isUltimate;
         this.levelUnlock = levelUnlock;
         this.abCost = abCost;
@@ -57,6 +66,7 @@ public abstract class SkillModel {
         this.agiScaling = agiScaling;
         this.flxScaling = flxScaling;
         this.staScaling = staScaling;
+        this.effects = effects;
     }
 
     // --- Execution ---
@@ -98,23 +108,37 @@ public abstract class SkillModel {
     public float getAgiScaling() { return agiScaling; }
     public float getFlxScaling() { return flxScaling; }
     public float getStaScaling() { return staScaling; }
+
+    public List<SkillEffect> getEffects() { return effects; }
+
+    public String getCooldown() {
+        return baseCooldown + " turns";
+    }
+
+    public int getIconRes() {
+        return iconRes;
+    }
+
+    public String getScaling() {
+        StringBuilder scaling = new StringBuilder();
+        if (strScaling > 0) scaling.append(strScaling * 100).append("% STR + ");
+        if (endScaling > 0) scaling.append(endScaling * 100).append("% END + ");
+        if (agiScaling > 0) scaling.append(agiScaling * 100).append("% AGI + ");
+        if (flxScaling > 0) scaling.append(flxScaling * 100).append("% FLX + ");
+        if (staScaling > 0) scaling.append(staScaling * 100).append("% STA + ");
+        return scaling.toString();
+    }
+
+    public String getEffect() {
+        StringBuilder effect = new StringBuilder();
+        for (SkillEffect skillEffect : effects) {
+            effect.append(skillEffect.getEffect()).append(" ");
+        }
+        return effect.toString();
+    }
 }
 
-enum SkillType {
-    DAMAGE,
-    BUFF,
-    DEBUFF,
-    HEAL,
-    SHIELD,
-    DOT // Damage over time
-}
 
-enum ClassType {
-    TANK,
-    ROGUE,
-    WARRIOR,
-    UNIVERSAL
-}
 
 /*
 🛡 Tank Skills

@@ -58,6 +58,8 @@ public class ArenaActivity extends BaseActivity {
                 findViewById(R.id.lipsLayer)
         );
 
+        MusicManager.start(this);
+
         // Load avatar safely and redirect if none exists
         loadAvatarIfExists();
 

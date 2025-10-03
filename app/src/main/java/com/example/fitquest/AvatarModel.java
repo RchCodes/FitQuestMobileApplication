@@ -1,7 +1,12 @@
 package com.example.fitquest;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -54,10 +59,15 @@ public class AvatarModel {
     // --- Inventory ---
     private Set<String> ownedGearIds = new HashSet<>(); // all owned items (by ID)
 
-    // --- Equipped gear per slot ---
-    private Map<GearType, String> equippedGear = new HashMap<>();
+    // --- Restricted Gear Slots ---
+    private final Map<GearType, String> equippedGear = new EnumMap<>(GearType.class);
 
     private Map<String, GoalState> goalProgress = new HashMap<>();
+
+    // --- NEW: Skill System ---
+    private List<PassiveSkill> passiveSkills = new ArrayList<>(2); // fixed 2
+    private List<SkillModel> activeSkills = new ArrayList<>(5);   // up to 5
+
 
     // Constructors
     public AvatarModel() {
@@ -66,6 +76,10 @@ public class AvatarModel {
         this.coins = 0;
         this.rank = 0;
         this.playerId = generatePlayerId();
+
+        assignClassPassiveSkills(); // auto-assign passives at level 1
+        initGearSlots();
+
     }
 
     public AvatarModel(String username, String gender, String playerClass,
@@ -88,6 +102,98 @@ public class AvatarModel {
         this.eyesColor = eyesColor;
         this.nose = nose;
         this.lips = lips;
+    }
+
+    // --- Gear Slot Setup ---
+    private void initGearSlots() {
+        for (GearType type : Arrays.asList(GearType.WEAPON, GearType.ARMOR, GearType.PANTS, GearType.BOOTS, GearType.ACCESSORY)) {
+            equippedGear.put(type, null); // start empty
+        }
+    }
+
+    public AvatarModel(AvatarModel other) {
+        this.armPoints = other.armPoints;
+        this.legPoints = other.legPoints;
+        this.chestPoints = other.chestPoints;
+        this.backPoints = other.backPoints;
+        this.strength = other.strength;
+        this.endurance = other.endurance;
+        this.agility = other.agility;
+        this.flexibility = other.flexibility;
+        this.stamina = other.stamina;
+        this.freePhysiquePoints = other.freePhysiquePoints;
+        this.freeAttributePoints = other.freeAttributePoints;
+    }
+
+    private void assignClassPassiveSkills() {
+        passiveSkills.clear();
+
+        ClassType ct = getClassType();
+        if (ct == null) return;
+
+        // Example: you should map real skills per class
+        switch (ct) {
+            case WARRIOR:
+                passiveSkills.add(SkillRepository.getPassiveById("warrior_passive1"));
+                passiveSkills.add(SkillRepository.getPassiveById("warrior_passive2"));
+                break;
+            case TANK:
+                passiveSkills.add(SkillRepository.getPassiveById("mage_passive1"));
+                passiveSkills.add(SkillRepository.getPassiveById("mage_passive2"));
+                break;
+            case ROGUE:
+                passiveSkills.add(SkillRepository.getPassiveById("rogue_passive1"));
+                passiveSkills.add(SkillRepository.getPassiveById("rogue_passive2"));
+                break;
+            default:
+                break;
+        }
+    }
+
+    // --- Skill Management Methods ---
+    public List<PassiveSkill> getPassiveSkills() {
+        return Collections.unmodifiableList(passiveSkills);
+    }
+
+    public List<SkillModel> getActiveSkills() {
+        return Collections.unmodifiableList(activeSkills);
+    }
+
+    /** Adds a new active skill (non-ultimate). */
+    public boolean addActiveSkill(SkillModel skill) {
+        if (activeSkills.size() >= 5) return false; // full
+        if (skill.isUltimate() && hasUltimateSkill()) return false; // only 1 ultimate
+        activeSkills.add(skill);
+        return true;
+    }
+
+    /** Replace an existing active skill at slot. */
+    public boolean replaceActiveSkill(int slot, SkillModel skill) {
+        if (slot < 0 || slot >= activeSkills.size()) return false;
+        if (skill.isUltimate() && hasUltimateSkill() && !activeSkills.get(slot).isUltimate()) {
+            return false; // avoid duplicate ultimate
+        }
+        activeSkills.set(slot, skill);
+        return true;
+    }
+
+    /** Checks if ultimate already exists. */
+    public boolean hasUltimateSkill() {
+        return activeSkills.stream().anyMatch(SkillModel::isUltimate);
+    }
+
+    public void removeActiveSkill(int slot) {
+        if (slot >= 0 && slot < activeSkills.size()) {
+            activeSkills.remove(slot);
+        }
+    }
+
+    public ClassType getClassType() {
+        try {
+            return ClassType.valueOf(playerClass);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     // --- Getters & Setters ---
@@ -276,10 +382,6 @@ public class AvatarModel {
     }
 
 
-    public ClassType getClassType() {
-        return ClassType.valueOf(playerClass);
-    }
-
     public String getFormattedCoins() {
         if (coins >= 1_000_000_000) {
             return (coins / 1_000_000_000) + "B";
@@ -353,5 +455,18 @@ public class AvatarModel {
     }
 
 
+    public void copyFrom(AvatarModel other) {
+        this.armPoints = other.armPoints;
+        this.legPoints = other.legPoints;
+        this.chestPoints = other.chestPoints;
+        this.backPoints = other.backPoints;
+        this.strength = other.strength;
+        this.endurance = other.endurance;
+        this.agility = other.agility;
+        this.flexibility = other.flexibility;
+        this.stamina = other.stamina;
+        this.freePhysiquePoints = other.freePhysiquePoints;
+        this.freeAttributePoints = other.freeAttributePoints;
+    }
 }
 

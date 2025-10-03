@@ -36,6 +36,7 @@ public class StoreActivity extends AppCompatActivity {
         // Avatar + avatar preview helper (same approach used in MainActivity)
         setupAvatarHelper();
         loadAvatar();
+        MusicManager.start(this);
 
         // UI refs
         txtCoins = findViewById(R.id.txtCoins);

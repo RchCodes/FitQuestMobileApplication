@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@drawable/dialog_background"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!-- Active Skills -->
+    <TextView
+        android:id="@+id/activeSkillsLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Active Skills"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:padding="8dp"
+        android:textColor="@android:color/white"/>
+
+    <LinearLayout
+        android:id="@+id/activeSkillsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- Passive Skills -->
+    <TextView
+        android:id="@+id/passiveSkillsLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Passive Skills"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:padding="8dp"
+        android:textColor="@android:color/white"/>
+
+    <LinearLayout
+        android:id="@+id/passiveSkillsContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp"/>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- Available Skills -->
+    <TextView
+        android:id="@+id/availableSkillsLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Available Skills"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:padding="8dp"
+        android:textColor="@android:color/white"/>
+
+    <GridLayout
+        android:id="@+id/availableSkillsGrid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="5"
+        android:alignmentMode="alignMargins"
+        android:rowCount="3"
+        android:useDefaultMargins="true"/>
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="12dp">
+
+        <Button
+            android:id="@+id/saveButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save"/>
+
+        <Button
+            android:id="@+id/cancelButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:layout_marginStart="16dp"/>
+    </LinearLayout>
+</LinearLayout>

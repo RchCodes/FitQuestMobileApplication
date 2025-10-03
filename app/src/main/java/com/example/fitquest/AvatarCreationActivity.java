@@ -130,6 +130,7 @@ public class AvatarCreationActivity extends BaseActivity {
         updateLips();
         updateOutfit();
         updateBody();
+        MusicManager.start(this);
     }
 
     private void bindViews() {

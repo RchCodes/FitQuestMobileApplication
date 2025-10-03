@@ -52,6 +52,7 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         loadProfileInfo();
         setupButtons();
         initGoogleFit();
+        MusicManager.start(this);
     }
 
     private void bindViews() {
@@ -185,7 +186,7 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         findViewById(R.id.quest_button).setOnClickListener(v -> new Quest(this).show());
         findViewById(R.id.goals_button).setOnClickListener(v -> new Goals(this, avatar).show());
         findViewById(R.id.gear_button).setOnClickListener(v -> startActivity(new Intent(this, GearActivity.class)));
-        findViewById(R.id.friends_button).setOnClickListener(v -> new Friends(this).show());
+        findViewById(R.id.friends_button).setOnClickListener(v -> startActivity(new Intent(this, AvatarOverviewActivity.class)));
         findViewById(R.id.arena_button).setOnClickListener(v -> startActivity(new Intent(this, ArenaActivity.class)));
         findViewById(R.id.challenge_button).setOnClickListener(v -> new Challenge(this).show());
         findViewById(R.id.stats_button).setOnClickListener(v -> new CharacterStats(this, avatar).show());

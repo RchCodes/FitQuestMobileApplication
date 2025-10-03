@@ -63,6 +63,7 @@ public class Login extends BaseActivity {
 
         setupGoogleSignIn();
         setupFacebookSignIn();
+        MusicManager.start(this);
 
         btnLogin.setOnClickListener(v -> loginWithEmail());
         btnSignup.setOnClickListener(v -> startActivity(new Intent(Login.this, AccountCreation.class)));

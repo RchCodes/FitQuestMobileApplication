@@ -5,14 +5,14 @@ import android.app.Dialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class CharacterStats {
 
     private final Dialog dialog;
-    private final AvatarModel avatar;
+    private final AvatarModel avatar;       // original avatar
+    private final AvatarModel tempAvatar;   // temporary copy for modifications
 
     // UI elements
     private TextView txtArm, txtLeg, txtChest, txtBack;
@@ -21,6 +21,9 @@ public class CharacterStats {
 
     public CharacterStats(Activity activity, AvatarModel avatar) {
         this.avatar = avatar;
+
+        // Create a temporary copy for modifications
+        this.tempAvatar = new AvatarModel(avatar);
 
         View popupView = LayoutInflater.from(activity).inflate(R.layout.character_stats, null);
 
@@ -58,76 +61,87 @@ public class CharacterStats {
         setupAttributeButton(popupView.findViewById(R.id.plus_flexibility), "flexibility");
         setupAttributeButton(popupView.findViewById(R.id.plus_stamina), "stamina");
 
-        // Apply & Close buttons
+        // Apply button
         View apply = popupView.findViewById(R.id.apply_button);
         if (apply != null) apply.setOnClickListener(v -> {
+            // Copy temp stats to the original avatar
+            avatar.copyFrom(tempAvatar);
             AvatarManager.saveAvatarOffline(activity, avatar);
             AvatarManager.saveAvatarOnline(avatar);
             Toast.makeText(activity, "Stats Applied!", Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
         });
 
+        // Close button (reverts changes)
         View close = popupView.findViewById(R.id.close_button);
-        if (close != null) close.setOnClickListener(v -> dialog.dismiss());
+        if (close != null) close.setOnClickListener(v -> {
+            // Reset tempAvatar to original in case of reopening
+            tempAvatar.copyFrom(avatar);
+            dialog.dismiss();
+        });
 
         updateUI();
     }
 
+    /** Setup physique increment buttons */
     private void setupPhysiqueButton(View button, String type) {
         if (button == null) return;
         button.setOnClickListener(v -> {
-            if (avatar.getFreePhysiquePoints() <= 0) {
+            if (tempAvatar.getFreePhysiquePoints() <= 0) {
                 Toast.makeText(dialog.getContext(), "No physique points left", Toast.LENGTH_SHORT).show();
                 return;
             }
             switch (type) {
-                case "arm": avatar.addArmPoints(1); break;
-                case "leg": avatar.addLegPoints(1); break;
-                case "chest": avatar.addChestPoints(1); break;
-                case "back": avatar.addBackPoints(1); break;
+                case "arm": tempAvatar.addArmPoints(1); break;
+                case "leg": tempAvatar.addLegPoints(1); break;
+                case "chest": tempAvatar.addChestPoints(1); break;
+                case "back": tempAvatar.addBackPoints(1); break;
             }
-            avatar.addFreePhysiquePoints(-1);
+            tempAvatar.addFreePhysiquePoints(-1);
             updateUI();
         });
     }
 
+    /** Setup attribute increment buttons */
     private void setupAttributeButton(View button, String type) {
         if (button == null) return;
         button.setOnClickListener(v -> {
-            if (avatar.getFreeAttributePoints() <= 0) {
+            if (tempAvatar.getFreeAttributePoints() <= 0) {
                 Toast.makeText(dialog.getContext(), "No attribute points left", Toast.LENGTH_SHORT).show();
                 return;
             }
             switch (type) {
-                case "strength": avatar.addStrength(1); break;
-                case "endurance": avatar.addEndurance(1); break;
-                case "agility": avatar.addAgility(1); break;
-                case "flexibility": avatar.addFlexibility(1); break;
-                case "stamina": avatar.addStamina(1); break;
+                case "strength": tempAvatar.addStrength(1); break;
+                case "endurance": tempAvatar.addEndurance(1); break;
+                case "agility": tempAvatar.addAgility(1); break;
+                case "flexibility": tempAvatar.addFlexibility(1); break;
+                case "stamina": tempAvatar.addStamina(1); break;
             }
-            avatar.addFreeAttributePoints(-1);
+            tempAvatar.addFreeAttributePoints(-1);
             updateUI();
         });
     }
 
-    /** Refresh all UI fields from avatar */
+    /** Refresh UI to display temporary avatar stats */
     private void updateUI() {
-        txtArm.setText(String.valueOf(avatar.getArmPoints()));
-        txtLeg.setText(String.valueOf(avatar.getLegPoints()));
-        txtChest.setText(String.valueOf(avatar.getChestPoints()));
-        txtBack.setText(String.valueOf(avatar.getBackPoints()));
+        txtArm.setText(String.valueOf(tempAvatar.getArmPoints()));
+        txtLeg.setText(String.valueOf(tempAvatar.getLegPoints()));
+        txtChest.setText(String.valueOf(tempAvatar.getChestPoints()));
+        txtBack.setText(String.valueOf(tempAvatar.getBackPoints()));
 
-        txtStrength.setText(String.valueOf(avatar.getStrength()));
-        txtEndurance.setText(String.valueOf(avatar.getEndurance()));
-        txtAgility.setText(String.valueOf(avatar.getAgility()));
-        txtFlexibility.setText(String.valueOf(avatar.getFlexibility()));
-        txtStamina.setText(String.valueOf(avatar.getStamina()));
+        txtStrength.setText(String.valueOf(tempAvatar.getStrength()));
+        txtEndurance.setText(String.valueOf(tempAvatar.getEndurance()));
+        txtAgility.setText(String.valueOf(tempAvatar.getAgility()));
+        txtFlexibility.setText(String.valueOf(tempAvatar.getFlexibility()));
+        txtStamina.setText(String.valueOf(tempAvatar.getStamina()));
 
-        physiqueTitle.setText("PHYSIQUE    Free: " + avatar.getFreePhysiquePoints());
-        attributesTitle.setText("ATTRIBUTES    Free: " + avatar.getFreeAttributePoints());
+        physiqueTitle.setText("PHYSIQUE    Free: " + tempAvatar.getFreePhysiquePoints());
+        attributesTitle.setText("ATTRIBUTES    Free: " + tempAvatar.getFreeAttributePoints());
     }
 
-    /** Show dialog */
+    /** Show the dialog */
     public void show() {
+        tempAvatar.copyFrom(avatar); // reset temporary copy every time dialog opens
         updateUI();
         dialog.show();
     }

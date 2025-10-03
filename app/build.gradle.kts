@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation("com.google.android.material:material:1.12.0")
 
     // CameraX (needed for live camera feed)
     implementation("androidx.camera:camera-core:1.3.3")

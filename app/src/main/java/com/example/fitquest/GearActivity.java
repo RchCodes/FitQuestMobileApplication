@@ -65,6 +65,8 @@ public class GearActivity extends AppCompatActivity {
         itemBoosts = findViewById(R.id.itemBoosts);
         itemSkill = findViewById(R.id.itemSkill);
 
+        MusicManager.start(this);
+
         // --- load owned gear from avatar & repository ---
         loadOwnedGear();
 
