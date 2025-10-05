@@ -181,11 +181,26 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageButton
-            android:id="@+id/leaderboards"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/button_arena_leaderboards"/>
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/leaderboards"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:background="@drawable/button_arena_leaderboards"/>
+
+            <ImageButton
+                android:id="@+id/battle_history"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:background="@drawable/button_battle_history"/>
+
+        </LinearLayout>
 
         <ImageButton
             android:id="@+id/start_combat"

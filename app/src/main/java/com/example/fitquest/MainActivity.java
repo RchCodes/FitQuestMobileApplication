@@ -188,7 +188,7 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         findViewById(R.id.gear_button).setOnClickListener(v -> startActivity(new Intent(this, GearActivity.class)));
         findViewById(R.id.friends_button).setOnClickListener(v -> startActivity(new Intent(this, AvatarOverviewActivity.class)));
         findViewById(R.id.arena_button).setOnClickListener(v -> startActivity(new Intent(this, ArenaActivity.class)));
-        findViewById(R.id.challenge_button).setOnClickListener(v -> new Challenge(this).show());
+        findViewById(R.id.challenge_button).setOnClickListener(v -> startActivity(new Intent(this, LevelSelectActivity.class)));
         findViewById(R.id.stats_button).setOnClickListener(v -> new CharacterStats(this, avatar).show());
     }
 

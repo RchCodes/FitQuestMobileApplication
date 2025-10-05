@@ -71,6 +71,7 @@ public class SkillLoadoutDialog extends Dialog {
                 if (activeSlots[index] != null) {
                     activeSlots[index] = null;
                     slot.setImageResource(android.R.color.transparent);
+                    slot.setAlpha(0.3f);
                 }
             });
 

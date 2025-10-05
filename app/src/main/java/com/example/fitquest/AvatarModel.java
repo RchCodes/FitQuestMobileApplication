@@ -68,6 +68,8 @@ public class AvatarModel {
     private List<PassiveSkill> passiveSkills = new ArrayList<>(2); // fixed 2
     private List<SkillModel> activeSkills = new ArrayList<>(5);   // up to 5
 
+    private List<BattleHistoryModel> battleHistory = new ArrayList<>();
+
 
     // Constructors
     public AvatarModel() {
@@ -467,6 +469,10 @@ public class AvatarModel {
         this.stamina = other.stamina;
         this.freePhysiquePoints = other.freePhysiquePoints;
         this.freeAttributePoints = other.freeAttributePoints;
+    }
+
+    public List<BattleHistoryModel> getBattleHistory() {
+        return battleHistory;
     }
 }
 

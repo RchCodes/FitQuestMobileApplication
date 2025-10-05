@@ -1,8 +1,11 @@
 package com.example.fitquest;
 
+import android.app.ActionBar;
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -11,13 +14,17 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.imageview.ShapeableImageView;
+
+import java.util.List;
+
 public class AvatarOverviewActivity extends BaseActivity {
 
     private AvatarModel avatar;
     private AvatarDisplayManager avatarHelper;
 
     // --- UI References ---
-    private TextView tvName, tvLevel, tvClass, tvHP, tvAP, expTextOverlay;
+    private TextView tvName, tvLevel, tvClass, tvExp, tvAP, expTextOverlay;
     private ProgressBar expBar;
 
     // physique
@@ -28,7 +35,10 @@ public class AvatarOverviewActivity extends BaseActivity {
 
     // avatar layers
     private ImageView baseBodyLayer, outfitLayer, weaponLayer, hairOutlineLayer,
-            hairFillLayer, eyesOutlineLayer, eyesFillLayer, noseLayer, lipsLayer;
+            hairFillLayer, eyesOutlineLayer, eyesFillLayer, noseLayer, lipsLayer, skillLoadout;
+
+    private ShapeableImageView skill1, skill2, skill3, skill4, skill5, passive1, passive2;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +49,7 @@ public class AvatarOverviewActivity extends BaseActivity {
         setupAvatarHelper();
         loadAvatarWithOnlineFallback();
         setupButtons();
+        loadSkills();
     }
 
     private void bindViews() {
@@ -46,8 +57,8 @@ public class AvatarOverviewActivity extends BaseActivity {
         tvName = findViewById(R.id.tvName);
         tvLevel = findViewById(R.id.tvLevel);
         tvClass = findViewById(R.id.tvClass);
-        tvHP = findViewById(R.id.tvHP);
-        tvAP = findViewById(R.id.tvAP);
+        tvExp = findViewById(R.id.tvExp);
+        //tvAP = findViewById(R.id.tvAP);
 
         expBar = findViewById(R.id.exp_bar);
         expTextOverlay = findViewById(R.id.exp_text_overlay);
@@ -75,6 +86,24 @@ public class AvatarOverviewActivity extends BaseActivity {
         eyesFillLayer = findViewById(R.id.eyesFillLayer);
         noseLayer = findViewById(R.id.noseLayer);
         lipsLayer = findViewById(R.id.lipsLayer);
+
+        skill1 = findViewById(R.id.skill1);
+        skill2 = findViewById(R.id.skill2);
+        skill3 = findViewById(R.id.skill3);
+        skill4 = findViewById(R.id.skill4);
+        skill5 = findViewById(R.id.skill5);
+        passive1 = findViewById(R.id.passive1);
+        passive2 = findViewById(R.id.passive2);
+
+        skillLoadout = findViewById(R.id.skillLoadout);
+
+        skillLoadout.setOnClickListener(v -> {
+            SkillLoadoutDialog dialog = new SkillLoadoutDialog(this, avatar);
+            dialog.setOnDismissListener(d -> loadSkills()); // refresh after closing
+            dialog.show();
+        });
+
+
     }
 
     private void setupAvatarHelper() {
@@ -173,5 +202,51 @@ public class AvatarOverviewActivity extends BaseActivity {
         txtAgility.setText(String.valueOf(avatar.getAgility()));
         txtFlexibility.setText(String.valueOf(avatar.getFlexibility()));
         txtStamina.setText(String.valueOf(avatar.getStamina()));
+
     }
+
+    private void loadSkills() {
+        if (avatar == null) return;
+
+        // Active
+        List<SkillModel> active = avatar.getActiveSkills();
+        ShapeableImageView[] activeSlots = { skill1, skill2, skill3, skill4, skill5 };
+
+        SkillInfoPopup popup = new SkillInfoPopup();
+
+        for (int i = 0; i < activeSlots.length; i++) {
+            ShapeableImageView slot = activeSlots[i];
+            if (i < active.size()) {
+                SkillModel s = active.get(i);
+                slot.setImageResource(s.getIconRes());
+                slot.setAlpha(1f);
+                slot.setOnClickListener(v -> popup.show(v, s));
+            } else {
+                slot.setImageResource(R.drawable.lock); // placeholder asset
+                slot.setAlpha(0.35f);
+                slot.setOnClickListener(null);
+            }
+        }
+
+        // Passive
+        List<PassiveSkill> passives = avatar.getPassiveSkills();
+        ShapeableImageView[] passiveSlots = { passive1, passive2 };
+
+        for (int i = 0; i < passiveSlots.length; i++) {
+            ShapeableImageView slot = passiveSlots[i];
+            if (i < passives.size()) {
+                PassiveSkill p = passives.get(i);
+                slot.setImageResource(p.getIconResId());
+                slot.setAlpha(1f);
+                slot.setOnClickListener(v -> popup.show(v, p));
+            } else {
+                slot.setImageResource(R.drawable.lock);
+                slot.setAlpha(0.35f);
+                slot.setOnClickListener(null);
+            }
+        }
+    }
+
+
+
 }

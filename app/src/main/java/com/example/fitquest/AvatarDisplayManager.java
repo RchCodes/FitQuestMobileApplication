@@ -5,6 +5,8 @@ import android.graphics.Color;
 import android.util.Log;
 import android.widget.ImageView;
 
+import java.util.List;
+
 public class AvatarDisplayManager {
 
     private AvatarModel avatar;
@@ -158,4 +160,7 @@ public class AvatarDisplayManager {
         return context.getResources().getIdentifier(name, "drawable", context.getPackageName());
     }
 
+    public List<BattleHistoryModel> getBattleHistory() {
+        return avatar.getBattleHistory();
+    }
 }

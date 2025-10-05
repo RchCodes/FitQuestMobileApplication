@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/bg_lb_item"
+    android:padding="12dp"
+    android:gravity="center_vertical"
+    android:layout_marginBottom="8dp">
+
+    <!-- Left Player -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_weight="1"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/playerLeftIcon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_avatar_placeholder"
+            android:background="@drawable/bg_profile"
+            android:padding="4dp" />
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp">
+
+            <TextView
+                android:id="@+id/playerLeftName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Chian"
+                android:textStyle="bold"
+                android:textColor="#000"
+                android:textSize="14sp"/>
+
+            <TextView
+                android:id="@+id/playerLeftLevel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LV. 99"
+                android:textColor="#444"
+                android:textSize="12sp"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Score Change -->
+    <TextView
+        android:id="@+id/scoreChange"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="+25"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:textColor="#4CAF50"
+        android:layout_marginHorizontal="12dp"/>
+
+    <!-- Right Player -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_weight="1"
+        android:gravity="center_vertical|end">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp">
+
+            <TextView
+                android:id="@+id/playerRightName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lonie"
+                android:textStyle="bold"
+                android:textColor="#000"
+                android:textSize="14sp"/>
+
+            <TextView
+                android:id="@+id/playerRightLevel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LV. 99"
+                android:textColor="#444"
+                android:textSize="12sp"/>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/playerRightIcon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_avatar_placeholder"
+            android:background="@drawable/bg_profile"
+            android:padding="4dp" />
+    </LinearLayout>
+
+</LinearLayout>

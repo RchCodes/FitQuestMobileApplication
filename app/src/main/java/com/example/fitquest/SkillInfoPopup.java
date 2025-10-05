@@ -11,97 +11,172 @@ import android.widget.TextView;
 
 import com.google.android.material.imageview.ShapeableImageView;
 
-/**
- * Reusable popup that displays Skill info and appears above the anchor view.
- */
+import java.util.List;
+import java.util.Locale;
+
 public class SkillInfoPopup {
 
     private PopupWindow popupWindow;
 
-    /**
-     * Show the popup above the anchor view (centered horizontally on the anchor).
-     * If there's not enough space above, it will show below the anchor.
-     */
+    // --- Active skill
     public void show(View anchor, SkillModel skill) {
         if (anchor == null || skill == null) return;
-
-        // Inflate content
         View content = LayoutInflater.from(anchor.getContext())
                 .inflate(R.layout.dialog_skill_info, null);
 
-        // Bind views and fill data
+        // Common
         ShapeableImageView icon = content.findViewById(R.id.skillIcon);
         TextView name = content.findViewById(R.id.skillName);
         TextView type = content.findViewById(R.id.skillType);
         TextView desc = content.findViewById(R.id.skillDescription);
         TextView scaling = content.findViewById(R.id.skillScaling);
+        TextView abCost = content.findViewById(R.id.skillABImpact);
         TextView cooldown = content.findViewById(R.id.skillCooldown);
         TextView effect = content.findViewById(R.id.skillEffect);
         TextView unlock = content.findViewById(R.id.skillUnlock);
+        TextView passiveDetails = content.findViewById(R.id.passiveDetails);
 
-        // fill fields (use getUnlock() to match the provided Skill model)
+        // populate active fields
         if (skill.getIconRes() != 0) icon.setImageResource(skill.getIconRes());
         name.setText(skill.getName());
-        type.setText("Type: " + skill.getType());
-        desc.setText("Description: " + skill.getDescription());
-        scaling.setText("Scaling: " + skill.getScaling());
+        type.setText("Type: " + (skill.getType() == null ? "Unknown" : skill.getType().name()));
+        desc.setText("Description: " + (skill.getDescription() == null ? "—" : skill.getDescription()));
+
+        // scaling: build a short row from available scaling floats
+        String scalingText = String.format(Locale.US,
+                "Scaling - STR: %.2f, END: %.2f, AGI: %.2f",
+                skill.getStrScaling(), skill.getEndScaling(), skill.getAgiScaling());
+        scaling.setText(scalingText);
+
+        abCost.setText("AB Cost: " + skill.getAbCost());
         cooldown.setText("Cooldown: " + skill.getCooldown());
-        effect.setText("Effect: " + skill.getEffect());
+        // effect: use description + effects list if any
+        List<?> effects = skill.getEffects();
+        String effectsText = (effects == null || effects.isEmpty()) ? skill.getDescription() : effects.toString();
+        effect.setText("Effect: " + (effectsText == null ? "—" : effectsText));
+
         unlock.setText("Level Unlock: " + skill.getLevelUnlock());
 
-        // Create PopupWindow using ViewGroup.LayoutParams constants (WRAP_CONTENT)
+        // hide passive-only view
+        passiveDetails.setVisibility(View.GONE);
+
+        showPopupAtAnchor(anchor, content);
+    }
+
+    // --- Passive skill
+    public void show(View anchor, PassiveSkill passive) {
+        if (anchor == null || passive == null) return;
+        View content = LayoutInflater.from(anchor.getContext())
+                .inflate(R.layout.dialog_skill_info, null);
+
+        ShapeableImageView icon = content.findViewById(R.id.skillIcon);
+        TextView name = content.findViewById(R.id.skillName);
+        TextView type = content.findViewById(R.id.skillType);
+        TextView desc = content.findViewById(R.id.skillDescription);
+        TextView scaling = content.findViewById(R.id.skillScaling);
+        TextView abCost = content.findViewById(R.id.skillABImpact);
+        TextView cooldown = content.findViewById(R.id.skillCooldown);
+        TextView effect = content.findViewById(R.id.skillEffect);
+        TextView unlock = content.findViewById(R.id.skillUnlock);
+        TextView passiveDetails = content.findViewById(R.id.passiveDetails);
+
+        if (passive.getIconResId() != 0) icon.setImageResource(passive.getIconResId());
+        name.setText(getPassiveName(passive)); // fallback name extraction
+        type.setText("Type: Passive");
+        desc.setText("Description: " + (passive.getDescription() == null ? "—" : passive.getDescription()));
+
+        // hide active-only fields
+        scaling.setVisibility(View.GONE);
+        abCost.setVisibility(View.GONE);
+        cooldown.setVisibility(View.GONE);
+        effect.setVisibility(View.GONE);
+        unlock.setVisibility(View.GONE);
+
+        // show passive-specific details
+        StringBuilder sb = new StringBuilder();
+        sb.append("Unlocked at: ").append(passive.getAllowedClass() == null ? "Any" : passive.getAllowedClass().name())
+                .append(" (lvl ").append(getPassiveUnlockLevel(passive)).append(")\n");
+        // add any stat bonuses if you want; we only have numeric fields available internally - show generic text:
+        sb.append("Bonuses: ").append(getPassiveBonuses(passive));
+
+        passiveDetails.setText(sb.toString());
+        passiveDetails.setVisibility(View.VISIBLE);
+
+        showPopupAtAnchor(anchor, content);
+    }
+
+    // Utility: create and show popup at calculated position above anchor (or below if not enough space)
+    private void showPopupAtAnchor(View anchor, View content) {
         popupWindow = new PopupWindow(
                 content,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-                true // focusable - lets back button dismiss it
+                true
         );
 
-        // Transparent outside area
+        // transparent outside
         popupWindow.setBackgroundDrawable(new ColorDrawable(0x00000000));
         popupWindow.setOutsideTouchable(true);
-        // If you want the popup to be able to extend outside the screen area, you can:
-        // popupWindow.setClippingEnabled(false);
 
-        // Measure content to compute position
+        // measure
         content.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        int popupWidth = content.getMeasuredWidth();
-        int popupHeight = content.getMeasuredHeight();
+        int popupW = content.getMeasuredWidth();
+        int popupH = content.getMeasuredHeight();
 
-        // Get anchor location on screen
         int[] loc = new int[2];
         anchor.getLocationOnScreen(loc);
-        int anchorX = loc[0];
-        int anchorY = loc[1];
-        int anchorW = anchor.getWidth();
-        int anchorH = anchor.getHeight();
+        int ax = loc[0], ay = loc[1], aw = anchor.getWidth(), ah = anchor.getHeight();
 
-        // Calculate x such that popup is centered above anchor
-        int x = anchorX + (anchorW / 2) - (popupWidth / 2);
-        if (x < 8) x = 8; // small padding from left edge
+        int x = ax + (aw / 2) - (popupW / 2);
+        if (x < 8) x = 8;
 
-        // Try to place above anchor
-        int yAbove = anchorY - popupHeight - 10; // 10px gap
-        int yBelow = anchorY + anchorH + 10;
+        int yAbove = ay - popupH - 10;
+        int yBelow = ay + ah + 10;
 
-        // Ensure popup doesn't go off the top of the screen:
-        Rect visibleFrame = new Rect();
-        anchor.getWindowVisibleDisplayFrame(visibleFrame);
+        Rect visible = new Rect();
+        anchor.getWindowVisibleDisplayFrame(visible);
 
-        int y;
-        if (yAbove >= visibleFrame.top + 8) {
-            y = yAbove; // enough room above
-        } else {
-            y = yBelow; // fallback to below anchor
-        }
+        int y = (yAbove >= visible.top + 8) ? yAbove : yBelow;
 
-        // Show popup
         popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, x, y);
     }
 
+    // helpers (you can replace these with actual PassiveSkill getters if you add them)
+    private String getPassiveName(PassiveSkill p) {
+        try {
+            // reflectively try to get a name, fallback to class simple name
+            java.lang.reflect.Field f = p.getClass().getDeclaredField("name");
+            f.setAccessible(true);
+            Object val = f.get(p);
+            if (val != null) return val.toString();
+        } catch (Exception ignored) {}
+        return p.getClass().getSimpleName();
+    }
+
+    private int getPassiveUnlockLevel(PassiveSkill p) {
+        try {
+            java.lang.reflect.Field f = p.getClass().getDeclaredField("levelUnlock");
+            f.setAccessible(true);
+            Object val = f.get(p);
+            if (val instanceof Integer) return (Integer) val;
+        } catch (Exception ignored) {}
+        return 1;
+    }
+
+    private String getPassiveBonuses(PassiveSkill p) {
+        // attempt to read known numeric fields (fallback to description)
+        StringBuilder sb = new StringBuilder();
+        try {
+            java.lang.reflect.Field f1 = p.getClass().getDeclaredField("critBonus");
+            f1.setAccessible(true);
+            Object vb = f1.get(p);
+            if (vb != null) sb.append("critBonus=").append(vb).append(" ");
+        } catch (Exception ignored) {}
+        if (sb.length() == 0) sb.append(p.getDescription() == null ? "—" : p.getDescription());
+        return sb.toString();
+    }
+
     public void dismiss() {
-        if (popupWindow != null && popupWindow.isShowing()) {
-            popupWindow.dismiss();
-        }
+        if (popupWindow != null && popupWindow.isShowing()) popupWindow.dismiss();
     }
 }

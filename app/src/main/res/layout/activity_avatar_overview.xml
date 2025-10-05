@@ -26,13 +26,13 @@
     <!-- Title -->
     <TextView
         android:id="@+id/tvTitle"
-        android:layout_width="200dp"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:textAlignment="textEnd"
         android:text="AVATAR OVERVIEW"
         android:textColor="#FFFFFF"
-        android:textSize="35sp"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.52"
@@ -457,20 +457,21 @@
         </FrameLayout>
 
         <TextView
-            android:id="@+id/tvHP"
-            android:layout_width="wrap_content"
+            android:id="@+id/tvExp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="HP: 100 +999"
+            android:gravity="center"
+            android:text="EXP"
             android:textColor="#FFF"
             android:layout_gravity="start"/>
 
-        <TextView
-            android:id="@+id/tvAP"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="AP: 100 +999"
-            android:textColor="#FFF"
-            android:layout_gravity="start"/>
+<!--        <TextView-->
+<!--            android:id="@+id/tvAP"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="AP: 100 +999"-->
+<!--            android:textColor="#FFF"-->
+<!--            android:layout_gravity="start"/>-->
     </LinearLayout>
 
     <!-- Avatar Image -->
@@ -553,64 +554,84 @@
         app:layout_constraintTop_toBottomOf="@id/layoutStats"
         app:layout_constraintStart_toStartOf="parent">
 
-        <!-- Active Skills -->
-        <TextView
-            android:id="@+id/tvActiveSkills"
-            android:layout_width="wrap_content"
+        <HorizontalScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Active Skills"
-            android:textStyle="bold"
-            android:textColor="#FFF"/>
+            android:fillViewport="true">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center">
+                <!-- Active Skills -->
+                <TextView
+                    android:id="@+id/tvActiveSkills"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Active Skills"
+                    android:textStyle="bold"
+                    android:textColor="#FFF"/>
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:layout_width="55dp"
-            android:layout_height="55dp"
-            android:layout_margin="3dp"
-            android:scaleType="centerCrop"
-            app:shapeAppearanceOverlay="@style/RoundImage"
-            app:strokeColor="#FFD700"
-            app:strokeWidth="2.5dp"
-            android:src="@drawable/ic_warrior_skill_1"/>
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/skill1"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:layout_margin="3dp"
+                    android:scaleType="centerCrop"
+                    app:shapeAppearanceOverlay="@style/RoundImage"
+                    app:strokeColor="#FFD700"
+                    app:strokeWidth="2.5dp"
+                    android:src="@drawable/ic_warrior_skill_1"/>
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:layout_width="55dp"
-            android:layout_height="55dp"
-            android:layout_margin="3dp"
-            android:scaleType="centerCrop"
-            app:shapeAppearanceOverlay="@style/RoundImage"
-            app:strokeColor="#FFD700"
-            app:strokeWidth="2.5dp"
-            android:src="@drawable/ic_warrior_skill_2"/>
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/skill2"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:layout_margin="3dp"
+                    android:scaleType="centerCrop"
+                    app:shapeAppearanceOverlay="@style/RoundImage"
+                    app:strokeColor="#FFD700"
+                    app:strokeWidth="2.5dp"
+                    android:src="@drawable/ic_warrior_skill_2"/>
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:layout_width="55dp"
-            android:layout_height="55dp"
-            android:layout_margin="3dp"
-            android:scaleType="centerCrop"
-            app:shapeAppearanceOverlay="@style/RoundImage"
-            app:strokeColor="#FFD700"
-            app:strokeWidth="2.5dp"
-            android:src="@drawable/ic_warrior_skill_3"/>
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/skill3"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:layout_margin="3dp"
+                    android:scaleType="centerCrop"
+                    app:shapeAppearanceOverlay="@style/RoundImage"
+                    app:strokeColor="#FFD700"
+                    app:strokeWidth="2.5dp"
+                    android:src="@drawable/ic_warrior_skill_3"/>
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:layout_width="55dp"
-            android:layout_height="55dp"
-            android:layout_margin="3dp"
-            android:scaleType="centerCrop"
-            app:shapeAppearanceOverlay="@style/RoundImage"
-            app:strokeColor="#FFD700"
-            app:strokeWidth="2.5dp"
-            android:src="@drawable/ic_warrior_skill_4"/>
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/skill4"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:layout_margin="3dp"
+                    android:scaleType="centerCrop"
+                    app:shapeAppearanceOverlay="@style/RoundImage"
+                    app:strokeColor="#FFD700"
+                    app:strokeWidth="2.5dp"
+                    android:src="@drawable/ic_warrior_skill_4"/>
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:layout_width="55dp"
-            android:layout_height="55dp"
-            android:layout_margin="3dp"
-            android:scaleType="centerCrop"
-            app:shapeAppearanceOverlay="@style/RoundImage"
-            app:strokeColor="#FFD700"
-            app:strokeWidth="2.5dp"
-            android:src="@drawable/ic_warrior_skill_5"/>
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/skill5"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:layout_margin="3dp"
+                    android:scaleType="centerCrop"
+                    app:shapeAppearanceOverlay="@style/RoundImage"
+                    app:strokeColor="#FFD700"
+                    app:strokeWidth="2.5dp"
+                    android:src="@drawable/ic_warrior_skill_5"/>
+
+            </LinearLayout>
+        </HorizontalScrollView>
+
+
 
     </LinearLayout>
 
@@ -635,6 +656,7 @@
             android:textColor="#FFF"/>
 
         <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/passive1"
             android:layout_width="55dp"
             android:layout_height="55dp"
             android:layout_margin="3dp"
@@ -645,6 +667,7 @@
             android:src="@drawable/ic_warrior_passive_1" />
 
         <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/passive2"
             android:layout_width="55dp"
             android:layout_height="55dp"
             android:layout_margin="3dp"
@@ -654,5 +677,15 @@
             app:strokeWidth="2.5dp"
             android:src="@drawable/ic_warrior_passive_2"/>
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/skillLoadout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:src="@drawable/button_loadout"
+        app:layout_constraintTop_toBottomOf="@+id/passiveSkillsLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

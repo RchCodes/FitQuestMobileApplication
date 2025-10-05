@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="#80000000"
+    android:orientation="vertical"
+    android:gravity="center_horizontal">
+    <!-- Title -->
+    <ImageView
+        android:id="@+id/imgTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/banner_pause"
+        android:layout_marginBottom="10dp"/>
+    <LinearLayout
+        android:layout_width="392dp"
+        android:layout_height="252dp"
+        android:background="@drawable/dialog_background_rounded"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="24dp">
+        <!-- Music Volume -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MUSIC"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#3A2E1D"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="6dp"
+            android:layout_marginRight="90dp"/>
+
+        <SeekBar
+            android:id="@+id/seekMusic"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:progress="50"
+            android:max="100"
+            android:progressTint="#3A2E1D"
+            android:thumbTint="#E0B341" />
+
+        <!-- SFX Volume -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SFX"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#3A2E1D"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="6dp"
+            android:layout_marginRight="100dp"/>
+
+        <SeekBar
+            android:id="@+id/seekSfx"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:progress="50"
+            android:max="100"
+            android:progressTint="#3A2E1D"
+            android:thumbTint="#E0B341" />
+
+        <!-- Quit Button -->
+        <ImageView
+            android:id="@+id/btnQuit"
+            android:layout_width="180dp"
+            android:layout_height="55dp"
+            android:text="QUIT"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:src="@drawable/button_quit"
+            android:layout_marginTop="30dp" />
+
+
+    </LinearLayout>
+
+    <!-- Hint -->
+    <TextView
+        android:id="@+id/tvHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tap any blank space to resume."
+        android:textColor="#FFFFFF"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:layout_marginTop="20dp" />
+
+</LinearLayout>

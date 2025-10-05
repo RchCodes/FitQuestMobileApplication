@@ -71,7 +71,7 @@
         android:layout_height="wrap_content"
         android:text="AB/Turn Impact: 50%"
         android:textColor="@android:color/white"
-        android:textSize="14sp"/>
+        android:textSize="14sp" />
 
     <TextView
         android:id="@+id/skillCooldown"
@@ -96,5 +96,15 @@
         android:text="Level Unlock: 4"
         android:textColor="@android:color/white"
         android:textSize="14sp"/>
+
+    <!-- Passive-only details (hidden for active) -->
+    <TextView
+        android:id="@+id/passiveDetails"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Passive Bonuses and details..."
+        android:layout_marginTop="6dp"
+        android:textColor="@android:color/white"
+        android:visibility="gone"/>
 
 </LinearLayout>

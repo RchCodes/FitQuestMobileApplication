@@ -171,7 +171,7 @@
                         android:id="@+id/itemName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Phantom Leggings (TANK)"
+                        android:text="WELCOME TO STORE"
                         android:textColor="#000000"
                         android:textSize="16sp"
                         android:textStyle="bold" />
@@ -181,7 +181,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Light as mist, perfect for evasion."
+                        android:text="Buy the item you want!"
                         android:textColor="#333333"
                         android:textSize="14sp" />
 
@@ -190,7 +190,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Boosts:\n+15% Flexibility"
+                        android:text=""
                         android:textColor="#111111"
                         android:textSize="14sp" />
 
@@ -199,7 +199,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="Skill Effect:\n+10% Dodge Chance"
+                        android:text=""
                         android:textColor="#111111"
                         android:textSize="14sp" />
                 </LinearLayout>

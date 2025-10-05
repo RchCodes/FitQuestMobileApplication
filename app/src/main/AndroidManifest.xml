@@ -19,6 +19,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FitQuest">
         <activity
+            android:name=".ArenaCombatActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ChallengeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LevelSelectActivity"
+            android:exported="false" />
+        <activity
             android:name=".AvatarOverviewActivity"
             android:exported="false" />
         <activity

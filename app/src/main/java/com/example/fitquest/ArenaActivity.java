@@ -26,7 +26,7 @@ public class ArenaActivity extends BaseActivity {
     private TextView playerName, playerLevel;
     private ImageView rankIcon;
     private TextView rankLabel;
-    private ImageButton backBtn, fightButton, leaderboardButton;
+    private ImageButton backBtn, fightButton, leaderboardButton, battleHistoryButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +43,7 @@ public class ArenaActivity extends BaseActivity {
         backBtn = findViewById(R.id.back_button);
         fightButton = findViewById(R.id.start_combat);
         leaderboardButton = findViewById(R.id.leaderboards);
+        battleHistoryButton = findViewById(R.id.battle_history);
 
         // Initialize avatar helper with all layers
         avatarHelper = new AvatarDisplayManager(
@@ -110,11 +111,18 @@ public class ArenaActivity extends BaseActivity {
             dialog.show(getSupportFragmentManager(), "LeaderboardDialog");
         });
 
+        battleHistoryButton.setOnClickListener(v -> {
+            BattleHistoryDialog dialog = new BattleHistoryDialog(avatarHelper.getBattleHistory());
+            dialog.show(getSupportFragmentManager(), "BattleHistoryDialog");
+        });
+
         fightButton.setOnClickListener(v ->
-                Toast.makeText(this, "Combat Started!", Toast.LENGTH_SHORT).show()
+                startActivity(
+                        new Intent(this, ArenaCombatActivity.class)
+                )
+                //Toast.makeText(this, "Combat Started!", Toast.LENGTH_SHORT).show()
         );
     }
-
 
     /** Launch method */
     public static void start(Context context) {

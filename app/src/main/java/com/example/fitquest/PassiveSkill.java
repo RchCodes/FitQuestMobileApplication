@@ -45,4 +45,8 @@ public abstract class PassiveSkill {
     public int getIconResId() {
         return iconResId;
     }
+
+    public String  getDescription() {
+        return description;
+    }
 }

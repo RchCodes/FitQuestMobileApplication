@@ -1,0 +1,481 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_combat_arena">
+
+    <!-- PLAYER INFO -->
+    <LinearLayout
+        android:id="@+id/playerInfo"
+        android:orientation="vertical"
+        android:layout_width="175dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_player_battle_info"
+        android:padding="8dp"
+        app:layout_constraintTop_toTopOf="@+id/playerFrame"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="-150dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/tvPlayerName"
+            android:text="Chian"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:shadowColor="@color/black"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="4"
+            android:textSize="14sp" />
+
+        <FrameLayout
+            android:id="@+id/PlayerHpFrame"
+            android:layout_width="match_parent"
+            android:layout_marginTop="6sp"
+            android:layout_height="12dp"
+            android:background="@drawable/progress_bg"
+            android:padding="2dp">
+
+            <!-- The actual progress fill -->
+            <ProgressBar
+                android:id="@+id/player_hp_bar"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:progress="50"
+                android:max="100"
+                android:progressDrawable="@drawable/progress_fill"
+                android:clipToPadding="false"/>
+
+            <!-- Overlay numeric progress centered on the bar -->
+            <TextView
+                android:id="@+id/player_hp_text_overlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="50/100"
+                android:textColor="#FFFFFF"
+                android:textSize="8sp"
+                android:includeFontPadding="false"/>
+        </FrameLayout>
+
+        <!-- Action BAR -->
+        <ProgressBar
+            android:id="@+id/playerActionBar"
+            android:layout_marginTop="4sp"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:progress="50"
+            android:max="100"
+            android:progressDrawable="@drawable/progress_ab"/>
+    </LinearLayout>
+
+    <!-- ENEMY INFO -->
+    <LinearLayout
+        android:id="@+id/enemyInfo"
+        android:orientation="vertical"
+        android:layout_width="175dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_enemy_battle_info"
+        android:padding="8dp"
+        app:layout_constraintTop_toTopOf="@id/enemyFrame"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="-150dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/tvEnemyName"
+            android:text="Lonie"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:shadowColor="@color/black"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="4"
+            android:textSize="14sp" />
+
+        <FrameLayout
+            android:id="@+id/enemyHpFrame"
+            android:layout_width="match_parent"
+            android:layout_marginTop="6sp"
+            android:layout_height="12dp"
+            android:background="@drawable/progress_bg"
+            android:padding="2dp">
+
+            <!-- The actual progress fill -->
+            <ProgressBar
+                android:id="@+id/enemy_hp_bar"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:progress="50"
+                android:max="100"
+                android:progressDrawable="@drawable/progress_fill"
+                android:clipToPadding="false"/>
+
+            <!-- Overlay numeric progress centered on the bar -->
+            <TextView
+                android:id="@+id/enemy_hp_text_overlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="50/100"
+                android:textColor="#FFFFFF"
+                android:textSize="8sp"
+                android:includeFontPadding="false"/>
+        </FrameLayout>
+
+        <!-- Action BAR -->
+        <ProgressBar
+            android:id="@+id/enemyActionBar"
+            android:layout_marginTop="4sp"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:progress="50"
+            android:max="100"
+            android:progressDrawable="@drawable/progress_ab"/>
+    </LinearLayout>
+
+    <!-- VS ICON -->
+    <ImageView
+        android:id="@+id/imgVS"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@drawable/ic_versus"
+        app:layout_constraintTop_toTopOf="@id/playerInfo"
+        app:layout_constraintStart_toEndOf="@id/playerInfo"
+        app:layout_constraintEnd_toStartOf="@id/enemyInfo"
+        app:layout_constraintHorizontal_chainStyle="packed"/>
+
+    <ImageView
+        android:layout_width="140dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_stand2"
+        app:layout_constraintBottom_toTopOf="@id/skillContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="7dp"
+        android:layout_marginBottom="35dp"/>
+
+    <!-- PLAYER CHARACTER -->
+    <FrameLayout
+        android:id="@+id/playerFrame"
+        android:layout_width="150dp"
+        android:layout_height="220dp"
+        app:layout_constraintBottom_toTopOf="@id/skillContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="7dp"
+        android:layout_marginBottom="30dp" >
+        <ImageView
+            android:id="@+id/baseBodyLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/body_male"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/outfitLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/weaponLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/hairFillLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/hairOutlineLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/eyesFillLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/eyesOutlineLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/noseLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/lipsLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+    </FrameLayout>
+
+    <ImageView
+        android:layout_width="140dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_stand2"
+        app:layout_constraintBottom_toTopOf="@id/skillContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="7dp"
+        android:layout_marginBottom="35dp"/>
+
+    <!-- ENEMY CHARACTER (FLIPPED) -->
+    <FrameLayout
+        android:id="@+id/enemyFrame"
+        android:layout_width="150dp"
+        android:layout_height="220dp"
+        android:src="@drawable/body_female"
+        android:scaleX="-1"
+        app:layout_constraintBottom_toTopOf="@id/skillContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="7dp"
+        android:layout_marginBottom="30dp" >
+        <ImageView
+            android:id="@+id/enemyBaseBodyLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/body_male"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/enemyOutfitLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/enmyWeaponLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/enemyHairFillLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/enemyHairOutlineLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/enemyEyesFillLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/enemyEyesOutlineLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/enemyNoseLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/enemyLipsLayer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"/>
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/effectsLayer"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" >
+        <!-- Player side animations (like damage text or buffs) -->
+        <FrameLayout
+            android:id="@+id/playerEffectLayer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|bottom"
+            android:layout_marginStart="64dp"
+            android:layout_marginBottom="200dp"
+            android:clipChildren="false"
+            android:clipToPadding="false" />
+
+        <!-- Enemy side animations -->
+        <FrameLayout
+            android:id="@+id/enemyEffectLayer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|bottom"
+            android:layout_marginEnd="64dp"
+            android:layout_marginBottom="200dp"
+            android:clipChildren="false"
+            android:clipToPadding="false" />
+    </FrameLayout>
+
+    <!-- SETTINGS BUTTON -->
+    <ImageButton
+        android:id="@+id/btnSettings"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/b_settings"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="8dp" />
+
+    <!-- SKILL BAR -->
+    <LinearLayout
+        android:id="@+id/skillContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="15dp"
+        android:background="@drawable/bg_skills_bar"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="8dp">
+
+        <!-- Reuse skill buttons (5 total) -->
+        <LinearLayout
+            android:id="@+id/skillRow1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imgSkill1"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_margin="3dp"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/RoundImage"
+                app:strokeColor="#FFD700"
+                app:strokeWidth="2.5dp"
+                android:src="@drawable/ic_warrior_skill_1"/>
+            <Button
+                android:id="@+id/skill1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Skill 1"
+                android:layout_marginRight="5sp"
+                android:background="@drawable/bg_skill_button"/>
+
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imgSkill2"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_margin="3dp"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/RoundImage"
+                app:strokeColor="#FFD700"
+                app:strokeWidth="2.5dp"
+                android:src="@drawable/ic_warrior_skill_1"/>
+            <Button
+                android:id="@+id/skill2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Skill 2"
+                android:layout_marginRight="5sp"
+                android:background="@drawable/bg_skill_button"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/skillRow2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imgSkill3"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_margin="3dp"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/RoundImage"
+                app:strokeColor="#FFD700"
+                app:strokeWidth="2.5dp"
+                android:src="@drawable/ic_warrior_skill_1"/>
+            <Button
+                android:id="@+id/skill3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Skill 3"
+                android:layout_marginRight="5sp"
+                android:background="@drawable/bg_skill_button"/>
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imgSkill4"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_margin="3dp"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/RoundImage"
+                app:strokeColor="#FFD700"
+                app:strokeWidth="2.5dp"
+                android:src="@drawable/ic_warrior_skill_1"/>
+            <Button
+                android:id="@+id/skill4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Skill 4"
+                android:layout_marginRight="5sp"
+                android:background="@drawable/bg_skill_button"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/skillRow3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <com.google.android.material.imageview.ShapeableImageView
+                android:id="@+id/imgSkill5"
+                android:layout_width="35dp"
+                android:layout_height="35dp"
+                android:layout_margin="3dp"
+                android:scaleType="centerCrop"
+                app:shapeAppearanceOverlay="@style/RoundImage"
+                app:strokeColor="#FFD700"
+                app:strokeWidth="2.5dp"
+                android:src="@drawable/ic_warrior_skill_1"/>
+            <Button
+                android:id="@+id/skill5"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Skill 5"
+                android:layout_marginRight="5sp"
+                android:background="@drawable/bg_skill_button"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
