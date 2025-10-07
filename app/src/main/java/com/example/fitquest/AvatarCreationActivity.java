@@ -248,9 +248,12 @@ public class AvatarCreationActivity extends BaseActivity {
             avatar.setLevel(1);
             avatar.setRank(0);
 
-            // Save offline & online
-            AvatarManager.saveAvatarOffline(this, avatar);
-            AvatarManager.saveAvatarOnline(avatar);
+            avatar.getPassiveSkills();
+
+
+            // Save using ProgressSyncManager for intelligent saving
+            ProgressSyncManager.saveProgress(this, avatar, false); // Save offline first
+            ProgressSyncManager.saveProgress(this, avatar, true);  // Save online
 
             // Save username to SharedPreferences
             getSharedPreferences("FitQuestPrefs", MODE_PRIVATE)

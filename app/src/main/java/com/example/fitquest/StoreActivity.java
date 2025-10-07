@@ -10,7 +10,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class StoreActivity extends AppCompatActivity {
 
@@ -27,6 +29,10 @@ public class StoreActivity extends AppCompatActivity {
 
     private GearModel selectedGear;
     private String currentFilter = "ALL"; // "ALL", "WEAPON", "ARMOR", "PANTS", "BOOTS", "ACCESSORY"
+    
+    // Store temporary gear preview
+    private Map<GearType, String> originalEquippedGear;
+    private boolean isPreviewMode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,12 +69,13 @@ public class StoreActivity extends AppCompatActivity {
         refreshCoinsText();
         filterAndRefresh(currentFilter);
 
-        // Grid click -> show details + mark selected
+        // Grid click -> show details + mark selected + preview gear
         gridStore.setOnItemClickListener((parent, view, position, id) -> {
             GearModel gear = filteredGear.get(position);
             selectedGear = gear;
             showGearDetails(gear);
             storeAdapter.setSelectedPosition(position);
+            previewGearOnAvatar(gear);
         });
 
         // Buy button
@@ -87,12 +94,30 @@ public class StoreActivity extends AppCompatActivity {
         });
 
         // Tabs
-        tabAll.setOnClickListener(v -> filterAndRefresh("ALL"));
-        tabWeapons.setOnClickListener(v -> filterAndRefresh("WEAPON"));
-        tabArmor.setOnClickListener(v -> filterAndRefresh("ARMOR"));
-        tabLeggings.setOnClickListener(v -> filterAndRefresh("PANTS"));
-        tabBoots.setOnClickListener(v -> filterAndRefresh("BOOTS"));
-        tabNecklace.setOnClickListener(v -> filterAndRefresh("ACCESSORY"));
+        tabAll.setOnClickListener(v -> {
+            clearGearPreview();
+            filterAndRefresh("ALL");
+        });
+        tabWeapons.setOnClickListener(v -> {
+            clearGearPreview();
+            filterAndRefresh("WEAPON");
+        });
+        tabArmor.setOnClickListener(v -> {
+            clearGearPreview();
+            filterAndRefresh("ARMOR");
+        });
+        tabLeggings.setOnClickListener(v -> {
+            clearGearPreview();
+            filterAndRefresh("PANTS");
+        });
+        tabBoots.setOnClickListener(v -> {
+            clearGearPreview();
+            filterAndRefresh("BOOTS");
+        });
+        tabNecklace.setOnClickListener(v -> {
+            clearGearPreview();
+            filterAndRefresh("ACCESSORY");
+        });
     }
 
     private void setupAvatarHelper() {
@@ -211,5 +236,120 @@ public class StoreActivity extends AppCompatActivity {
         if (n >= 1_000_000L) return (n / 1_000_000L) + "M";
         if (n >= 1_000L) return (n / 1_000L) + "K";
         return String.valueOf(n);
+    }
+    
+    /**
+     * Preview gear on avatar temporarily without saving
+     */
+    private void previewGearOnAvatar(GearModel gear) {
+        if (gear == null || avatar == null) return;
+        
+        // Save original equipped gear if not already in preview mode
+        if (!isPreviewMode) {
+            originalEquippedGear = new HashMap<>(avatar.getEquippedGear());
+            isPreviewMode = true;
+        }
+        
+        // Temporarily equip the selected gear
+        avatar.equipGear(gear.getType(), gear.getId());
+        
+        // Update avatar display with temporary gear
+        updateAvatarDisplayWithGear(gear);
+    }
+    
+    /**
+     * Clear gear preview and restore original equipped gear
+     */
+    private void clearGearPreview() {
+        if (isPreviewMode && originalEquippedGear != null && avatar != null) {
+            // Restore original equipped gear
+            avatar.getEquippedGear().clear();
+            avatar.getEquippedGear().putAll(originalEquippedGear);
+            
+            // Refresh avatar display
+            avatarHelper.loadAvatar(avatar);
+            
+            isPreviewMode = false;
+            originalEquippedGear = null;
+        }
+    }
+    
+    /**
+     * Update avatar display with specific gear changes
+     */
+    private void updateAvatarDisplayWithGear(GearModel gear) {
+        if (gear == null || avatar == null) return;
+        
+        // Update specific gear layer based on type
+        switch (gear.getType()) {
+            case WEAPON:
+                updateWeaponDisplay(gear);
+                break;
+            case ARMOR:
+            case PANTS:
+            case BOOTS:
+                updateOutfitDisplay();
+                break;
+            case ACCESSORY:
+                // Accessories might not have visual representation
+                break;
+        }
+    }
+    
+    /**
+     * Update weapon display
+     */
+    private void updateWeaponDisplay(GearModel weapon) {
+        if (weapon == null) return;
+        
+        String gender = avatar.getGender();
+        int weaponSpriteRes;
+        
+        if ("male".equalsIgnoreCase(gender)) {
+            weaponSpriteRes = weapon.getMaleSpriteRes();
+        } else {
+            weaponSpriteRes = weapon.getFemaleSpriteRes();
+        }
+        
+        if (weaponSpriteRes != 0) {
+            avatarHelper.getWeaponImageView().setImageResource(weaponSpriteRes);
+        }
+    }
+    
+    /**
+     * Update outfit display based on equipped gear
+     */
+    private void updateOutfitDisplay() {
+        // Check if we have a complete outfit set
+        avatar.checkOutfitCompletion();
+        
+        // Refresh the outfit layer
+        String outfitResName = avatar.getOutfit();
+        if (outfitResName != null && !outfitResName.isEmpty()) {
+            int resId = getDrawableByName(outfitResName);
+            if (resId != 0) {
+                avatarHelper.getOutfitImageView().setImageResource(resId);
+            }
+        }
+    }
+    
+    /**
+     * Get drawable resource ID by name
+     */
+    private int getDrawableByName(String name) {
+        return getResources().getIdentifier(name, "drawable", getPackageName());
+    }
+    
+    @Override
+    protected void onDestroy() {
+        // Clear any preview when leaving store
+        clearGearPreview();
+        super.onDestroy();
+    }
+    
+    @Override
+    public void onBackPressed() {
+        clearGearPreview();
+        super.onBackPressed();
     }
 }

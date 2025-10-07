@@ -163,4 +163,61 @@ public class AvatarDisplayManager {
     public List<BattleHistoryModel> getBattleHistory() {
         return avatar.getBattleHistory();
     }
+    
+    /**
+     * Get weapon ImageView for direct manipulation
+     */
+    public ImageView getWeaponImageView() {
+        return ivWeapon;
+    }
+    
+    /**
+     * Get outfit ImageView for direct manipulation
+     */
+    public ImageView getOutfitImageView() {
+        return ivOutfit;
+    }
+    
+    /**
+     * Preview gear temporarily without saving
+     */
+    public void previewGear(GearModel gear) {
+        if (gear == null || avatar == null) return;
+        
+        switch (gear.getType()) {
+            case WEAPON:
+                previewWeapon(gear);
+                break;
+            case ARMOR:
+            case PANTS:
+            case BOOTS:
+                // Outfit changes are handled by checkOutfitCompletion
+                avatar.checkOutfitCompletion();
+                refreshDisplay();
+                break;
+            case ACCESSORY:
+                // Accessories might not have visual representation
+                break;
+        }
+    }
+    
+    /**
+     * Preview weapon temporarily
+     */
+    private void previewWeapon(GearModel weapon) {
+        if (weapon == null) return;
+        
+        String gender = avatar.getGender();
+        int weaponSpriteRes;
+        
+        if ("male".equalsIgnoreCase(gender)) {
+            weaponSpriteRes = weapon.getMaleSpriteRes();
+        } else {
+            weaponSpriteRes = weapon.getFemaleSpriteRes();
+        }
+        
+        if (weaponSpriteRes != 0) {
+            ivWeapon.setImageResource(weaponSpriteRes);
+        }
+    }
 }

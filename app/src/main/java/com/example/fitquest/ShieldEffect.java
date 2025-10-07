@@ -1,20 +1,22 @@
 package com.example.fitquest;
 
 // Shield effect: absorbs incoming damage
-public class ShieldEffect extends StatusEffect implements CombatContext.OnIncomingDamageHook {
+public abstract class ShieldEffect extends StatusEffect implements CombatContext.OnIncomingDamageHook {
 
     private int remainingShield;
 
     public ShieldEffect(String name, int duration, int shieldAmount) {
-        super(name, duration);
+        super(name, duration, R.drawable.ic_effect_shield);
         this.remainingShield = shieldAmount;
     }
 
     public int absorbDamage(int incoming) {
         int absorbed = Math.min(remainingShield, incoming);
         remainingShield -= absorbed;
-        boolean isExpired;
-        if (remainingShield <= 0) isExpired = true;
+        if (remainingShield <= 0) {
+            // mark effect expired so Character.processStatusEffects will remove it
+            this.remainingTurns = 0;
+        }
         return incoming - absorbed;
     }
 

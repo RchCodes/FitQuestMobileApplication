@@ -6,15 +6,20 @@ public class BurnEffect extends StatusEffect {
     private int burnDamage;
 
     public BurnEffect(String name, int duration, int burnDamage) {
-        super(name, duration);
+        super(name, duration, R.drawable.ic_enemy_flamewolf_passive);
         this.burnDamage = burnDamage;
     }
 
     @Override
+    public int modifyStat(String stat, int value) {
+        return value; // burn does not alter stats directly
+    }
+
+
+    @Override
     public void onTurnStart(Character owner, CombatContext ctx) {
         super.onTurnStart(owner, ctx);
-        boolean isExpired = false;
-        if (!isExpired) {
+        if (!isExpired()) {
             ctx.applyDamage(null, owner, burnDamage, null);
         }
     }

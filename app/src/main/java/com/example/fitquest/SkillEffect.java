@@ -29,4 +29,8 @@ public class SkillEffect {
     public char[] getEffect() {
         return effectId.toCharArray();
     }
+
+    public String getId() {
+        return effectId;
+    }
 }

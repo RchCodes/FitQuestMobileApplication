@@ -31,6 +31,12 @@ public class Character {
         this.isAlive = true;
     }
 
+    public Character(String name, int baseHP, int baseAttack, int baseDefense, int baseSpeed, AvatarModel avatar, List<SkillModel> activeSkills) {
+
+        this.avatar = avatar;
+        this.activeSkills = activeSkills;
+    }
+
     // --- Core Calculations ---
     private void recalcMaxHp() {
         // Base endurance *10 + chest physique bonus
@@ -139,7 +145,7 @@ public class Character {
     }
 
     public void increaseActionBar(int amount) {
-        actionBar = Math.min(100, actionBar + amount);
+        actionBar = Math.max(0, Math.min(100, actionBar + amount));
     }
 
     public boolean isActionBarFull() {
@@ -210,5 +216,32 @@ public class Character {
 
     public String getName() {
         return avatar.getUsername();
+    }
+
+    public int getLevel() {
+        return avatar.getLevel();
+    }
+
+    public float getAttack() {
+        return getEffectiveStrength();
+    }
+
+    public void applyStatusEffect(StatusEffect statusEffect) {
+        statusEffects.add(statusEffect);
+    }
+
+    public void modifyTempStrength(int strBonus) {
+        // Apply stat bonuses if needed
+        getEffectiveStrength();
+    }
+
+    public void modifyTempAgility(int agiBonus) {
+        // Apply stat bonuses if needed
+        getEffectiveAgility();
+    }
+
+    public void modifyTempEndurance(int endBonus) {
+        // Apply stat bonuses if needed
+        getEffectiveEndurance();
     }
 }

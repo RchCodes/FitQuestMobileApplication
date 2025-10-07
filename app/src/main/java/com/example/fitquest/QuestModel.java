@@ -18,6 +18,7 @@ public class QuestModel implements Serializable {
     private long lastCompletedTime;
 
     private String exerciseType; // e.g., "pushups", "squats", "plank"
+    private QuestCompletionType completionType; // SINGLE, ACCUMULATED
 
     public QuestModel() {
         // Default constructor for Firebase/Gson
@@ -37,6 +38,7 @@ public class QuestModel implements Serializable {
         this.claimed = false;
         this.lastCompletedTime = 0;
         this.exerciseType = exerciseType;
+        this.completionType = category == QuestCategory.DAILY ? QuestCompletionType.SINGLE : QuestCompletionType.ACCUMULATED;
     }
 
     // --- Getters ---
@@ -51,10 +53,12 @@ public class QuestModel implements Serializable {
     public boolean isClaimed() { return claimed; }
     public long getLastCompletedTime() { return lastCompletedTime; }
     public String getExerciseType() { return exerciseType; }
+    public QuestCompletionType getCompletionType() { return completionType; }
 
     // --- Setters (for Firebase or manual updates) ---
     public void setClaimed(boolean claimed) { this.claimed = claimed; }
     public void setExerciseType(String exerciseType) { this.exerciseType = exerciseType; }
+    public void setCompletionType(QuestCompletionType completionType) { this.completionType = completionType; }
 
     // --- Progress update ---
     public boolean addProgress(int amount) {

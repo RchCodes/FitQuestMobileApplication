@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 public class PauseDialog {
 
-    private final Dialog dialog;
+    final Dialog dialog;
 
     public PauseDialog(Context context, Runnable onQuit) {
         dialog = new Dialog(context);
@@ -31,7 +31,7 @@ public class PauseDialog {
         // Listeners
         seekMusic.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                MusicManager.setVolume(progress);
+                MusicManager.setVolume(progress, context);
             }
             @Override public void onStartTrackingTouch(SeekBar seekBar) { }
             @Override public void onStopTrackingTouch(SeekBar seekBar) { }
@@ -39,15 +39,15 @@ public class PauseDialog {
 
         seekSfx.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                SoundManager.setVolume(progress);
-                SoundManager.playClick(); // optional feedback
+                SoundManager.setVolume(progress, context);
+                SoundManager.playButtonClick(); // optional feedback
             }
             @Override public void onStartTrackingTouch(SeekBar seekBar) { }
             @Override public void onStopTrackingTouch(SeekBar seekBar) { }
         });
 
         btnQuit.setOnClickListener(v -> {
-            SoundManager.playClick();
+            SoundManager.playButtonClick();
             if (onQuit != null) onQuit.run();
             dialog.dismiss();
         });

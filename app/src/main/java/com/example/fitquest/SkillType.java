@@ -7,5 +7,7 @@ public enum SkillType {
             HEAL,
             COUNTER, // Counter attacks
             SHIELD,
-            DOT // Damage over time
+            DOT, // Damage over time
+
+
 }

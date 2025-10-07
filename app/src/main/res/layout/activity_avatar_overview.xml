@@ -465,13 +465,7 @@
             android:textColor="#FFF"
             android:layout_gravity="start"/>
 
-<!--        <TextView-->
-<!--            android:id="@+id/tvAP"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="AP: 100 +999"-->
-<!--            android:textColor="#FFF"-->
-<!--            android:layout_gravity="start"/>-->
+
     </LinearLayout>
 
     <!-- Avatar Image -->
@@ -483,9 +477,7 @@
         app:layout_constraintTop_toBottomOf="@id/layoutInfo"
         app:layout_constraintBottom_toTopOf="@id/activeSkillsLayout"
         app:layout_constraintStart_toStartOf="@+id/verticalCenterLine"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintDimensionRatio="4:5"
-        >
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageView
             android:id="@+id/baseBodyLayer"

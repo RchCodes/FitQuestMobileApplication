@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
@@ -12,18 +13,13 @@
         android:id="@+id/btnBack"
         android:layout_width="70dp"
         android:layout_height="35dp"
-        android:text="BACK"
-        android:textStyle="bold"
-        android:textSize="12sp"
         android:layout_marginTop="16dp"
         android:background="@drawable/button_back"
-        android:textColor="@android:color/white"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
 
-
-    <!-- Levels Grid -->
+    <!-- Levels Grid (dynamic buttons) -->
     <GridLayout
         android:id="@+id/gridLevels"
         android:layout_width="wrap_content"
@@ -32,71 +28,19 @@
         android:columnCount="3"
         android:rowCount="4"
         android:layout_marginTop="-32dp"
-        android:paddingTop="32dp"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
+        android:padding="16dp"
         android:alignmentMode="alignMargins"
         android:rowOrderPreserved="false"
         app:layout_constraintTop_toBottomOf="@id/tvSelectLevel"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Example Unlocked -->
-        <Button
-            android:id="@+id/btnLevel1"
-            android:layout_width="90dp"
-            android:layout_height="90dp"
-            android:gravity="center"
-            android:text="1"
-            android:textSize="30sp"
-            android:shadowColor="#FAFAFA"
-            android:shadowDx="2"
-            android:shadowDy="3"
-            android:shadowRadius="4"
-            android:fontFamily="@font/bungee_regular"
-            android:paddingHorizontal="20dp"
-            android:paddingVertical="10dp"
-            android:textColor="#AA5A1E"
-            android:background="@drawable/button_level_unlocked"
-            android:layout_margin="10dp" />
-
-        <Button
-            android:id="@+id/btnLevel2"
-            android:layout_width="90dp"
-            android:layout_height="90dp"
-            android:text="2"
-            android:textStyle="bold"
-            android:textSize="30sp"
-            android:shadowColor="#FAFAFA"
-            android:shadowDx="2"
-            android:shadowDy="3"
-            android:shadowRadius="4"
-            android:fontFamily="@font/bungee_regular"
-            android:paddingHorizontal="20dp"
-            android:paddingVertical="10dp"
-            android:textColor="#AA5A1E"
-            android:background="@drawable/button_level_unlocked"
-            android:layout_margin="10dp" />
-
-        <ImageButton
-            android:id="@+id/btnLocked"
-            android:layout_width="90dp"
-            android:layout_height="90dp"
-            android:src="@drawable/lock"
-            android:background="@drawable/button_level_locked"
-            android:layout_margin="10dp"
-            android:contentDescription="Locked Level" />
-    </GridLayout>
 
     <!-- Title Banner -->
     <ImageView
         android:id="@+id/tvSelectLevel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="SELECT LEVEL"
-        android:textStyle="bold"
-        android:textSize="22sp"
-        android:textColor="@android:color/white"
         android:background="@drawable/banner_select_level"
         android:paddingHorizontal="20dp"
         android:paddingVertical="8dp"

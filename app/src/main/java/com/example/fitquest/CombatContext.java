@@ -30,6 +30,9 @@ public class CombatContext {
         // UI hooks
         void onCombatStarted(Character player, Character enemy, Mode mode);
         void onActionBarUpdated(Character c);
+
+        void onCombatTick(double deltaTime);
+
         void onTurnStart(Character c, CombatContext ctx);
         void onSkillUsed(Character user, SkillModel skill, Character target, String logEntry);
         void onDamageApplied(Character attacker, Character defender, int amount, String logEntry);
@@ -41,12 +44,17 @@ public class CombatContext {
          * If implementing UI, return the SkillModel object the player chose (or null to auto).
          */
         @Nullable SkillModel onRequestPlayerSkillChoice(List<SkillModel> availableSkills, Character player, Character enemy);
+
+        // --- CombatListener ---
+        void onCombatTick();
+
+        void onCombatEnd(boolean playerWon);
     }
 
     private final Character player;
     private final Character enemy;
     private final Mode mode;
-    private final CombatListener listener;
+    final CombatListener listener;
     private final Deque<String> log = new ArrayDeque<>();
     private final Random rng = new Random();
 
@@ -96,6 +104,8 @@ public class CombatContext {
      */
     public void tick(double elapsedSeconds) {
         if (result != Result.ONGOING) return;
+
+
 
         // Fill AB for each combatant
         for (Character c : allCombatants) {
@@ -169,12 +179,28 @@ public class CombatContext {
             if (c.isAlive()) {
                 c.onTurnStart(this);
                 if (listener != null) listener.onTurnStart(c, this);
+                if (c.isAlive()) {
+                    c.processStatusEffects(this); // ensures durations tick down
+                }
+            }
+        }
+
+        if (readyQueue.isEmpty()) {
+            // Optional: slowly drain AB or trigger "skip" mechanic
+            for (Character c : allCombatants) {
+                c.increaseActionBar(-1); // small decay to re-enter loop
             }
         }
     }
 
     private void checkCombatEnd() {
-        if (result != Result.ONGOING) return;
+        if (!player.isAlive() && !enemy.isAlive()) {
+            finalizeCombat(player, enemy);
+        } else if (!player.isAlive()) {
+            finalizeCombat(enemy, player);
+        } else if (!enemy.isAlive()) {
+            finalizeCombat(player, enemy);
+        }
     }
 
     /** Let UI explicitly use a skill for player (by SkillModel id). Returns true if used. */
@@ -318,6 +344,16 @@ public class CombatContext {
 
         int damage = rawDamage;
 
+        // 0) Outgoing damage modifiers (attacker passives or effects)
+        if (attacker != null) {
+            for (StatusEffect e : new ArrayList<>(attacker.getStatusEffects())) {
+                if (e instanceof OnOutgoingDamageHook) {
+                    OnOutgoingDamageHook hook = (OnOutgoingDamageHook) e;
+                    rawDamage = hook.onOutgoingDamage(attacker, defender, rawDamage, this, sourceSkill);
+                }
+            }
+        }
+
         // 1) Let defender status effects potentially absorb or modify damage
         for (StatusEffect e : new ArrayList<>(defender.getStatusEffects())) {
             // Shield handling: if effect has absorbDamage method, call it
@@ -348,7 +384,7 @@ public class CombatContext {
         }
 
         // 2) Passive hooks that respond to damage about to be taken
-        defender.onDamageTaken(damage, this);
+    defender.onDamageTaken(damage, this);
 
         // 3) Apply damage to HP (after all reductions)
         defender.takeDamage(damage);
@@ -384,16 +420,17 @@ public class CombatContext {
     public void applyStatusEffect(Character who, StatusEffect effect) {
         if (who == null || effect == null) return;
         who.addStatusEffect(effect);
-        pushLog(String.format(Locale.US, "%s is afflicted with %s for %d turns", userName(who), effect.getName(), getEffectDuration(effect)));
+        int turns = effect.getRemainingTurns();
+        if (turns < 0) turns = -1;
+        pushLog(String.format(Locale.US, "%s is afflicted with %s for %d turns", userName(who), effect.getName(), turns));
         if (listener != null) listener.onStatusApplied(who, effect, effect.getName());
     }
 
     // Helper to get effect duration if available
     private int getEffectDuration(StatusEffect e) {
+        // Prefer explicit API on StatusEffect; fallback to -1 when not available
         try {
-            java.lang.reflect.Field f = e.getClass().getDeclaredField("duration");
-            f.setAccessible(true);
-            return f.getInt(e);
+            return e.getRemainingTurns();
         } catch (Exception ex) {
             return -1;
         }
@@ -418,7 +455,7 @@ public class CombatContext {
     }
 
     /** Push message to log and notify listener. */
-    private void pushLog(String entry) {
+    void pushLog(String entry) {
         log.addFirst(String.format(Locale.US, "[%d] %s", turnCounter, entry));
         if (listener != null) listener.onLog(entry);
     }
@@ -473,4 +510,50 @@ public class CombatContext {
          */
         int onAttacked(Character defender, Character attacker, int damageTaken, CombatContext ctx, @Nullable SkillModel skill);
     }
+
+    public void endCombat(boolean playerWon) {
+        // Stop further ticking/actions
+        result = playerWon ? Result.PLAYER_WON : Result.ENEMY_WON;
+
+        // Push log
+        pushLog("Combat forcibly ended: " + result);
+
+        // Notify listener
+        if (listener != null) {
+            // Determine winner and loser objects
+            Character winner = playerWon ? player : enemy;
+            Character loser = playerWon ? enemy : player;
+
+            listener.onCombatEnded(result, winner, loser);
+            listener.onCombatEnd(playerWon); // optional hook
+        }
+
+        // Optionally reset or clear any queues
+        readyQueue.clear();
+        awaitingPlayerChoice = false;
+    }
+
+    public void reset(Character newPlayer, Character newEnemy) {
+        allCombatants.clear();
+        readyQueue.clear();
+        log.clear();
+
+        allCombatants.add(newPlayer);
+        allCombatants.add(newEnemy);
+
+        // Reset internal state
+        turnCounter = 0;
+        result = Result.ONGOING;
+        awaitingPlayerChoice = false;
+
+        // Update references
+        newPlayer.recalcStatsFromAvatar();
+        newEnemy.recalcStatsFromAvatar();
+
+        pushLog(String.format(Locale.US, "Combat reset: %s vs %s",
+                newPlayer.getAvatar().getUsername(),
+                newEnemy.getAvatar().getUsername()));
+    }
+
+
 }

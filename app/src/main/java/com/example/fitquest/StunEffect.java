@@ -4,8 +4,14 @@ package com.example.fitquest;
 public class StunEffect extends StatusEffect {
 
     public StunEffect(String name, int duration) {
-        super(name, duration);
+        super(name, duration, 0);
     }
+
+    @Override
+    public int modifyStat(String stat, int value) {
+        return value; // stun does not modify stats; it just blocks actions
+    }
+
 
     @Override
     public void onTurnStart(Character owner, CombatContext ctx) {

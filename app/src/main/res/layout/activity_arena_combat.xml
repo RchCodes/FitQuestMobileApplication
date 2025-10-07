@@ -8,6 +8,14 @@
 
     <!-- PLAYER INFO -->
     <LinearLayout
+        android:id="@+id/playerStatusEffects"
+        android:layout_width="175dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/playerInfo"
+        app:layout_constraintStart_toStartOf="@id/playerInfo"
+        app:layout_constraintEnd_toEndOf="@id/playerInfo"/>
+    <LinearLayout
         android:id="@+id/playerInfo"
         android:orientation="vertical"
         android:layout_width="175dp"
@@ -76,6 +84,15 @@
     </LinearLayout>
 
     <!-- ENEMY INFO -->
+    <LinearLayout
+        android:id="@+id/enemyStatusEffects"
+        android:layout_width="175dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/enemyInfo"
+        app:layout_constraintStart_toStartOf="@id/enemyInfo"
+        app:layout_constraintEnd_toEndOf="@id/enemyInfo"/>
+
     <LinearLayout
         android:id="@+id/enemyInfo"
         android:orientation="vertical"
@@ -263,7 +280,7 @@
             android:scaleType="fitXY"/>
 
         <ImageView
-            android:id="@+id/enmyWeaponLayer"
+            android:id="@+id/enemyWeaponLayer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitXY"/>
@@ -350,6 +367,20 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_margin="8dp" />
+
+    <TextView
+        android:id="@+id/combat_log"
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:padding="8dp"
+        android:scrollbars="vertical"
+        app:layout_constraintBottom_toTopOf="@id/skillContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="8dp"/>
+
 
     <!-- SKILL BAR -->
     <LinearLayout

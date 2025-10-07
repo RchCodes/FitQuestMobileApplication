@@ -124,7 +124,7 @@ public final class SkillRepository {
                 1.20f, // STR scaling
                 0.40f, // END scaling
                 0f,0f,0f,
-                Arrays.asList(new SkillEffect("def_down_20", EffectType.DEBUFF, 0.20f, 2, 0))
+                Arrays.asList(new SkillEffect("def_down_20", EffectType.DEBUFF, 0.20f, 2, R.drawable.ic_effect_debuff))
         ));
 
         putSkill(new SimpleSkill(
@@ -141,7 +141,7 @@ public final class SkillRepository {
                 1.00f,
                 0.30f,
                 0f,0f,0f,
-                Arrays.asList(new SkillEffect("ignore_def_25", EffectType.DEBUFF, 0.25f, 0, 0))
+                Arrays.asList(new SkillEffect("ignore_def_25", EffectType.DEBUFF, 0.25f, 0,R.drawable.ic_effect_debuff ))
         ));
 
         putSkill(new SimpleSkill(
@@ -156,7 +156,7 @@ public final class SkillRepository {
                 50,
                 3,
                 0f,0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("buff_def_20", EffectType.BUFF, 0.20f, 2, 0))
+                Arrays.asList(new SkillEffect("buff_def_20", EffectType.BUFF, 0.20f, 2, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -171,7 +171,7 @@ public final class SkillRepository {
                 50,
                 4,
                 0f,0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("damage_reduction_50", EffectType.SHIELD, 0.50f, 1, 0))
+                Arrays.asList(new SkillEffect("damage_reduction_50", EffectType.SHIELD, 0.50f, 1, R.drawable.ic_effect_shield))
         ));
 
         putSkill(new SimpleSkill(
@@ -186,7 +186,7 @@ public final class SkillRepository {
                 100,
                 5,
                 0f,0.20f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("cleanse", EffectType.BUFF, 0f, 0, 0))
+                Arrays.asList(new SkillEffect("cleanse", EffectType.BUFF, 0f, 0, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -203,7 +203,7 @@ public final class SkillRepository {
                 2.00f,
                 0.50f,
                 0f,0f,0f,
-                Arrays.asList(new SkillEffect("stun_30", EffectType.DEBUFF, 0.30f, 1, 0))
+                Arrays.asList(new SkillEffect("stun_30", EffectType.DEBUFF, 0.30f, 1, R.drawable.ic_effect_debuff))
         ));
 
         putSkill(new SimpleSkill(
@@ -218,7 +218,7 @@ public final class SkillRepository {
                 50,
                 4,
                 0f,0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("reduce_damage_30", EffectType.SHIELD, 0.30f, 2, 0))
+                Arrays.asList(new SkillEffect("reduce_damage_30", EffectType.SHIELD, 0.30f, 2, R.drawable.ic_effect_shield))
         ));
 
         putSkill(new SimpleSkill(
@@ -234,7 +234,7 @@ public final class SkillRepository {
                 4,
                 0f,0f,0f,0f,0f,
                 Arrays.asList(new SkillEffect("heal_missing_15", EffectType.BUFF, 0.15f, 0, 0),
-                        new SkillEffect("atk_down_20", EffectType.DEBUFF, 0.20f, 1, 0))
+                        new SkillEffect("atk_down_20", EffectType.DEBUFF, 0.20f, 1, R.drawable.ic_effect_debuff))
         ));
 
         putSkill(new SimpleSkill(
@@ -251,7 +251,7 @@ public final class SkillRepository {
                 1.00f,
                 0.20f,
                 0f,0f,0f,
-                Arrays.asList(new SkillEffect("stun_25", EffectType.DEBUFF, 0.25f, 1, 0))
+                Arrays.asList(new SkillEffect("stun_25", EffectType.DEBUFF, 0.25f, 1, R.drawable.ic_effect_debuff))
         ));
 
         putSkill(new SimpleSkill(
@@ -282,7 +282,7 @@ public final class SkillRepository {
                 50,
                 5,
                 0f,0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("immune_debuffs", EffectType.BUFF, 0f, 2, 0))
+                Arrays.asList(new SkillEffect("immune_debuffs", EffectType.BUFF, 0f, 2, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -298,7 +298,7 @@ public final class SkillRepository {
                 6,
                 2.50f,
                 0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("self_open", EffectType.DEBUFF, 0f, 1, 0))
+                Arrays.asList(new SkillEffect("self_open", EffectType.DEBUFF, 0f, 1, R.drawable.ic_effect_debuff))
         ));
 
         putSkill(new SimpleSkill(
@@ -315,7 +315,7 @@ public final class SkillRepository {
                 0.90f,
                 0.20f,
                 0f,0f,0f,
-                Arrays.asList(new SkillEffect("reduce_enemy_ab_20", EffectType.DEBUFF, 0.20f, 2, 0))
+                Arrays.asList(new SkillEffect("reduce_enemy_ab_20", EffectType.DEBUFF, 0.20f, 2, R.drawable.ic_effect_debuff))
         ));
 
 
@@ -335,7 +335,7 @@ public final class SkillRepository {
                 0f,
                 0.50f, // AGI scaling included in third param, but SkillModel constructor has agiScaling param; we put 0.5f in agi slot
                 0f,0f,
-                Arrays.asList(new SkillEffect("crit_if_debuffed", EffectType.BUFF, 0.30f, 0, 0))
+                Arrays.asList(new SkillEffect("crit_if_debuffed", EffectType.BUFF, 0.30f, 0, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -353,7 +353,7 @@ public final class SkillRepository {
                 0f,
                 0.30f,
                 0f,0f,
-                Arrays.asList(new SkillEffect("true_hit", EffectType.BUFF, 0f, 0, 0))
+                Arrays.asList(new SkillEffect("true_hit", EffectType.BUFF, 0f, 0, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -371,7 +371,7 @@ public final class SkillRepository {
                 0f,
                 0.40f,
                 0f,0f,
-                Arrays.asList(new SkillEffect("double_hit_25", EffectType.BUFF, 0.25f, 0, 0))
+                Arrays.asList(new SkillEffect("double_hit_25", EffectType.BUFF, 0.25f, 0, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -386,8 +386,8 @@ public final class SkillRepository {
                 50,
                 4,
                 0f,0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("dodge_next", EffectType.BUFF, 0f, 1, 0),
-                        new SkillEffect("next_guaranteed_crit", EffectType.BUFF, 1f, 1, 0))
+                Arrays.asList(new SkillEffect("dodge_next", EffectType.BUFF, 0f, 1, R.drawable.ic_effect_debuff),
+                        new SkillEffect("next_guaranteed_crit", EffectType.BUFF, 1f, 1, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -405,7 +405,7 @@ public final class SkillRepository {
                 0f,
                 0.30f,
                 0f,0f,
-                Arrays.asList(new SkillEffect("poison_dot", EffectType.DOT, 0.08f, 3, 0))
+                Arrays.asList(new SkillEffect("poison_dot", EffectType.DOT, 0.08f, 3, R.drawable.ic_effect_poison))
         ));
 
         putSkill(new SimpleSkill(
@@ -423,7 +423,7 @@ public final class SkillRepository {
                 0f,
                 0.50f,
                 0f,0f,
-                Arrays.asList(new SkillEffect("take_30pct_more", EffectType.DEBUFF, 0.30f, 3, 0))
+                Arrays.asList(new SkillEffect("take_30pct_more", EffectType.DEBUFF, 0.30f, 3, R.drawable.ic_effect_debuff))
         ));
 
         putSkill(new SimpleSkill(
@@ -441,7 +441,7 @@ public final class SkillRepository {
                 0f,
                 0.40f,
                 0f,0f,
-                Arrays.asList(new SkillEffect("first_strike_if_ab_full", EffectType.BUFF, 1f, 0, 0))
+                Arrays.asList(new SkillEffect("first_strike_if_ab_full", EffectType.BUFF, 1f, 0, R.drawable.ic_effect_debuff))
         ));
 
         putSkill(new SimpleSkill(
@@ -459,7 +459,7 @@ public final class SkillRepository {
                 0f,
                 0.30f,
                 0f,0f,
-                Arrays.asList(new SkillEffect("bleed", EffectType.DOT, 0.10f, 2, 0))
+                Arrays.asList(new SkillEffect("bleed", EffectType.DOT, 0.10f, 2, R.drawable.ic_effect_poison))
         ));
 
         putSkill(new SimpleSkill(
@@ -474,7 +474,7 @@ public final class SkillRepository {
                 50,
                 4,
                 0f,0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("dodge_and_restore_sta", EffectType.BUFF, 0.10f, 1, 0))
+                Arrays.asList(new SkillEffect("dodge_and_restore_sta", EffectType.BUFF, 0.10f, 1, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -492,7 +492,7 @@ public final class SkillRepository {
                 0f,
                 0f,
                 0.20f,0f,
-                Arrays.asList(new SkillEffect("reduce_enemy_str_20", EffectType.DEBUFF, 0.20f, 2, 0))
+                Arrays.asList(new SkillEffect("reduce_enemy_str_20", EffectType.DEBUFF, 0.20f, 2, R.drawable.ic_effect_debuff))
         ));
 
         putSkill(new SimpleSkill(
@@ -510,7 +510,7 @@ public final class SkillRepository {
                 0f,
                 0.20f,
                 0f,0f,
-                Arrays.asList(new SkillEffect("higher_crit", EffectType.BUFF, 0.15f, 0, 0))
+                Arrays.asList(new SkillEffect("higher_crit", EffectType.BUFF, 0.15f, 0, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -525,7 +525,7 @@ public final class SkillRepository {
                 50,
                 5,
                 0f,0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("clone_absorb_next", EffectType.SHIELD, 0f, 1, 0))
+                Arrays.asList(new SkillEffect("clone_absorb_next", EffectType.SHIELD, 0f, 1, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -543,7 +543,7 @@ public final class SkillRepository {
                 0f,
                 0.60f,
                 0f,0f,
-                Arrays.asList(new SkillEffect("execute_under_20", EffectType.DEBUFF, 0f, 0, 0))
+                Arrays.asList(new SkillEffect("execute_under_20", EffectType.DEBUFF, 0f, 0, R.drawable.ic_effect_debuff))
         ));
 
 
@@ -579,7 +579,7 @@ public final class SkillRepository {
                 0f,
                 0.30f,
                 0f,0f,
-                Arrays.asList(new SkillEffect("act_first_bonus", EffectType.BUFF, 0.10f, 0, 0))
+                Arrays.asList(new SkillEffect("act_first_bonus", EffectType.BUFF, 0.10f, 0, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -597,7 +597,7 @@ public final class SkillRepository {
                 0f,
                 0.20f,
                 0f,0f,
-                Arrays.asList(new SkillEffect("extra_damage_if_enemy_buffed", EffectType.BUFF, 0.25f, 0, 0))
+                Arrays.asList(new SkillEffect("extra_damage_if_enemy_buffed", EffectType.BUFF, 0.25f, 0, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -612,7 +612,7 @@ public final class SkillRepository {
                 50,
                 3,
                 0f,0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("buff_str_20", EffectType.BUFF, 0.20f, 2, 0))
+                Arrays.asList(new SkillEffect("buff_str_20", EffectType.BUFF, 0.20f, 2, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -628,7 +628,7 @@ public final class SkillRepository {
                 4,
                 1.60f,
                 0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("double_damage_under_30pct", EffectType.BUFF, 2.0f, 0, 0))
+                Arrays.asList(new SkillEffect("double_damage_under_30pct", EffectType.BUFF, 2.0f, 0, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -644,7 +644,7 @@ public final class SkillRepository {
                 6,
                 0.80f * 4, // representing 3-5 × 80% as a simplified multiplier
                 0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("extra_action_if_kill", EffectType.BUFF, 1f, 0, 0))
+                Arrays.asList(new SkillEffect("extra_action_if_kill", EffectType.BUFF, 1f, 0, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -660,7 +660,7 @@ public final class SkillRepository {
                 3,
                 1.20f,
                 0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("bonus_vs_high_hp", EffectType.BUFF, 0.30f, 0, 0))
+                Arrays.asList(new SkillEffect("bonus_vs_high_hp", EffectType.BUFF, 0.30f, 0, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -676,7 +676,7 @@ public final class SkillRepository {
                 3,
                 0.60f,
                 0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("block_and_counter", EffectType.BUFF, 0f, 0, 0))
+                Arrays.asList(new SkillEffect("block_and_counter", EffectType.BUFF, 0f, 0, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -691,8 +691,8 @@ public final class SkillRepository {
                 50,
                 4,
                 0f,0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("extra_action", EffectType.BUFF, 1f, 0, 0),
-                        new SkillEffect("hp_cost_5percent", EffectType.DEBUFF, 0.05f, 0, 0))
+                Arrays.asList(new SkillEffect("extra_action", EffectType.BUFF, 1f, 0, R.drawable.ic_effect_buff),
+                        new SkillEffect("hp_cost_5percent", EffectType.DEBUFF, 0.05f, 0, R.drawable.ic_effect_debuff))
         ));
 
         putSkill(new SimpleSkill(
@@ -707,8 +707,8 @@ public final class SkillRepository {
                 50,
                 4,
                 0f,0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("buff_end_20", EffectType.BUFF, 0.20f, 2, 0),
-                        new SkillEffect("heal_10pct", EffectType.BUFF, 0.10f, 0, 0))
+                Arrays.asList(new SkillEffect("buff_end_20", EffectType.BUFF, 0.20f, 2, R.drawable.ic_effect_buff),
+                        new SkillEffect("heal_10pct", EffectType.BUFF, 0.10f, 0, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -724,7 +724,7 @@ public final class SkillRepository {
                 3,
                 1.40f,
                 0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("ignore_enemy_buffs", EffectType.DEBUFF, 0f, 0, 0))
+                Arrays.asList(new SkillEffect("ignore_enemy_buffs", EffectType.DEBUFF, 0f, 0, R.drawable.ic_effect_debuff))
         ));
 
         putSkill(new SimpleSkill(
@@ -739,7 +739,7 @@ public final class SkillRepository {
                 50,
                 4,
                 0f,0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("buff_atk_20_sta_regen", EffectType.BUFF, 0.20f, 2, 0))
+                Arrays.asList(new SkillEffect("buff_atk_20_sta_regen", EffectType.BUFF, 0.20f, 2, R.drawable.ic_effect_buff))
         ));
 
         putSkill(new SimpleSkill(
@@ -755,9 +755,12 @@ public final class SkillRepository {
                 6,
                 2.50f,
                 0f,0f,0f,0f,
-                Arrays.asList(new SkillEffect("bypass_def_20chance", EffectType.DEBUFF, 0.20f, 0, 0))
+                Arrays.asList(new SkillEffect("bypass_def_20chance", EffectType.DEBUFF, 0.20f, 0, R.drawable.ic_effect_debuff))
         ));
     }
+
+    // ===================== ENEMY SKILLS =====================
+
 
     // Helper to put skill to map (ensures non-null id)
     private static void putSkill(SkillModel s) {
@@ -781,12 +784,73 @@ public final class SkillRepository {
 
         @Override
         public void execute(Character user, Character target, CombatContext context) {
-            // Placeholder execution behavior:
-            // - integrate with your CombatContext to apply damage/effects, logging, AB usage, cooldown management.
-            // For now, keep minimal to allow compilation.
-            System.out.println("Executing skill: " + getName() + " by " + (user != null ? user.getName() : "unknown"));
-            // TODO: implement real combat logic
+            if (user == null || target == null || context == null) return;
+
+            // 1) Apply damage if the skill is a damage type
+            if (getType() == SkillType.DAMAGE || getType() == SkillType.DOT) {
+                // Basic damage formula: STR, END, AGI scaling
+                int baseDamage = Math.max(1,
+                        Math.round(getStrScaling() * user.getEffectiveStrength()
+                                + getEndScaling() * user.getEffectiveEndurance()
+                                + getAgiScaling() * user.getEffectiveAgility()));
+
+                context.applyDamage(user, target, baseDamage, this);
+
+                // Apply DOT effects
+                for (SkillEffect effect : getEffects()) {
+                                        if (effect.getType() == EffectType.DOT) {
+                                                DOTEffect dot;
+                                                if (effect.getMagnitude() > 0f && effect.getMagnitude() < 1f) {
+                                                        // treat magnitude as fractional percent of max HP per tick
+                                                        dot = new DOTEffect(effect.getId(), effect.getMagnitude(), effect.getDuration(), effect.getIconRes());
+                                                } else {
+                                                        // fixed damage per tick
+                                                        dot = new DOTEffect(effect.getId(), effect.getDuration(), Math.max(1, Math.round(effect.getMagnitude())), effect.getIconRes());
+                                                }
+                                                target.applyStatusEffect(dot);
+
+                                                context.pushLog(user.getName() + " applies " + effect.getId() + " to " + target.getName());
+                                                if (context.listener != null) {
+                                                        context.listener.onStatusApplied(target, dot,
+                                                                        user.getName() + " applies " + effect.getId() + " to " + target.getName());
+                                                }
+                                        }
+                }
+            }
+
+            // 2) Apply buffs, shields, or counters if applicable
+            if (getType() == SkillType.BUFF || getType() == SkillType.HEAL || getType() == SkillType.COUNTER) {
+                for (SkillEffect effect : getEffects()) {
+                    BuffEffect buff = new BuffEffect(effect.getId(), effect.getMagnitude(), effect.getDuration(), effect.getIconRes());
+                    user.applyStatusEffect(buff);
+
+                    context.pushLog(user.getName() + " gains " + effect.getId());
+                    if (context.listener != null) {
+                        context.listener.onStatusApplied(user, buff, user.getName() + " gains " + effect.getId());
+                    }
+                }
+            }
+
+            // 3) Handle healing
+            if (getType() == SkillType.HEAL) {
+                for (SkillEffect effect : getEffects()) {
+                    // Assume heal effects are marked as BUFF with "heal" in ID
+                    if (effect.getType() == EffectType.BUFF && effect.getId().toLowerCase().contains("heal")) {
+                        int healAmount = Math.round(effect.getMagnitude() * user.getMaxHp());
+                        user.heal(healAmount);
+
+                        context.pushLog(user.getName() + " heals " + healAmount + " HP");
+                    }
+                }
+            }
+
+            // 4) Ultimate skill special log
+            if (isUltimate()) {
+                context.pushLog(user.getName() + " unleashes ultimate: " + getName());
+            }
+
         }
+
     }
 
     private static class SimplePassive extends PassiveSkill {
@@ -797,4 +861,13 @@ public final class SkillRepository {
 
         // Override hooks optionally in future.
     }
+
+    // SkillRepository.java (add near putSkill)
+    private static void putPassive(PassiveSkill p) {
+        if (p != null && p.getId() != null) {
+            PASSIVE_MAP.put(p.getId(), p);
+        }
+    }
+
+
 }

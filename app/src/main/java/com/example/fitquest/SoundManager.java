@@ -1,36 +1,112 @@
 package com.example.fitquest;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 
 public class SoundManager {
-
+    
     private static SoundPool soundPool;
     private static int volume = 50; // 0-100
-    private static int clickSoundId;
-
-    public static void init(Context context) {
-        if (soundPool == null) {
-            AudioAttributes attrs = new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_GAME)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build();
-
-            soundPool = new SoundPool.Builder()
-                    .setMaxStreams(5)
-                    .setAudioAttributes(attrs)
-                    .build();
-
-            clickSoundId = soundPool.load(context, R.raw.click, 1);
+    private static boolean soundEnabled = true;
+    private static boolean isInitialized = false;
+    
+    private static final String PREFS_NAME = "fitquest_sound";
+    private static final String KEY_VOLUME = "sound_volume";
+    private static final String KEY_ENABLED = "sound_enabled";
+    
+    // Sound effect IDs
+    private static int buttonClickSoundId;
+    private static int questCompleteSoundId;
+    private static int levelUpSoundId;
+    private static int combatHitSoundId;
+    
+    public static void initialize(Context context) {
+        if (isInitialized) return;
+        
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        volume = prefs.getInt(KEY_VOLUME, 50);
+        soundEnabled = prefs.getBoolean(KEY_ENABLED, true);
+        
+        // Initialize SoundPool
+        AudioAttributes audioAttributes = new AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_GAME)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build();
+            
+        soundPool = new SoundPool.Builder()
+            .setMaxStreams(10)
+            .setAudioAttributes(audioAttributes)
+            .build();
+            
+        // Load sound effects (you'll need to add these to res/raw/)
+        try {
+            buttonClickSoundId = soundPool.load(context, R.raw.button_click, 1);
+            questCompleteSoundId = soundPool.load(context, R.raw.quest_complete, 1);
+            levelUpSoundId = soundPool.load(context, R.raw.level_up, 1);
+            combatHitSoundId = soundPool.load(context, R.raw.combat_hit, 1);
+        } catch (Exception e) {
+            // Handle missing sound files gracefully
+            e.printStackTrace();
+        }
+        
+        isInitialized = true;
+    }
+    
+    public static void playButtonClick() {
+        if (!soundEnabled || soundPool == null) return;
+        soundPool.play(buttonClickSoundId, volume / 100f, volume / 100f, 1, 0, 1f);
+    }
+    
+    public static void playQuestComplete() {
+        if (!soundEnabled || soundPool == null) return;
+        soundPool.play(questCompleteSoundId, volume / 100f, volume / 100f, 1, 0, 1f);
+    }
+    
+    public static void playLevelUp() {
+        if (!soundEnabled || soundPool == null) return;
+        soundPool.play(levelUpSoundId, volume / 100f, volume / 100f, 1, 0, 1f);
+    }
+    
+    public static void playCombatHit() {
+        if (!soundEnabled || soundPool == null) return;
+        soundPool.play(combatHitSoundId, volume / 100f, volume / 100f, 1, 0, 1f);
+    }
+    
+    public static void setVolume(int vol, Context context) {
+        volume = Math.max(0, Math.min(100, vol)); // Clamp between 0-100
+        
+        // Save to preferences
+        if (context != null) {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit().putInt(KEY_VOLUME, volume).apply();
         }
     }
-
-    public static void playClick() {
-        if (soundPool != null) soundPool.play(clickSoundId, volume / 100f, volume / 100f, 1, 0, 1f);
+    
+    public static void setSoundEnabled(boolean enabled, Context context) {
+        soundEnabled = enabled;
+        
+        // Save to preferences
+        if (context != null) {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit().putBoolean(KEY_ENABLED, soundEnabled).apply();
+        }
     }
-
-    public static void setVolume(int vol) { volume = vol; }
-    public static int getVolume() { return volume; }
-    public static void release() { if (soundPool != null) { soundPool.release(); soundPool = null; } }
+    
+    public static int getVolume() {
+        return volume;
+    }
+    
+    public static boolean isSoundEnabled() {
+        return soundEnabled;
+    }
+    
+    public static void release() {
+        if (soundPool != null) {
+            soundPool.release();
+            soundPool = null;
+            isInitialized = false;
+        }
+    }
 }

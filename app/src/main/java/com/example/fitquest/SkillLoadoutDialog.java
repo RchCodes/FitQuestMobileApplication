@@ -2,6 +2,8 @@ package com.example.fitquest;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -41,10 +43,19 @@ public class SkillLoadoutDialog extends Dialog {
         setupAvailableSkills(context);
 
         saveBtn.setOnClickListener(v -> {
+            // Save the skill loadout
             avatar.getActiveSkills().clear(); // reset
             for (SkillModel sm : activeSlots) {
                 if (sm != null) avatar.addActiveSkill(sm);
             }
+            
+            // Save avatar with new skill loadout
+            AvatarManager.saveAvatarOffline(context, avatar);
+            if (isNetworkAvailable()) {
+                AvatarManager.saveAvatarOnline(avatar);
+            }
+            
+            Toast.makeText(context, "Skill loadout saved!", Toast.LENGTH_SHORT).show();
             dismiss();
         });
 
@@ -127,5 +138,14 @@ public class SkillLoadoutDialog extends Dialog {
 
             availableGrid.addView(skillIcon);
         }
+    }
+    
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        }
+        return false;
     }
 }

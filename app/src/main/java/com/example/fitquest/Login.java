@@ -80,24 +80,14 @@ public class Login extends BaseActivity {
                 return;
             }
 
-            FirebaseAuth.getInstance().fetchSignInMethodsForEmail(email)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            boolean emailPasswordUser = task.getResult().getSignInMethods().contains("password");
-                            if (emailPasswordUser) {
-                                FirebaseAuth.getInstance().sendPasswordResetEmail(email)
-                                        .addOnCompleteListener(resetTask -> {
-                                            if (resetTask.isSuccessful()) {
-                                                Toast.makeText(this, "Password reset email sent to " + email, Toast.LENGTH_LONG).show();
-                                            } else {
-                                                Toast.makeText(this, "Error: " + resetTask.getException().getMessage(), Toast.LENGTH_LONG).show();
-                                            }
-                                        });
-                            } else {
-                                Toast.makeText(this, "This email is linked with Google/Facebook login. Reset your password there.", Toast.LENGTH_LONG).show();
-                            }
+            // Send password reset email regardless of provider
+            FirebaseAuth.getInstance().sendPasswordResetEmail(email)
+                    .addOnCompleteListener(resetTask -> {
+                        if (resetTask.isSuccessful()) {
+                            Toast.makeText(this, "Password reset email sent to " + email, Toast.LENGTH_LONG).show();
                         } else {
-                            Toast.makeText(this, "Error: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                            // If password reset fails, it might be because the email doesn't have a password account
+                            Toast.makeText(this, "If you signed up with Google/Facebook, please use those providers to login.", Toast.LENGTH_LONG).show();
                         }
                     });
         });
@@ -120,42 +110,20 @@ public class Login extends BaseActivity {
 
         progressOverlay.setVisibility(View.VISIBLE);
 
-        // Check which providers are linked to this email
-        FirebaseAuth.getInstance().fetchSignInMethodsForEmail(email)
-                .addOnCompleteListener(task -> {
-                    if (!task.isSuccessful()) {
-                        progressOverlay.setVisibility(View.GONE);
-                        Toast.makeText(this, "Error: " + (task.getException() != null ? task.getException().getMessage() : "Unknown error"), Toast.LENGTH_LONG).show();
-                        return;
-                    }
+        // Proceed directly with email/password login
+        authManager.login(email, password, new AuthManager.AuthCallback() {
+            @Override
+            public void onSuccess(FirebaseUser user) {
+                progressOverlay.setVisibility(View.GONE);
+                UserUtils.checkAvatarAndProceed(user, Login.this);
+            }
 
-                    if (task.getResult() == null || task.getResult().getSignInMethods().isEmpty()) {
-                        progressOverlay.setVisibility(View.GONE);
-                        Toast.makeText(this, "No account found with this email", Toast.LENGTH_LONG).show();
-                        return;
-                    }
-
-                    if (!task.getResult().getSignInMethods().contains("password")) {
-                        progressOverlay.setVisibility(View.GONE);
-                        Toast.makeText(this, "This email is linked with Google/Facebook. Please login with the respective provider.", Toast.LENGTH_LONG).show();
-                        return;
-                    }
-
-                    // Email uses password, proceed with login
-                    authManager.login(email, password, new AuthManager.AuthCallback() {
-                        @Override
-                        public void onSuccess(FirebaseUser user) {
-                            progressOverlay.setVisibility(View.GONE);
-                            UserUtils.checkAvatarAndProceed(user, Login.this);
-                        }
-
-                        @Override
-                        public void onFailure(String errorMessage) {
-                            progressOverlay.setVisibility(View.GONE);
-                            Toast.makeText(Login.this, "Login failed: " + errorMessage, Toast.LENGTH_LONG).show();
-                        }
-                    });
-                });
+            @Override
+            public void onFailure(String errorMessage) {
+                progressOverlay.setVisibility(View.GONE);
+                Toast.makeText(Login.this, "Login failed: " + errorMessage, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
 

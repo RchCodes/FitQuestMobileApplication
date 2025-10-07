@@ -10,6 +10,9 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -42,6 +45,16 @@ public class Profile {
     private AvatarModel avatar;
 
 
+    private TextView usernameView;
+    private TextView classView;
+    private TextView levelView;
+    private ProgressBar expBar;
+    private TextView progressText;
+    private TextView playerIdView;
+    private ImageView rankIconView;
+    private TextView rankNameView;
+
+
     private final CallbackManager facebookCallbackManager = CallbackManager.Factory.create();
 
     public Profile(Context context, ActivityResultLauncher<Intent> googleLauncher) {
@@ -59,16 +72,35 @@ public class Profile {
         dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
 
+        // Bind all views first
+        bindViewsAndSetup(popupView);
+
+        // Load avatar
         avatar = AvatarManager.loadAvatarOffline(context);
         if (avatar == null) avatar = new AvatarModel();
 
+        // Now populate profile data safely
+        populateProfileData();
 
+        // Set profile change listener
+        avatar.setProfileChangeListener(updatedAvatar -> {
+            avatar = updatedAvatar;
+            populateProfileData();
+        });
 
-        bindViewsAndSetup(popupView);
         setupFacebookCallback();
+
     }
 
     private void bindViewsAndSetup(View popupView) {
+        usernameView = popupView.findViewById(R.id.username);
+        classView = popupView.findViewById(R.id.classView);
+        levelView = popupView.findViewById(R.id.level);
+        expBar = popupView.findViewById(R.id.exp_bar);
+        progressText = popupView.findViewById(R.id.progressText);
+        playerIdView = popupView.findViewById(R.id.player_id);
+        rankIconView = popupView.findViewById(R.id.rank_icon);
+        rankNameView = popupView.findViewById(R.id.rank_name);
         Button bindButton = popupView.findViewById(R.id.bind_button);
         bindButton.setOnClickListener(v -> showBindOptions());
         Button switchButton = popupView.findViewById(R.id.switch_button);
@@ -76,6 +108,36 @@ public class Profile {
         ImageButton closeButton = popupView.findViewById(R.id.btn_close_profile);
         closeButton.setOnClickListener(v -> dismiss());
     }
+
+    private void populateProfileData() {
+        if (avatar == null) return;
+
+        // Username
+        usernameView.setText(avatar.getUsername());
+
+        // Class
+        classView.setText(avatar.getPlayerClass());
+
+        // Level
+        levelView.setText("LV. " + avatar.getLevel());
+
+        // EXP Bar
+        int currentXp = avatar.getXp();
+        int xpForNextLevel = LevelProgression.getMaxXpForLevel(avatar.getLevel());
+        expBar.setMax(xpForNextLevel);
+        expBar.setProgress(currentXp);
+
+        // Progress text
+        progressText.setText(currentXp + "/" + xpForNextLevel);
+
+        // Player ID
+        playerIdView.setText("ID: " + avatar.getPlayerId());
+
+        // Rank icon and name
+        rankIconView.setImageResource(avatar.getRankDrawableRes());
+        rankNameView.setText(avatar.getRankName());
+    }
+
 
     private void switchAccount() {
         new AlertDialog.Builder(context)

@@ -106,6 +106,7 @@ public class GearActivity extends AppCompatActivity {
 
             avatar.checkOutfitCompletion();
             AvatarManager.saveAvatarOffline(this, avatar);
+            AvatarManager.saveAvatarOnline(avatar); // Also save online
             avatarHelper.loadAvatar(avatar);
 
             gearAdapter.updateData(filteredGear); // refresh highlighting
@@ -115,6 +116,7 @@ public class GearActivity extends AppCompatActivity {
 
         btnSave.setOnClickListener(v -> {
             AvatarManager.saveAvatarOffline(this, avatar);
+            AvatarManager.saveAvatarOnline(avatar); // Also save online
             Toast.makeText(this, "Saved.", Toast.LENGTH_SHORT).show();
             finish();
         });

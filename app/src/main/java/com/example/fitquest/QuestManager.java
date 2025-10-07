@@ -15,6 +15,11 @@ public class QuestManager {
 
     private static List<QuestModel> quests = null;
 
+    public static List<QuestModel> getAllQuests(Context context) {
+        ensureLoaded(context);
+        return quests;
+    }
+
     // Listener for UI updates
     public interface QuestProgressListener {
         void onQuestProgressUpdated(QuestModel quest);
@@ -191,13 +196,12 @@ public class QuestManager {
         list.add(new QuestModel("q_daily_quests_5", "Complete 5 Quests", "Complete 5 quests in today",
                 new QuestReward(100, 50, 0, 0, 0, 0, 0, 5), QuestCategory.DAILY, 5, "completion"));
 
-
         // Weekly
         list.add(new QuestModel("q_weekly_push_50", "Accumulate 50 Push-ups", "Do 50 pushups this week",
                 new QuestReward(100,200,0,0,0,0,0,3), QuestCategory.WEEKLY,50,"pushups"));
-        list.add(new QuestModel("q_weekly_squat_150", "Accumulate 150 Squats", "Do 150 squats this week",
-                new QuestReward(90,180,0,0,0,0,0,2), QuestCategory.WEEKLY,150,"squats"));
-        list.add(new QuestModel("q_weekly_plank_300", "Accumulate 300 Plank Seconds", "Maintain a plank for 300 seconds this week",
+        list.add(new QuestModel("q_weekly_squat_75", "Accumulate 150 Squats", "Do 75 squats this week",
+                new QuestReward(90,180,0,0,0,0,0,2), QuestCategory.WEEKLY,75,"squats"));
+        list.add(new QuestModel("q_weekly_plank_150", "Accumulate 150 Plank Seconds", "Maintain a plank for 150 seconds this week",
                 new QuestReward(75,60,0,0,0,0,0,3), QuestCategory.WEEKLY,300,"plank"));
         list.add(new QuestModel("q_weekly_crunches_100", "Accumulate 100 Crunches", "Complete 100 crunches this week",
                 new QuestReward(60,40,0,0,0,0,0,2), QuestCategory.WEEKLY,100,"crunches"));

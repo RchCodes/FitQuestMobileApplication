@@ -51,7 +51,7 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/button_lb_ques2t"
+            android:src="@drawable/button_lb_quest2"
             android:layout_marginLeft="15dp"/>
 
     </LinearLayout>>

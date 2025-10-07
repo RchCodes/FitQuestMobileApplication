@@ -40,6 +40,12 @@
         android:id="@+id/music_seekbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+    <Switch
+        android:id="@+id/music_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enable Music"
+        android:layout_marginBottom="8dp"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -52,6 +58,13 @@
         android:id="@+id/sfx_seekbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+
+    <Switch
+        android:id="@+id/sfx_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enable SFX"
+        android:layout_marginBottom="8dp"/>
 
     <!-- Divider -->
     <View
@@ -85,6 +98,15 @@
             android:minWidth="48dp"
             android:minHeight="48dp" />
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/pending_quests_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/holo_blue_dark"
+        android:visibility="gone"
+        android:layout_marginTop="8dp"
+        android:textSize="14sp"/>
 
     <!-- Notifications Description -->
     <TextView

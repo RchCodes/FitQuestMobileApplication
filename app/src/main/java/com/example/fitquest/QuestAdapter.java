@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
@@ -143,17 +144,23 @@ public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHol
 
         holder.actionButton.setOnClickListener(v -> {
             if (!quest.isCompleted()) {
-                // Launch exercise activity
-                Context ctx = v.getContext();
-                Intent intent = new Intent(ctx, ExerciseTrackingActivity.class);
-                intent.putExtra("EXERCISE_TYPE", quest.getExerciseType());
-                intent.putExtra("MAX_PROGRESS", quest.getTarget());
-                intent.putExtra("DIFFICULTY_LEVEL", "beginner"); // optional
-                intent.putExtra("QUEST_ID", quest.getId()); // link quest for tracking
-                ctx.startActivity(intent);
+                // Only allow clicking for SINGLE completion type quests (daily quests)
+                if (quest.getCompletionType() == QuestCompletionType.SINGLE) {
+                    // Launch exercise activity
+                    Context ctx = v.getContext();
+                    Intent intent = new Intent(ctx, ExerciseTrackingActivity.class);
+                    intent.putExtra("EXERCISE_TYPE", quest.getExerciseType());
+                    intent.putExtra("MAX_PROGRESS", quest.getTarget());
+                    intent.putExtra("DIFFICULTY_LEVEL", "beginner"); // optional
+                    intent.putExtra("QUEST_ID", quest.getId()); // link quest for tracking
+                    ctx.startActivity(intent);
 
-                // Do NOT call applyRewards or auto-claim here
-                // Rewards will only be claimed manually in the dialog
+                    // Do NOT call applyRewards or auto-claim here
+                    // Rewards will only be claimed manually in the dialog
+                } else {
+                    // For ACCUMULATED quests (weekly/monthly), show info message
+                    Toast.makeText(context, "This quest requires accumulated progress over time. Complete related daily quests to progress!", Toast.LENGTH_LONG).show();
+                }
             } else if (quest.isCompleted() && !quest.isClaimed()) {
                 // Claim button pressed
                 boolean leveledUp = QuestManager.claimQuest(context, quest);

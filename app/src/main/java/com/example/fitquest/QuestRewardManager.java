@@ -55,6 +55,12 @@ public class QuestRewardManager {
 
         // Mark quest as completed
         quest.complete();
+        
+        // Handle accumulated quest progress if this was a daily quest
+        QuestProgressManager.handleDailyQuestCompletion(ctx, quest);
+        
+        // Update quest leaderboard
+        LeaderboardManager.updateQuestLeaderboard(ctx, quest.getId(), quest);
 
         // Update quest storage
         List<QuestModel> quests = QuestStorage.loadQuestsOffline(ctx);
@@ -103,6 +109,9 @@ public class QuestRewardManager {
 
     /** Show level-up popup */
     public static void showLevelUpPopup(Context ctx, int newLevel, int newRank) {
+        AvatarModel avatar = AvatarManager.loadAvatarOffline(ctx);
+        if (avatar == null) return;
+        
         AlertDialog.Builder builder = new AlertDialog.Builder(ctx);
         View view = LayoutInflater.from(ctx).inflate(R.layout.dialog_levelup, null);
 
@@ -111,8 +120,24 @@ public class QuestRewardManager {
         Button btnOk = view.findViewById(R.id.btnOk);
 
         tvTitle.setText("🎉 Level Up! 🎉");
-        tvDetails.setText("You reached Level " + newLevel +
-                (newRank > 0 ? "\nNew Rank: " + rankName(newRank) : ""));
+        
+        // Build level up details
+        StringBuilder details = new StringBuilder();
+        details.append("You reached Level ").append(newLevel);
+        if (newRank > 0) {
+            details.append("\nNew Rank: ").append(rankName(newRank));
+        }
+        
+        // Show newly acquired skills
+        List<SkillModel> newSkills = avatar.getNewlyAcquiredSkills(newLevel);
+        if (!newSkills.isEmpty()) {
+            details.append("\n\nNew Skills Acquired:");
+            for (SkillModel skill : newSkills) {
+                details.append("\n• ").append(skill.getName());
+            }
+        }
+        
+        tvDetails.setText(details.toString());
 
         AlertDialog dialog = builder.setView(view).create();
         btnOk.setOnClickListener(v -> dialog.dismiss());

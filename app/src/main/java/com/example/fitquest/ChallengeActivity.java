@@ -1,47 +1,106 @@
 package com.example.fitquest;
 
-import android.animation.ObjectAnimator;
+import android.content.Intent;
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Bundle;
-import android.view.Gravity;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import androidx.appcompat.app.AppCompatActivity;
+import android.widget.Toast;
 
-import com.airbnb.lottie.LottieAnimationView;
+import com.google.android.material.imageview.ShapeableImageView;
 
-public class ChallengeActivity extends AppCompatActivity {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
-    private ImageView imgPlayer, imgEnemy;
+public class ChallengeActivity extends BaseActivity implements CombatContext.CombatListener {
+
+    private static final String TAG = "ChallengeActivity";
+
+    // --- UI Components ---
+    private ImageView imgEnemy;
     private FrameLayout effectsLayer;
     private ProgressBar playerHpBar, enemyHpBar, playerActionBar, enemyActionBar;
-    private TextView playerHpText, enemyHpText;
+    private TextView playerHpText, enemyHpText, playerNameText, enemyNameText;
     private LinearLayout playerStatusEffects, enemyStatusEffects;
     private Button[] skillButtons = new Button[5];
+    private TextView combatLog, challengeInfo;
+    private ImageView btnPause;
+
+    // Skill icons (ShapeableImageView in layout)
+    private ShapeableImageView[] skillImages;
+
+    // --- Combat System ---
+    private Character playerCharacter;
+    private Character enemyCharacter;
+    private CombatContext combatContext;
+    private Handler combatHandler;
+    private Runnable combatTickRunnable;
+
+    // --- Gauntlet / Challenge ---
+    private List<AvatarModel> challengeEnemies = new ArrayList<>(); // avatars used for CombatContext
+    private List<EnemyModel> enemyModelsReceived = new ArrayList<>(); // original enemy models from LevelSelect (if any)
+    private int currentEnemyIndex = 0;
+    private int levelNumber = 1;
+    private boolean combatActive = false;
+    private boolean combatPaused = false;
+    private Random random = new Random();
+    private AvatarDisplayManager avatarHelper;
+
+    private int totalEnemies;
+    private int enemiesDefeated = 0;
+
+    // Skill popup and pauseDialog are referenced in your original ChallengeActivity; keep optional
+    private SkillInfoPopup skillPopup;
+    private PauseDialog pauseDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_challenge); // ← use your XML name here
+        setContentView(R.layout.activity_challenge);
 
-        // --- Initialize Core Views ---
-        //imgPlayer = findViewById(R.id.imgPlayer);
+        // Read intent extras (LevelSelect sends enemies list + level)
+        Intent intent = getIntent();
+        if (intent != null) {
+            ArrayList<EnemyModel> list = intent.getParcelableArrayListExtra("enemies");
+            if (list != null) enemyModelsReceived = list;
+            levelNumber = intent.getIntExtra("level", 1);
+        }
+
+        skillPopup = new SkillInfoPopup();
+
+        initializeUI();
+        setupAvatarDisplay();    // initialize player avatar display manager and load avatar
+        setupCombatHandler();
+        loadPlayerCharacter();
+        createChallengeEnemies(); // create challengeEnemies (converted from enemyModelsReceived or dynamic)
+        startCombat();
+
+    }
+
+    private void initializeUI() {
         imgEnemy = findViewById(R.id.imgEnemy);
         effectsLayer = findViewById(R.id.effectsLayer);
-
         playerHpBar = findViewById(R.id.player_hp_bar);
         enemyHpBar = findViewById(R.id.enemy_hp_bar);
         playerActionBar = findViewById(R.id.playerActionBar);
         enemyActionBar = findViewById(R.id.enemyActionBar);
-
         playerHpText = findViewById(R.id.player_hp_text_overlay);
         enemyHpText = findViewById(R.id.enemy_hp_text_overlay);
-
+        playerNameText = findViewById(R.id.tvPlayerName);
+        enemyNameText = findViewById(R.id.tvEnemyName);
         playerStatusEffects = findViewById(R.id.playerStatusEffects);
         enemyStatusEffects = findViewById(R.id.enemyStatusEffects);
 
@@ -51,69 +110,592 @@ public class ChallengeActivity extends AppCompatActivity {
         skillButtons[3] = findViewById(R.id.skill4);
         skillButtons[4] = findViewById(R.id.skill5);
 
-        // Example Skill Click Action
-        for (Button skill : skillButtons) {
-            skill.setOnClickListener(v -> performAttack());
+        skillImages = new ShapeableImageView[] {
+                findViewById(R.id.imgSkill1),
+                findViewById(R.id.imgSkill2),
+                findViewById(R.id.imgSkill3),
+                findViewById(R.id.imgSkill4),
+                findViewById(R.id.imgSkill5)
+        };
+
+        combatLog = findViewById(R.id.combat_log);
+        challengeInfo = findViewById(R.id.challenge_info);
+        btnPause = findViewById(R.id.btnSettings);
+
+        // Attach listeners to skill buttons and icons
+        for (int i = 0; i < skillButtons.length; i++) {
+            final int index = i;
+            if (skillButtons[i] != null) {
+                skillButtons[i].setOnClickListener(v -> {
+                    showSkillPopup(v, index);
+                    useSkill(index);
+                });
+            }
+            if (skillImages.length > i && skillImages[i] != null) {
+                final int idx = i;
+                skillImages[i].setOnClickListener(v -> showSkillPopup(v, idx));
+            }
+        }
+
+        // Pause/Settings button
+        if (btnPause != null) {
+            btnPause.setOnClickListener(v -> {
+                if (pauseDialog == null) {
+                    pauseDialog = new PauseDialog(this, () -> {
+                        // End combat safely and exit
+                        if (combatActive && combatContext != null) {
+                            combatContext.endCombat(false); // mark as lost
+                            combatActive = false;
+                        }
+                        finish();
+                    });
+
+                    pauseDialog.dialog.setOnDismissListener(d -> combatPaused = false);
+                }
+                combatPaused = true;
+                pauseDialog.show();
+            });
+        }
+
+        updateChallengeInfo();
+    }
+
+    private void setupAvatarDisplay() {
+        // Create AvatarDisplayManager for player (layered)
+        avatarHelper = new AvatarDisplayManager(
+                this,
+                findViewById(R.id.baseBodyLayer),
+                findViewById(R.id.outfitLayer),
+                findViewById(R.id.weaponLayer),
+                findViewById(R.id.hairOutlineLayer),
+                findViewById(R.id.hairFillLayer),
+                findViewById(R.id.eyesOutlineLayer),
+                findViewById(R.id.eyesFillLayer),
+                findViewById(R.id.noseLayer),
+                findViewById(R.id.lipsLayer)
+        );
+
+        // If avatar exists offline, load it
+        AvatarModel avatar = AvatarManager.loadAvatarOffline(this);
+        if (avatar != null) {
+            avatarHelper.loadAvatar(avatar);
+        } else {
+            Toast.makeText(this, "No avatar found!", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void performAttack() {
-        // Example: Animate damage effect on enemy
-        showFloatingText(imgEnemy, "-35", 0xFFFF5555); // red text for damage
-        //playLottieEffect(imgEnemy, R.raw.hit_impact); // optional hit animation
-    }
-
-    // --- FLOATING DAMAGE TEXT ---
-    private void showFloatingText(View target, String text, int color) {
-        TextView tv = new TextView(this);
-        tv.setText(text);
-        tv.setTextColor(color);
-        tv.setTextSize(18);
-        tv.setShadowLayer(4, 2, 2, 0xAA000000);
-        tv.setGravity(Gravity.CENTER);
-
-        int[] loc = new int[2];
-        target.getLocationOnScreen(loc);
-
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT);
-        params.leftMargin = loc[0] + target.getWidth() / 2 - 30;
-        params.topMargin = loc[1] - 60; // above target
-        tv.setLayoutParams(params);
-
-        effectsLayer.addView(tv);
-
-        // Animate upward float + fade
-        tv.animate()
-                .translationYBy(-150)
-                .alpha(0f)
-                .setDuration(1000)
-                .withEndAction(() -> effectsLayer.removeView(tv))
-                .start();
-    }
-
-    // --- LOTTIE EFFECTS ---
-    private void playLottieEffect(View target, int animationRes) {
-        LottieAnimationView lottie = new LottieAnimationView(this);
-        lottie.setAnimation(animationRes);
-        lottie.playAnimation();
-
-        int[] loc = new int[2];
-        target.getLocationOnScreen(loc);
-
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(200, 200);
-        params.leftMargin = loc[0] + target.getWidth() / 2 - 100;
-        params.topMargin = loc[1] - 50;
-        lottie.setLayoutParams(params);
-
-        effectsLayer.addView(lottie);
-
-        lottie.addAnimatorListener(new android.animation.AnimatorListenerAdapter() {
+    private void setupCombatHandler() {
+        combatHandler = new Handler(Looper.getMainLooper());
+        combatTickRunnable = new Runnable() {
             @Override
-            public void onAnimationEnd(android.animation.Animator animation) {
-                effectsLayer.removeView(lottie);
+            public void run() {
+                // Only tick when combat active and not paused
+                if (combatActive && combatContext != null && !combatPaused) {
+                    try {
+                        combatContext.tick(0.1); // 100ms tick
+                        // keep UI in sync by calling the listener tick hook
+                        try {
+                            onCombatTick(0.1);
+                        } catch (Exception e) {
+                            Log.w(TAG, "onCombatTick(double) threw: " + e.getMessage());
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error during combat tick", e);
+                    }
+                }
+                // schedule next tick regardless (keeps loop alive)
+                combatHandler.postDelayed(this, 100);
+            }
+        };
+    }
+
+    private void loadPlayerCharacter() {
+        AvatarModel playerAvatar = AvatarManager.loadAvatarOffline(this);
+        if (playerAvatar == null) {
+            Toast.makeText(this, "No avatar found!", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+        playerCharacter = new Character(playerAvatar);
+        updatePlayerUI();
+
+        // ensure avatarHelper shows the player
+        if (avatarHelper != null) {
+            avatarHelper.loadAvatar(playerAvatar);
+        }
+    }
+
+    /**
+     * Create challenge enemies list.
+     * If LevelSelect supplied EnemyModel list via intent, convert those into AvatarModel (light conversion).
+     * Otherwise fallback to dynamic creation by levelNumber (your original logic).
+     */
+    private void createChallengeEnemies() {
+        challengeEnemies.clear();
+        currentEnemyIndex = 0;
+        enemiesDefeated = 0;
+
+        if (enemyModelsReceived != null && !enemyModelsReceived.isEmpty()) {
+            // Convert supplied EnemyModel list to AvatarModel for Character consumption
+            for (EnemyModel e : enemyModelsReceived) {
+                AvatarModel av = convertEnemyToAvatar(e);
+                challengeEnemies.add(av);
+            }
+        } else {
+            // fallback to dynamic generator you had previously
+            totalEnemies = 3 + (levelNumber * 2);
+            for (int i = 0; i < totalEnemies; i++) {
+                AvatarModel enemy = createChallengeEnemy(i + 1);
+                challengeEnemies.add(enemy);
+            }
+        }
+
+        // If we have enemyModelsReceived but need to set totalEnemies for UI
+        if (enemyModelsReceived != null && !enemyModelsReceived.isEmpty()) {
+            totalEnemies = enemyModelsReceived.size();
+        } else {
+            totalEnemies = challengeEnemies.size();
+        }
+
+        selectNextEnemy();
+    }
+
+    /**
+     * Convert EnemyModel -> AvatarModel (basic mapping)
+     * This method fills username, level and core stats so Character and CombatContext work.
+     */
+    private AvatarModel convertEnemyToAvatar(EnemyModel enemy) {
+        AvatarModel av = new AvatarModel();
+        av.setUsername(enemy.getName());
+        // set level: roughly scale by baseHp / 50 (heuristic) or use levelNumber
+        int estimatedLevel = Math.max(1, levelNumber + (enemy.getBaseHp() / 100));
+        av.setLevel(estimatedLevel);
+        av.setPlayerClass("enemy");
+
+        // Map stats roughly from EnemyModel base stats
+        av.addStrength(enemy.getBaseStr());
+        av.addEndurance(enemy.getBaseEnd());
+        av.addAgility(enemy.getBaseAgi());
+        // add reasonable defaults for other stats if methods exist
+        av.addFlexibility(2);
+        av.addStamina(5 + enemy.getBaseHp() / 50);
+
+        // No layered gear for enemy — optional: set outfit to null
+        return av;
+    }
+
+    private AvatarModel createChallengeEnemy(int enemyIndex) {
+        AvatarModel enemyAvatar = new AvatarModel();
+
+        int enemyLevel = levelNumber + enemyIndex - 1 + random.nextInt(3); // ±1-2 variation
+        enemyAvatar.setLevel(enemyLevel);
+        enemyAvatar.setUsername(getEnemyName(enemyIndex, enemyLevel));
+        enemyAvatar.setPlayerClass(getRandomClass());
+
+        int baseStat = 5 + enemyLevel * 3;
+        enemyAvatar.addStrength(baseStat + random.nextInt(3));
+        enemyAvatar.addEndurance(baseStat + random.nextInt(3));
+        enemyAvatar.addAgility(baseStat + random.nextInt(3));
+        enemyAvatar.addFlexibility(baseStat + random.nextInt(3));
+        enemyAvatar.addStamina(baseStat + random.nextInt(3));
+
+        addGearToEnemy(enemyAvatar, enemyLevel);
+
+        return enemyAvatar;
+    }
+
+    private String getEnemyName(int index, int level) {
+        String[] prefixes = {"Brutal", "Fierce", "Mighty", "Savage", "Relentless"};
+        String[] suffixes = {"Warrior", "Champion", "Gladiator", "Berserker"};
+        return prefixes[random.nextInt(prefixes.length)] + " " +
+                suffixes[random.nextInt(suffixes.length)] + " (Lv." + level + ")";
+    }
+
+    private String getRandomClass() {
+        String[] classes = {"warrior", "rogue", "tank"};
+        return classes[random.nextInt(classes.length)];
+    }
+
+    private void addGearToEnemy(AvatarModel enemy, int level) {
+        List<GearModel> allGear = GearRepository.getAllGear();
+        Collections.shuffle(allGear);
+        int gearCount = Math.min(3 + (level / 3), 5);
+        int added = 0;
+        for (GearModel gear : allGear) {
+            if (added >= gearCount) break;
+            if (gear.getClassRestriction().equals("UNIVERSAL") ||
+                    gear.getClassRestriction().equalsIgnoreCase(enemy.getPlayerClass())) {
+                enemy.addGear(gear.getId());
+                enemy.equipGear(gear.getType(), gear.getId());
+                added++;
+            }
+        }
+    }
+
+    private void selectNextEnemy() {
+        if (challengeEnemies.isEmpty()) return;
+        if (currentEnemyIndex < 0) currentEnemyIndex = 0;
+        if (currentEnemyIndex >= challengeEnemies.size()) return;
+
+        AvatarModel next = challengeEnemies.get(currentEnemyIndex);
+        enemyCharacter = new Character(next);
+        updateEnemyUI();
+
+        // If enemyModelsReceived supplies sprite resources, set imgEnemy accordingly
+        if (enemyModelsReceived != null && currentEnemyIndex < enemyModelsReceived.size()) {
+            EnemyModel em = enemyModelsReceived.get(currentEnemyIndex);
+            if (imgEnemy != null && em != null && em.getSpriteResId() != 0) {
+                imgEnemy.setImageResource(em.getSpriteResId());
+            }
+        } else {
+            // otherwise hide/clear imgEnemy or set default
+            // (leave whatever is in XML if you prefer)
+        }
+    }
+
+    private void startCombat() {
+        if (playerCharacter == null || enemyCharacter == null) return;
+
+        combatContext = new CombatContext(playerCharacter, enemyCharacter, CombatContext.Mode.CHALLENGE, this);
+        combatContext.startCombat();
+
+        combatActive = true;
+
+        // ensure we do not post multiple runnables
+        if (combatHandler != null && combatTickRunnable != null) {
+            combatHandler.removeCallbacks(combatTickRunnable);
+            combatHandler.post(combatTickRunnable);
+        }
+    }
+
+    private void useSkill(int skillIndex) {
+        if (playerCharacter == null || combatContext == null) return;
+        List<SkillModel> skills = getAvailableSkills(playerCharacter);
+        if (skillIndex < skills.size()) {
+            combatContext.playerUseSkill(skills.get(skillIndex).getId());
+        }
+    }
+
+    private List<SkillModel> getAvailableSkills(Character character) {
+        List<SkillModel> available = new ArrayList<>();
+        for (SkillModel skill : character.getActiveSkills()) {
+            if (skill.getLevelUnlock() <= character.getAvatar().getLevel() &&
+                    !skill.isOnCooldown() &&
+                    skill.getAbCost() <= character.getActionBar()) {
+                available.add(skill);
+            }
+        }
+        return available;
+    }
+
+    private void updatePlayerUI() {
+        if (playerCharacter == null) return;
+        if (playerNameText != null) playerNameText.setText(playerCharacter.getName());
+        if (playerHpBar != null && playerHpText != null) updateHealthBar(playerHpBar, playerHpText, playerCharacter);
+        if (playerActionBar != null) updateActionBar(playerActionBar, playerCharacter);
+        updateSkillButtons();
+    }
+
+    private void updateEnemyUI() {
+        if (enemyCharacter == null) return;
+        if (enemyNameText != null) enemyNameText.setText(enemyCharacter.getName());
+        if (enemyHpBar != null && enemyHpText != null) updateHealthBar(enemyHpBar, enemyHpText, enemyCharacter);
+        if (enemyActionBar != null) updateActionBar(enemyActionBar, enemyCharacter);
+    }
+
+    private void updateHealthBar(ProgressBar hpBar, TextView hpText, Character character) {
+        int currentHp = character.getCurrentHp();
+        int maxHp = character.getMaxHp();
+        if (maxHp <= 0) maxHp = 1;
+        if (currentHp < 0) currentHp = 0;
+        if (currentHp > maxHp) currentHp = maxHp;
+        hpBar.setMax(maxHp);
+        hpBar.setProgress(currentHp);
+        hpText.setText(currentHp + "/" + maxHp);
+    }
+
+    private void updateActionBar(ProgressBar actionBar, Character character) {
+        actionBar.setMax(100);
+        int ab = character.getActionBar();
+        if (ab < 0) ab = 0;
+        if (ab > 100) ab = 100;
+        actionBar.setProgress(ab);
+    }
+
+    private void updateSkillButtons() {
+        if (playerCharacter == null) return;
+
+        List<SkillModel> skills = getAvailableSkills(playerCharacter);
+        for (int i = 0; i < skillButtons.length; i++) {
+            Button btn = skillButtons[i];
+            if (btn == null) continue;
+
+            if (i < skills.size()) {
+                SkillModel s = skills.get(i);
+                btn.setText(s.getName());
+                btn.setEnabled(true);
+                btn.setVisibility(View.VISIBLE);
+
+                // update icon if available
+                if (skillImages != null && i < skillImages.length && skillImages[i] != null) {
+                    if (s.getIconRes() != 0) {
+                        skillImages[i].setImageResource(s.getIconRes());
+                        skillImages[i].setVisibility(View.VISIBLE);
+                    } else {
+                        skillImages[i].setImageResource(R.drawable.lock_2);
+                        skillImages[i].setVisibility(View.VISIBLE);
+                    }
+                }
+            } else {
+                btn.setText("");
+                btn.setEnabled(false);
+                btn.setVisibility(View.GONE);
+                if (skillImages != null && i < skillImages.length && skillImages[i] != null) {
+                    skillImages[i].setVisibility(View.GONE);
+                }
+            }
+        }
+    }
+
+    private void addCombatLog(String message) {
+        if (combatLog != null) {
+            String currentLog = combatLog.getText() != null ? combatLog.getText().toString() : "";
+            combatLog.setText(message + "\n" + currentLog);
+        } else {
+            Log.i(TAG, message);
+        }
+    }
+
+    private void updateChallengeInfo() {
+        if (challengeInfo != null) {
+            challengeInfo.setText("Level " + levelNumber + " - Enemy " + (currentEnemyIndex + 1) + "/" + Math.max(1, totalEnemies));
+        }
+    }
+
+    private void showSkillPopup(View anchor, int skillIndex) {
+        if (playerCharacter == null) return;
+        List<SkillModel> skills = getAvailableSkills(playerCharacter);
+        if (skillIndex < skills.size()) {
+            skillPopup.show(anchor, skills.get(skillIndex));
+        }
+    }
+
+    // ---------------- CombatListener callbacks ----------------
+
+    @Override
+    public void onCombatStarted(Character player, Character enemy, CombatContext.Mode mode) {
+        runOnUiThread(() -> {
+            addCombatLog("Combat started: " + player.getName() + " vs " + enemy.getName());
+            updatePlayerUI();
+            updateEnemyUI();
+        });
+    }
+
+    @Override
+    public void onActionBarUpdated(Character c) {
+        runOnUiThread(() -> {
+            if (c == playerCharacter) {
+                if (playerActionBar != null) updateActionBar(playerActionBar, c);
+                updateSkillButtons();
+            } else if (c == enemyCharacter) {
+                if (enemyActionBar != null) updateActionBar(enemyActionBar, c);
             }
         });
+    }
+
+    @Override
+    public void onCombatTick(double deltaTime) {
+        runOnUiThread(() -> {
+            if (playerCharacter != null && playerHpBar != null && playerHpText != null) {
+                updateHealthBar(playerHpBar, playerHpText, playerCharacter);
+                updateActionBar(playerActionBar, playerCharacter);
+            }
+            if (enemyCharacter != null && enemyHpBar != null && enemyHpText != null) {
+                updateHealthBar(enemyHpBar, enemyHpText, enemyCharacter);
+                updateActionBar(enemyActionBar, enemyCharacter);
+            }
+        });
+    }
+
+    // no-arg variant requested by some listeners -> call double-arg version
+    @Override
+    public void onCombatTick() {
+        onCombatTick(0.0);
+    }
+
+    @Override
+    public void onTurnStart(Character c, CombatContext ctx) {
+        // status effects processed in CombatContext tick; UI updates if needed
+    }
+
+    @Override
+    public void onSkillUsed(Character user, SkillModel skill, Character target, String logEntry) {
+        runOnUiThread(() -> addCombatLog(logEntry));
+    }
+
+    @Override
+    public void onDamageApplied(Character attacker, Character defender, int amount, String logEntry) {
+        runOnUiThread(() -> {
+            addCombatLog(logEntry);
+            if (defender == playerCharacter) {
+                if (playerHpBar != null && playerHpText != null) updateHealthBar(playerHpBar, playerHpText, playerCharacter);
+            } else if (defender == enemyCharacter) {
+                if (enemyHpBar != null && enemyHpText != null) updateHealthBar(enemyHpBar, enemyHpText, enemyCharacter);
+            }
+        });
+    }
+
+    @Override
+    public void onStatusApplied(Character target, StatusEffect effect, String logEntry) {
+        runOnUiThread(() -> addCombatLog(logEntry));
+    }
+
+    @Override
+    public void onLog(String entry) {
+        runOnUiThread(() -> addCombatLog(entry));
+    }
+
+    /**
+     * Called by CombatContext when combat finishes (normal path).
+     * We'll reward player on victory and move to next enemy or finish challenge.
+     */
+    @Override
+    public void onCombatEnded(CombatContext.Result result, Character winner, Character loser) {
+        runOnUiThread(() -> {
+            combatActive = false;
+            if (combatHandler != null) {
+                combatHandler.removeCallbacks(combatTickRunnable);
+            }
+
+            AvatarModel playerAvatar = playerCharacter.getAvatar();
+            boolean playerWon = (result == CombatContext.Result.PLAYER_WON);
+            String resultMessage;
+
+            if (playerWon) {
+                resultMessage = "Victory! You defeated " + loser.getName();
+                boolean leveledUp = playerAvatar.addXp(20 + (levelNumber * 5)); // scaled reward
+                playerAvatar.addCoins(50 + (levelNumber * 10));
+
+                // record battle history if your AvatarModel supports
+                BattleHistoryModel entry = new BattleHistoryModel(
+                        playerAvatar.getUsername(),
+                        playerAvatar.getLevel(),
+                        playerAvatar.getRankDrawableRes(),
+                        loser.getName(),
+                        loser.getLevel(),
+                        R.drawable.rank_novice,
+                        0
+                );
+                playerAvatar.addBattleHistory(entry);
+
+                // Save locally; attempt network sync if available
+                ProgressSyncManager.saveProgress(this, playerAvatar, false);
+                if (isNetworkAvailable()) ProgressSyncManager.saveProgress(this, playerAvatar, true);
+
+                if (leveledUp) {
+                    QuestRewardManager.showLevelUpPopup(this, playerAvatar.getLevel(), playerAvatar.getRank());
+                }
+
+                // Move to next enemy if any
+                currentEnemyIndex++;
+                if (currentEnemyIndex < challengeEnemies.size()) {
+                    selectNextEnemy();
+                    // small delay before new combat
+                    new Handler(Looper.getMainLooper()).postDelayed(this::startCombat, 1500);
+                } else {
+                    addCombatLog("Challenge cleared!");
+                    Toast.makeText(this, "Challenge cleared!", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+            } else {
+                resultMessage = "Defeat! You were defeated by " + winner.getName();
+                boolean leveledUp = playerAvatar.addXp(5);
+                ProgressSyncManager.saveProgress(this, playerAvatar, false);
+                if (isNetworkAvailable()) ProgressSyncManager.saveProgress(this, playerAvatar, true);
+                if (leveledUp) {
+                    QuestRewardManager.showLevelUpPopup(this, playerAvatar.getLevel(), playerAvatar.getRank());
+                }
+                Toast.makeText(this, resultMessage, Toast.LENGTH_LONG).show();
+                // End challenge on defeat
+                finish();
+            }
+
+            addCombatLog(resultMessage);
+        });
+    }
+
+    // This hook is used by CombatContext.endCombat(playerWon)
+    @Override
+    public void onCombatEnd(boolean playerWon) {
+        runOnUiThread(() -> {
+            combatActive = false;
+            if (combatHandler != null) combatHandler.removeCallbacks(combatTickRunnable);
+            addCombatLog("Combat forcibly ended: " + (playerWon ? "PLAYER_WON" : "PLAYER_LOST"));
+            // Mirror onCombatEnded behavior for endCombat path:
+            if (playerWon) {
+                // emulate victory flow
+                AvatarModel playerAvatar = playerCharacter.getAvatar();
+                playerAvatar.addXp(20 + (levelNumber * 5));
+                playerAvatar.addCoins(50 + (levelNumber * 10));
+                ProgressSyncManager.saveProgress(this, playerAvatar, false);
+                if (isNetworkAvailable()) ProgressSyncManager.saveProgress(this, playerAvatar, true);
+                if (currentEnemyIndex + 1 < challengeEnemies.size()) {
+                    currentEnemyIndex++;
+                    selectNextEnemy();
+                    new Handler(Looper.getMainLooper()).postDelayed(this::startCombat, 1500);
+                } else {
+                    addCombatLog("Challenge cleared!");
+                    Toast.makeText(this, "Challenge cleared!", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+            } else {
+                Toast.makeText(this, "You were defeated!", Toast.LENGTH_LONG).show();
+                finish();
+            }
+        });
+    }
+
+    // Auto-select skill for player if UI isn't implemented (we keep manual via buttons)
+    @Override
+    public SkillModel onRequestPlayerSkillChoice(List<SkillModel> availableSkills, Character player, Character enemy) {
+        return null; // null => CombatContext will auto-select
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (connectivityManager == null) return false;
+
+        Network network = connectivityManager.getActiveNetwork();
+        if (network == null) return false;
+
+        NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+        return capabilities != null && (
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+        );
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        MusicManager.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        MusicManager.resume();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        combatActive = false;
+        if (combatHandler != null) {
+            combatHandler.removeCallbacks(combatTickRunnable);
+        }
     }
 }

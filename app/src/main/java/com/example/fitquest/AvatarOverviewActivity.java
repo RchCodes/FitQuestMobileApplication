@@ -2,6 +2,7 @@ package com.example.fitquest;
 
 import android.app.ActionBar;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -127,22 +128,22 @@ public class AvatarOverviewActivity extends BaseActivity {
     }
 
     private void loadAvatarWithOnlineFallback() {
-        AvatarModel offlineAvatar = AvatarManager.loadAvatarOffline(this);
-        if (offlineAvatar != null) {
-            avatar = offlineAvatar;
-            avatarHelper.loadAvatar(avatar);
-            loadProfileInfo();
-        }
-
-        AvatarManager.loadAvatarOnline(new AvatarManager.AvatarLoadCallback() {
+        // Use ProgressSyncManager for intelligent loading
+        ProgressSyncManager.loadProgress(this, new ProgressSyncManager.AvatarLoadCallback() {
             @Override
-            public void onLoaded(AvatarModel onlineAvatar) {
+            public void onLoaded(AvatarModel loadedAvatar) {
                 runOnUiThread(() -> {
-                    if (onlineAvatar != null) {
-                        avatar = onlineAvatar;
-                        avatarHelper.loadAvatar(avatar);
-                        loadProfileInfo();
-                        AvatarManager.saveAvatarOffline(AvatarOverviewActivity.this, avatar);
+                    avatar = loadedAvatar;
+                    avatarHelper.loadAvatar(avatar);
+                    loadProfileInfo();
+                    loadSkills();
+                    
+                    // Save progress using sync manager
+                    ProgressSyncManager.saveProgress(AvatarOverviewActivity.this, avatar, false); // Save offline first
+                    
+                    // If online is available, also save online
+                    if (isNetworkAvailable()) {
+                        ProgressSyncManager.saveProgress(AvatarOverviewActivity.this, avatar, true);
                     }
                 });
             }
@@ -150,15 +151,22 @@ public class AvatarOverviewActivity extends BaseActivity {
             @Override
             public void onError(String message) {
                 runOnUiThread(() -> {
-                    Log.e("AvatarOverview", "Failed online load: " + message);
-                    if (offlineAvatar == null && avatar == null) {
-                        Toast.makeText(AvatarOverviewActivity.this, "No avatar found. Redirecting...", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(AvatarOverviewActivity.this, AvatarCreationActivity.class));
-                        finish();
-                    }
+                    Log.e("AvatarOverview", "Avatar load failed: " + message);
+                    Toast.makeText(AvatarOverviewActivity.this, "No avatar found. Redirecting...", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(AvatarOverviewActivity.this, AvatarCreationActivity.class));
+                    finish();
                 });
             }
         });
+    }
+    
+    private boolean isNetworkAvailable() {
+        android.net.ConnectivityManager connectivityManager = (android.net.ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            android.net.NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        }
+        return false;
     }
 
     private void loadProfileInfo() {
@@ -247,6 +255,28 @@ public class AvatarOverviewActivity extends BaseActivity {
         }
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (avatar != null) {
+            // Save progress using sync manager
+            ProgressSyncManager.saveProgress(this, avatar, false); // Save offline
+            
+            // If online is available, also save online
+            if (isNetworkAvailable()) {
+                ProgressSyncManager.saveProgress(this, avatar, true);
+            }
+        }
+    }
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (avatar != null) {
+            ProgressSyncManager.saveProgress(this, avatar, false);
+            if (isNetworkAvailable()) {
+                ProgressSyncManager.saveProgress(this, avatar, true);
+            }
+        }
+    }
 }

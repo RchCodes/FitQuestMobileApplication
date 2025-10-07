@@ -1,105 +1,144 @@
 package com.example.fitquest;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.res.ResourcesCompat;
 
-public class LevelSelectActivity extends AppCompatActivity {
+import java.util.ArrayList;
+import java.util.List;
 
-    private ImageView btnBack;
+public class LevelSelectActivity extends BaseActivity {
+
     private GridLayout gridLevels;
-    private ImageButton btnPrev, btnNext;
+    private ImageView btnBack;
 
-    private Button btnLevel1, btnLevel2;
-    private ImageButton btnLocked;
-
-    private int currentPage = 1; // for multi-page level selection (future use)
+    private static final int TOTAL_LEVELS = 10;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_level_select);
 
-        bindViews();
-        setupListeners();
-        updateLevelGrid();
-    }
-
-    private void bindViews() {
-        btnBack = findViewById(R.id.btnBack);
         gridLevels = findViewById(R.id.gridLevels);
-        btnPrev = findViewById(R.id.btnPrev);
-        btnNext = findViewById(R.id.btnNext);
+        btnBack = findViewById(R.id.btnBack);
 
-        // Example levels (you can expand this)
-        btnLevel1 = findViewById(R.id.btnLevel1);
-        btnLevel2 = findViewById(R.id.btnLevel2);
-        btnLocked = findViewById(R.id.btnLocked);
-    }
-
-    private void setupListeners() {
-        // 🔙 Back button
         btnBack.setOnClickListener(v -> finish());
 
-        // 🟡 Unlocked levels
-        //btnLevel1.setOnClickListener(v -> openLevel(1));
-        //btnLevel2.setOnClickListener(v -> openLevel(2));
+        // Load player progress (example)
+        SharedPreferences prefs = getSharedPreferences("PlayerPrefs", Context.MODE_PRIVATE);
+        int playerLevel = prefs.getInt("playerLevel", 1); // Default: level 1
 
-        btnLevel1.setOnClickListener(v -> startActivity(
-                new Intent(this, ChallengeActivity.class)
-                        .putExtra("LEVEL_NUMBER", 1)
-                ));
-
-        // 🔒 Locked level (show message)
-        btnLocked.setOnClickListener(v ->
-                Toast.makeText(this, "This level is locked!", Toast.LENGTH_SHORT).show()
-        );
-
-        // ⬅️➡️ Page navigation
-        btnPrev.setOnClickListener(v -> changePage(-1));
-        btnNext.setOnClickListener(v -> changePage(1));
+        generateLevelButtons(playerLevel);
     }
 
-    private void updateLevelGrid() {
-        // This method can later update which levels are unlocked per page.
-        // For now, it just ensures visible layout consistency.
-        // You can add logic like:
-        // if (playerLevel >= 2) unlockLevel(btnLevel2);
+    private void generateLevelButtons(int playerLevel) {
+        gridLevels.removeAllViews();
+
+        for (int i = 1; i <= TOTAL_LEVELS; i++) {
+            Button btnLevel = new Button(this);
+            btnLevel.setText(String.valueOf(i));
+            btnLevel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30);
+            btnLevel.setTypeface(ResourcesCompat.getFont(this, R.font.bungee_regular), Typeface.BOLD);
+            btnLevel.setShadowLayer(4, 2, 3, Color.parseColor("#FAFAFA"));
+            btnLevel.setPadding(20, 10, 20, 10);
+
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+            params.width = dpToPx(50);
+            params.height = dpToPx(50);
+            params.setMargins(dpToPx(10), dpToPx(10), dpToPx(10), dpToPx(10));
+            btnLevel.setLayoutParams(params);
+
+            if (i <= playerLevel) {
+                // Unlocked
+                btnLevel.setBackgroundResource(R.drawable.button_level_unlocked);
+                btnLevel.setTextColor(Color.parseColor("#AA5A1E"));
+                int level = i;
+                btnLevel.setOnClickListener(v -> openChallenge(level));
+            } else {
+                // Locked
+                btnLevel.setBackgroundResource(R.drawable.button_level_locked);
+                btnLevel.setTextColor(Color.GRAY);
+                btnLevel.setEnabled(false);
+            }
+
+            gridLevels.addView(btnLevel);
+        }
     }
 
-    private void openLevel(int levelNumber) {
-        Toast.makeText(this, "Opening Level " + levelNumber, Toast.LENGTH_SHORT).show();
+    private void openChallenge(int level) {
+        List<EnemyModel> enemiesForLevel = getEnemiesForLevel(level);
+        if (enemiesForLevel.isEmpty()) {
+            Toast.makeText(this, "No enemies defined for this level", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        // Example: start the challenge activity for this level
         Intent intent = new Intent(this, ChallengeActivity.class);
-        intent.putExtra("LEVEL_NUMBER", levelNumber);
+        intent.putParcelableArrayListExtra("enemies", new ArrayList<>(enemiesForLevel));
+        intent.putExtra("level", level);
         startActivity(intent);
     }
 
-    private void changePage(int direction) {
-        // Future pagination support (if you have more than 12 levels)
-        currentPage += direction;
-        if (currentPage < 1) currentPage = 1;
-
-        Toast.makeText(this, "Page " + currentPage, Toast.LENGTH_SHORT).show();
-        // TODO: update visible buttons per page
+    private List<EnemyModel> getEnemiesForLevel(int level) {
+        List<EnemyModel> enemies = new ArrayList<>();
+        switch (level) {
+            case 1:
+                enemies.add(EnemyRepository.getEnemy("slime").spawn());
+                break;
+            case 2:
+                enemies.add(EnemyRepository.getEnemy("slime").spawn());
+                enemies.add(EnemyRepository.getEnemy("venopods").spawn());
+                break;
+            case 3:
+                enemies.add(EnemyRepository.getEnemy("venopods").spawn());
+                enemies.add(EnemyRepository.getEnemy("slime").spawn());
+                break;
+            case 4:
+                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
+                break;
+            case 5:
+                enemies.add(EnemyRepository.getEnemy("slime").spawn());
+                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
+                break;
+            case 6:
+                enemies.add(EnemyRepository.getEnemy("venopods").spawn());
+                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
+                break;
+            case 7:
+                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
+                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
+                break;
+            case 8:
+                enemies.add(EnemyRepository.getEnemy("slime_king").spawn());
+                break;
+            case 9:
+                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
+                enemies.add(EnemyRepository.getEnemy("slime_king").spawn());
+                break;
+            case 10:
+                enemies.add(EnemyRepository.getEnemy("slime_king").spawn());
+                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
+                enemies.add(EnemyRepository.getEnemy("venopods").spawn());
+                break;
+            default:
+                break;
+        }
+        return enemies;
     }
 
-    // Optional helper
-    private void unlockLevel(Button levelButton) {
-        levelButton.setEnabled(true);
-        levelButton.setBackgroundResource(R.drawable.button_level_unlocked);
-    }
-
-    private void lockLevel(ImageButton lockButton) {
-        lockButton.setEnabled(false);
-        lockButton.setBackgroundResource(R.drawable.button_level_locked);
+    private int dpToPx(int dp) {
+        float density = getResources().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 }

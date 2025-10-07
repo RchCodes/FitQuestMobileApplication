@@ -1,28 +1,37 @@
 package com.example.fitquest;
+
 /**
- * Base class for buffs and debuffs
+ * Minimal StatusEffect base used by Combat pipeline.
+ * Extend or instantiate concrete subclasses as needed.
  */
 public abstract class StatusEffect {
-    protected final String name;
-    protected int duration; // in turns
+    protected String name;
+    protected int remainingTurns;
+    protected final int iconRes;
 
-    public StatusEffect(String name, int duration) {
+    public StatusEffect(String name, int duration, int iconRes) {
         this.name = name;
-        this.duration = duration;
+        this.remainingTurns = duration;
+        this.iconRes = iconRes;
+    }
+
+    /** Called at start of owner's turn (Character.processStatusEffects calls this). */
+    public void onTurnStart(Character owner, CombatContext ctx) {
+        // Default: decrement duration
+        if (remainingTurns > 0) remainingTurns--;
+    }
+
+    /** Whether this effect is expired and should be removed. */
+    public boolean isExpired() {
+        return remainingTurns == 0;
     }
 
     public String getName() { return name; }
-    public boolean isExpired() { return duration <= 0; }
-    public void reduceDuration() { duration--; }
+    public int getRemainingTurns() { return remainingTurns; }
+    public int getIconRes() { return iconRes; }
 
-    /**
-     * Apply effect at the start of the turn (e.g., DOT, heal)
-     */
-    public void onTurnStart(Character character, CombatContext ctx) {}
+    /** Some effects may absorb damage; override if needed. Returns remaining damage after absorb. */
+    public int absorbDamage(int incoming) { return incoming; }
 
-    /**
-     * Modify stat dynamically (STR, END, AGI, FLX, STA)
-     */
-    public int modifyStat(String stat, int value) { return value; }
+    public abstract int modifyStat(String stat, int value);
 }
-

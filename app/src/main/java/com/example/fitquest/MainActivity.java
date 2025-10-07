@@ -33,7 +33,8 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
     private Profile profile;
 
     private ImageView userIcon;
-    private TextView playerName, playerLevel, coins, expText;
+    private TextView playerName, playerLevel, coins, expText, rankName;
+    private ImageView rankIcon;
     private ProgressBar expBar;
 
     private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1001;
@@ -62,6 +63,8 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         coins = findViewById(R.id.coins);
         expBar = findViewById(R.id.exp_bar);
         expText = findViewById(R.id.exp_text_overlay);
+        rankName = findViewById(R.id.rank_name);
+        rankIcon = findViewById(R.id.rank_icon);
     }
 
     private void setupAvatarHelper() {
@@ -101,24 +104,28 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
     }
 
     private void loadAvatarWithOnlineFallback() {
-        // Try loading offline first
-        AvatarModel offlineAvatar = AvatarManager.loadAvatarOffline(this);
-        if (offlineAvatar != null) {
-            avatar = offlineAvatar;
-            avatarHelper.loadAvatar(avatar);
-            loadProfileInfo();
-        }
-
-        // Always attempt online fetch to update avatar
-        AvatarManager.loadAvatarOnline(new AvatarManager.AvatarLoadCallback() {
+        // Use ProgressSyncManager for intelligent loading
+        ProgressSyncManager.loadProgress(this, new ProgressSyncManager.AvatarLoadCallback() {
             @Override
-            public void onLoaded(AvatarModel onlineAvatar) {
+            public void onLoaded(AvatarModel loadedAvatar) {
                 runOnUiThread(() -> {
-                    if (onlineAvatar != null) {
-                        avatar = onlineAvatar;
-                        avatarHelper.loadAvatar(avatar);
-                        loadProfileInfo();
-                        AvatarManager.saveAvatarOffline(MainActivity.this, avatar);
+                    avatar = loadedAvatar;
+                    avatarHelper.loadAvatar(avatar);
+                    loadProfileInfo();
+
+                    avatar.setProfileChangeListener(updatedAvatar -> {
+                        avatar = updatedAvatar;
+                        avatarHelper.loadAvatar(avatar); // update avatar image
+                        loadProfileInfo();               // refresh all profile UI
+                    });
+
+
+                    // Save progress using sync manager
+                    ProgressSyncManager.saveProgress(MainActivity.this, avatar, false); // Save offline first
+                    
+                    // If online is available, also save online
+                    if (isNetworkAvailable()) {
+                        ProgressSyncManager.saveProgress(MainActivity.this, avatar, true);
                     }
                 });
             }
@@ -126,26 +133,22 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
             @Override
             public void onError(String message) {
                 runOnUiThread(() -> {
-                    Log.e("MainActivity", "Online avatar load failed: " + message);
-                    // Only redirect to creation if offline was missing and online failed
-                    if (offlineAvatar == null && avatar == null) {
-                        Toast.makeText(MainActivity.this, "No avatar found. Redirecting to creation.", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(MainActivity.this, AvatarCreationActivity.class));
-                        finish();
-                    }
+                    Log.e("MainActivity", "Avatar load failed: " + message);
+                    Toast.makeText(MainActivity.this, "No avatar found. Redirecting to creation.", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(MainActivity.this, AvatarCreationActivity.class));
+                    finish();
                 });
             }
         });
-
-        // If offline is missing, start a short timeout in case online fails silently
-        if (offlineAvatar == null) {
-            new android.os.Handler().postDelayed(() -> {
-                if (avatar == null) {
-                    startActivity(new Intent(MainActivity.this, AvatarCreationActivity.class));
-                    finish();
-                }
-            }, 4000); // 4 sec buffer for online fetch
+    }
+    
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            android.net.NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
         }
+        return false;
     }
 
 
@@ -156,6 +159,10 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         playerName.setText(avatar.getUsername());
         playerLevel.setText("LV. " + avatar.getLevel());
         coins.setText(String.valueOf(avatar.getCoins()));
+        
+        // Update rank display
+        rankName.setText(avatar.getRankName());
+        rankIcon.setImageResource(avatar.getRankDrawableRes());
 
         int currentLevel = avatar.getLevel();
         int maxLevel = LevelProgression.getMaxLevel();
@@ -196,8 +203,31 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
     protected void onResume() {
         super.onResume();
         QuestManager.setQuestProgressListener(this);
+        MusicManager.onActivityResume(this);
+        
+        // Load profile info and refresh
         loadProfileInfo();
         refreshProfile();
+        
+        // Check for pending sync if avatar exists
+        if (avatar != null && isNetworkAvailable()) {
+            ProgressSyncManager.forceSync(this, new ProgressSyncManager.AvatarSyncCallback() {
+                @Override
+                public void onSyncComplete(AvatarModel syncedAvatar, String message) {
+                    runOnUiThread(() -> {
+                        avatar = syncedAvatar;
+                        avatarHelper.loadAvatar(avatar);
+                        loadProfileInfo();
+                        Log.d("MainActivity", "Sync completed: " + message);
+                    });
+                }
+                
+                @Override
+                public void onSyncError(String message) {
+                    Log.e("MainActivity", "Sync failed: " + message);
+                }
+            });
+        }
     }
 
     @Override
@@ -205,20 +235,16 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         super.onPause();
         if (avatar != null) {
             // Save offline always
-            AvatarManager.saveAvatarOffline(this, avatar);
+            ProgressSyncManager.saveProgress(this, avatar, false);
 
             // Save online only if internet is available
-            ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            boolean hasInternet = cm != null
-                    && cm.getActiveNetworkInfo() != null
-                    && cm.getActiveNetworkInfo().isConnected();
-
-            if (hasInternet) {
-                AvatarManager.saveAvatarOnline(avatar);
+            if (isNetworkAvailable()) {
+                ProgressSyncManager.saveProgress(this, avatar, true);
             }
         }
 
         QuestManager.setQuestProgressListener(null);
+        MusicManager.onActivityPause();
     }
 
     // ------------------ GOOGLE FIT ------------------
