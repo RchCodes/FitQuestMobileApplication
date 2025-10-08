@@ -18,14 +18,17 @@
         android:gravity="center"
         android:padding="8dp"
         android:textColor="@android:color/white"/>
-
-    <LinearLayout
-        android:id="@+id/activeSkillsContainer"
+    <HorizontalScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:layout_marginBottom="8dp"/>
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:id="@+id/activeSkillsContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp"/>
+    </HorizontalScrollView>
 
     <!-- Passive Skills -->
     <TextView
@@ -65,14 +68,18 @@
         android:padding="8dp"
         android:textColor="@android:color/white"/>
 
-    <GridLayout
-        android:id="@+id/availableSkillsGrid"
+    <HorizontalScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnCount="5"
-        android:alignmentMode="alignMargins"
-        android:rowCount="3"
-        android:useDefaultMargins="true"/>
+        android:layout_height="wrap_content">
+        <GridLayout
+            android:id="@+id/availableSkillsGrid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="5"
+            android:alignmentMode="alignMargins"
+            android:rowCount="3"
+            android:useDefaultMargins="true"/>
+    </HorizontalScrollView>
 
     <!-- Buttons -->
     <LinearLayout

@@ -181,16 +181,14 @@
         </LinearLayout>
 
         <!-- Save Button -->
-        <Button
+        <ImageView
             android:id="@+id/btnSave"
             android:layout_width="wrap_content"
-            android:layout_height="29dp"
+            android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:layout_marginLeft="65dp"
             android:layout_marginBottom="8dp"
-            android:backgroundTint="#FFA000"
-            android:text="SAVE"
-            android:textColor="#FFFFFF" />
+            android:src="@drawable/button_save"/>
 
         <Button
             android:id="@+id/btnEquip"

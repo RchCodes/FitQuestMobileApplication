@@ -22,7 +22,7 @@ public class CharacterStats {
     public CharacterStats(Activity activity, AvatarModel avatar) {
         this.avatar = avatar;
 
-        // Create a temporary copy for modifications
+        // Create a temporary copy for modifications (deep enough for UI)
         this.tempAvatar = new AvatarModel(avatar);
 
         View popupView = LayoutInflater.from(activity).inflate(R.layout.character_stats, null);
@@ -31,9 +31,9 @@ public class CharacterStats {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(popupView);
         dialog.setCancelable(true);
-        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        if (dialog.getWindow() != null) dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
 
-        // Titles
+        // Titles (null guard)
         physiqueTitle = popupView.findViewById(R.id.physique_title);
         attributesTitle = popupView.findViewById(R.id.attributes_title);
 
@@ -64,7 +64,7 @@ public class CharacterStats {
         // Apply button
         View apply = popupView.findViewById(R.id.apply_button);
         if (apply != null) apply.setOnClickListener(v -> {
-            // Copy temp stats to the original avatar
+            // Copy temp stats to the original avatar (only stats & free points)
             avatar.copyFrom(tempAvatar);
             AvatarManager.saveAvatarOffline(activity, avatar);
             AvatarManager.saveAvatarOnline(avatar);
@@ -88,7 +88,7 @@ public class CharacterStats {
         if (button == null) return;
         button.setOnClickListener(v -> {
             if (tempAvatar.getFreePhysiquePoints() <= 0) {
-                Toast.makeText(dialog.getContext(), "No physique points left", Toast.LENGTH_SHORT).show();
+                Toast.makeText(v.getContext(), "No physique points left", Toast.LENGTH_SHORT).show();
                 return;
             }
             switch (type) {
@@ -107,7 +107,7 @@ public class CharacterStats {
         if (button == null) return;
         button.setOnClickListener(v -> {
             if (tempAvatar.getFreeAttributePoints() <= 0) {
-                Toast.makeText(dialog.getContext(), "No attribute points left", Toast.LENGTH_SHORT).show();
+                Toast.makeText(v.getContext(), "No attribute points left", Toast.LENGTH_SHORT).show();
                 return;
             }
             switch (type) {
@@ -124,24 +124,24 @@ public class CharacterStats {
 
     /** Refresh UI to display temporary avatar stats */
     private void updateUI() {
-        txtArm.setText(String.valueOf(tempAvatar.getArmPoints()));
-        txtLeg.setText(String.valueOf(tempAvatar.getLegPoints()));
-        txtChest.setText(String.valueOf(tempAvatar.getChestPoints()));
-        txtBack.setText(String.valueOf(tempAvatar.getBackPoints()));
+        if (txtArm != null) txtArm.setText(String.valueOf(tempAvatar.getArmPoints()));
+        if (txtLeg != null) txtLeg.setText(String.valueOf(tempAvatar.getLegPoints()));
+        if (txtChest != null) txtChest.setText(String.valueOf(tempAvatar.getChestPoints()));
+        if (txtBack != null) txtBack.setText(String.valueOf(tempAvatar.getBackPoints()));
 
-        txtStrength.setText(String.valueOf(tempAvatar.getStrength()));
-        txtEndurance.setText(String.valueOf(tempAvatar.getEndurance()));
-        txtAgility.setText(String.valueOf(tempAvatar.getAgility()));
-        txtFlexibility.setText(String.valueOf(tempAvatar.getFlexibility()));
-        txtStamina.setText(String.valueOf(tempAvatar.getStamina()));
+        if (txtStrength != null) txtStrength.setText(String.valueOf(tempAvatar.getStrength()));
+        if (txtEndurance != null) txtEndurance.setText(String.valueOf(tempAvatar.getEndurance()));
+        if (txtAgility != null) txtAgility.setText(String.valueOf(tempAvatar.getAgility()));
+        if (txtFlexibility != null) txtFlexibility.setText(String.valueOf(tempAvatar.getFlexibility()));
+        if (txtStamina != null) txtStamina.setText(String.valueOf(tempAvatar.getStamina()));
 
-        physiqueTitle.setText("PHYSIQUE    Free: " + tempAvatar.getFreePhysiquePoints());
-        attributesTitle.setText("ATTRIBUTES    Free: " + tempAvatar.getFreeAttributePoints());
+        if (physiqueTitle != null) physiqueTitle.setText("PHYSIQUE    Free: " + tempAvatar.getFreePhysiquePoints());
+        if (attributesTitle != null) attributesTitle.setText("ATTRIBUTES    Free: " + tempAvatar.getFreeAttributePoints());
     }
 
     /** Show the dialog */
     public void show() {
-        tempAvatar.copyFrom(avatar); // reset temporary copy every time dialog opens
+        tempAvatar.copyFrom(avatar); // reset temporary copy every time dialog opens (copy stats)
         updateUI();
         dialog.show();
     }

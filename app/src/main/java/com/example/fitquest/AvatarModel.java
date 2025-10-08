@@ -75,7 +75,6 @@ public class AvatarModel {
     private List<String> activeSkillIds;
     private List<String> passiveSkillIds;
 
-
     // Constructors
     public AvatarModel() {
         initBase();
@@ -117,18 +116,70 @@ public class AvatarModel {
         }
     }
 
+    /**
+     * Copy constructor: create a temporary/working copy of the avatar.
+     * This intentionally copies appearance, class, stats and IDs so the temp object
+     * can safely be used by UI code without accidentally losing class metadata.
+     */
     public AvatarModel(AvatarModel other) {
+        if (other == null) {
+            initBase();
+            return;
+        }
+
+        // Basic identity & appearance
+        this.username = other.username;
+        this.gender = other.gender;
+        this.playerClass = other.playerClass;
+        this.bodyStyle = other.bodyStyle;
+        this.outfit = other.outfit;
+        this.weapon = other.weapon;
+        this.hairOutline = other.hairOutline;
+        this.hairFill = other.hairFill;
+        this.hairColor = other.hairColor;
+        this.eyesOutline = other.eyesOutline;
+        this.eyesFill = other.eyesFill;
+        this.eyesColor = other.eyesColor;
+        this.nose = other.nose;
+        this.lips = other.lips;
+
+        // Core progression
+        this.coins = other.coins;
+        this.xp = other.xp;
+        this.level = other.level;
+        this.rank = other.rank;
+        this.rankPoints = other.rankPoints;
+        this.playerId = other.playerId;
+
+        // Free points & stats
+        this.freePhysiquePoints = other.freePhysiquePoints;
+        this.freeAttributePoints = other.freeAttributePoints;
+
         this.armPoints = other.armPoints;
         this.legPoints = other.legPoints;
         this.chestPoints = other.chestPoints;
         this.backPoints = other.backPoints;
+
         this.strength = other.strength;
         this.endurance = other.endurance;
         this.agility = other.agility;
         this.flexibility = other.flexibility;
         this.stamina = other.stamina;
-        this.freePhysiquePoints = other.freePhysiquePoints;
-        this.freeAttributePoints = other.freeAttributePoints;
+
+        // Inventory & gear (shallow copy safe for temp usage)
+        this.ownedGearIds = other.ownedGearIds != null ? new HashSet<>(other.ownedGearIds) : new HashSet<>();
+        this.equippedGear.putAll(other.equippedGear);
+
+        // Goals
+        this.goalProgress = other.goalProgress != null ? new HashMap<>(other.goalProgress) : new HashMap<>();
+
+        // Battle history (keep history)
+        this.battleHistory = other.battleHistory != null ? new ArrayList<>(other.battleHistory) : new ArrayList<>();
+
+        // Skill IDs and runtime lists
+        this.activeSkillIds = other.activeSkillIds != null ? new ArrayList<>(other.activeSkillIds) : new ArrayList<>();
+        this.passiveSkillIds = other.passiveSkillIds != null ? new ArrayList<>(other.passiveSkillIds) : new ArrayList<>();
+        loadSkillsFromIds();
     }
 
     public void initializeClassData() {
@@ -163,12 +214,13 @@ public class AvatarModel {
     }
 
     private void assignClassPassiveSkills() {
+        if (passiveSkills == null) passiveSkills = new ArrayList<>(2);
         passiveSkills.clear();
 
         ClassType ct = getClassType();
         if (ct == null) return;
 
-        // Example: you should map real skills per class
+        // Example: replace with your real mapping
         switch (ct) {
             case WARRIOR:
                 passiveSkills.add(SkillRepository.getPassiveById("momentum"));
@@ -239,40 +291,40 @@ public class AvatarModel {
         ClassType ct = getClassType();
         if (ct == null) return;
 
-        // Clear any existing active skills
+        if (activeSkills == null) activeSkills = new ArrayList<>(5);
         activeSkills.clear();
 
         switch (ct) {
             case WARRIOR:
-                // Warriors start with basic attack and defensive skills
                 SkillModel sword_slash = SkillRepository.getSkillById("sword_slash");
                 if (sword_slash != null) activeSkills.add(sword_slash);
                 break;
             case ROGUE:
-                // Rogues start with quick attack and dodge skills
                 SkillModel backstab = SkillRepository.getSkillById("backstab");
                 if (backstab != null) activeSkills.add(backstab);
                 break;
             case TANK:
-                // Tanks start with shield skills and taunt
                 SkillModel hammerShatter = SkillRepository.getSkillById("hammer_shatter");
                 if (hammerShatter != null) activeSkills.add(hammerShatter);
                 break;
             default:
-                // Default basic attack for any class
                 SkillModel defaultAttack = SkillRepository.getSkillById("basic_attack");
                 if (defaultAttack != null) activeSkills.add(defaultAttack);
                 break;
         }
+
+        updateSkillIds();
     }
 
     // --- Skill Management Methods ---
     public List<PassiveSkill> getPassiveSkills() {
+        if (passiveSkills == null) passiveSkills = new ArrayList<>(2);
         return Collections.unmodifiableList(passiveSkills);
     }
 
 
     public List<SkillModel> getActiveSkills() {
+        if (activeSkills == null) activeSkills = new ArrayList<>(5);
         return Collections.unmodifiableList(activeSkills);
     }
 
@@ -280,10 +332,14 @@ public class AvatarModel {
      * Adds a new active skill (non-ultimate).
      */
     public boolean addActiveSkill(SkillModel skill) {
+        if (skill == null) return false;
+        if (activeSkills == null) activeSkills = new ArrayList<>(5);
         if (activeSkills.stream().anyMatch(s -> s.getId().equals(skill.getId()))) return false;
         if (activeSkills.size() >= 5) return false; // full
         if (skill.isUltimate() && hasUltimateSkill()) return false; // only 1 ultimate
         activeSkills.add(skill);
+        updateSkillIds();
+        notifyChange();
         return true;
     }
 
@@ -291,11 +347,15 @@ public class AvatarModel {
      * Replace an existing active skill at slot.
      */
     public boolean replaceActiveSkill(int slot, SkillModel skill) {
+        if (skill == null) return false;
+        if (activeSkills == null) activeSkills = new ArrayList<>(5);
         if (slot < 0 || slot >= activeSkills.size()) return false;
         if (skill.isUltimate() && hasUltimateSkill() && !activeSkills.get(slot).isUltimate()) {
             return false; // avoid duplicate ultimate
         }
         activeSkills.set(slot, skill);
+        updateSkillIds();
+        notifyChange();
         return true;
     }
 
@@ -303,12 +363,16 @@ public class AvatarModel {
      * Checks if ultimate already exists.
      */
     public boolean hasUltimateSkill() {
+        if (activeSkills == null) activeSkills = new ArrayList<>(5);
         return activeSkills.stream().anyMatch(SkillModel::isUltimate);
     }
 
     public void removeActiveSkill(int slot) {
+        if (activeSkills == null) activeSkills = new ArrayList<>(5);
         if (slot >= 0 && slot < activeSkills.size()) {
             activeSkills.remove(slot);
+            updateSkillIds();
+            notifyChange();
         }
     }
 
@@ -475,7 +539,6 @@ public class AvatarModel {
         xp += amount;
         int oldLevel = level;
         checkLevelUp();
-        notifyChange();
         return level > oldLevel;
     }
 
@@ -544,19 +607,19 @@ public class AvatarModel {
 
     // --- Free Points ---
     public int getFreePhysiquePoints() {
-        return freePhysiquePoints;
+        return Math.max(0, freePhysiquePoints);
     }
 
     public int getFreeAttributePoints() {
-        return freeAttributePoints;
+        return Math.max(0, freeAttributePoints);
     }
 
     public void addFreePhysiquePoints(int pts) {
-        freePhysiquePoints += pts;
+        freePhysiquePoints = Math.max(0, freePhysiquePoints + pts);
     }
 
     public void addFreeAttributePoints(int pts) {
-        freeAttributePoints += pts;
+        freeAttributePoints = Math.max(0, freeAttributePoints + pts);
     }
 
     // --- Physique ---
@@ -577,19 +640,19 @@ public class AvatarModel {
     }
 
     public void addArmPoints(int pts) {
-        armPoints += pts;
+        armPoints = Math.max(0, armPoints + pts);
     }
 
     public void addLegPoints(int pts) {
-        legPoints += pts;
+        legPoints = Math.max(0, legPoints + pts);
     }
 
     public void addChestPoints(int pts) {
-        chestPoints += pts;
+        chestPoints = Math.max(0, chestPoints + pts);
     }
 
     public void addBackPoints(int pts) {
-        backPoints += pts;
+        backPoints = Math.max(0, backPoints + pts);
     }
 
     // --- Attributes ---
@@ -614,23 +677,23 @@ public class AvatarModel {
     }
 
     public void addStrength(int pts) {
-        strength += pts;
+        strength = Math.max(0, strength + pts);
     }
 
     public void addEndurance(int pts) {
-        endurance += pts;
+        endurance = Math.max(0, endurance + pts);
     }
 
     public void addAgility(int pts) {
-        agility += pts;
+        agility = Math.max(0, agility + pts);
     }
 
     public void addFlexibility(int pts) {
-        flexibility += pts;
+        flexibility = Math.max(0, flexibility + pts);
     }
 
     public void addStamina(int pts) {
-        stamina += pts;
+        stamina = Math.max(0, stamina + pts);
     }
 
     // --- Level & Rank logic ---
@@ -641,14 +704,16 @@ public class AvatarModel {
             level++;
 
             // Handle skill acquisition for each level gained
-            acquireSkillsForLevel(level);
+            onLevelUp();
         }
         if (level >= LevelProgression.getMaxLevel()) {
             level = LevelProgression.getMaxLevel();
             xp = LevelProgression.getMaxXpForLevel(level);
         }
-        onLevelUp();
+
         updateRank();
+        // single notification for any change done in this method
+        notifyChange();
     }
 
     /**
@@ -660,32 +725,35 @@ public class AvatarModel {
 
         // Get all available skills for this class
         List<SkillModel> availableSkills = SkillRepository.getSkillsForClass(ct);
+        if (availableSkills == null) return;
 
         for (SkillModel skill : availableSkills) {
             // Check if this skill should be unlocked at this level
             if (skill.getLevelUnlock() == newLevel) {
-                // Check if we already have this skill
                 boolean alreadyHasSkill = false;
-                for (SkillModel existingSkill : activeSkills) {
-                    if (existingSkill.getId().equals(skill.getId())) {
-                        alreadyHasSkill = true;
-                        break;
+                if (activeSkills != null) {
+                    for (SkillModel existingSkill : activeSkills) {
+                        if (existingSkill.getId().equals(skill.getId())) {
+                            alreadyHasSkill = true;
+                            break;
+                        }
                     }
                 }
 
-                // If we don't have this skill yet, add it
                 if (!alreadyHasSkill) {
+                    if (activeSkills == null) activeSkills = new ArrayList<>(5);
                     // Try to auto-equip if there's space
                     if (activeSkills.size() < 5) {
                         activeSkills.add(skill);
                     } else {
-                        // Add to available skills (could be stored separately for future use)
-                        // For now, we'll just add it to active skills anyway
+                        // If full, still add to list for now (preserve behavior)
                         activeSkills.add(skill);
                     }
                 }
             }
         }
+
+        updateSkillIds();
     }
 
     /**
@@ -697,15 +765,17 @@ public class AvatarModel {
         if (ct == null) return newSkills;
 
         List<SkillModel> availableSkills = SkillRepository.getSkillsForClass(ct);
+        if (availableSkills == null) return newSkills;
 
         for (SkillModel skill : availableSkills) {
             if (skill.getLevelUnlock() == targetLevel) {
-                // Check if we already have this skill
                 boolean alreadyHasSkill = false;
-                for (SkillModel existingSkill : activeSkills) {
-                    if (existingSkill.getId().equals(skill.getId())) {
-                        alreadyHasSkill = true;
-                        break;
+                if (activeSkills != null) {
+                    for (SkillModel existingSkill : activeSkills) {
+                        if (existingSkill.getId().equals(skill.getId())) {
+                            alreadyHasSkill = true;
+                            break;
+                        }
                     }
                 }
 
@@ -725,7 +795,7 @@ public class AvatarModel {
         else if (rankPoints >= 201) rank = 2; // Elite
         else if (rankPoints >= 101) rank = 1; // Veteran
         else rank = 0; // Novice
-        notifyChange();
+        // NOTE: do not call notifyChange() here to avoid duplicated notifications
     }
 
     public int getXpNeeded() {
@@ -742,14 +812,12 @@ public class AvatarModel {
     public void setXp(int xp) {
         if (xp < 0) xp = 0;
         this.xp = xp;
-        checkLevelUp(); // Ensure level and rank stay consistent
-        notifyChange();
+        checkLevelUp(); // checkLevelUp will call notifyChange()
     }
 
     public void setLevel(int level) {
         this.level = Math.min(level, LevelProgression.getMaxLevel());
-        checkLevelUp(); // Adjust XP and rank if needed
-        notifyChange();
+        checkLevelUp();
     }
 
     public void setRank(int rank) {
@@ -770,10 +838,13 @@ public class AvatarModel {
 
     // --- Methods ---
     public void addGear(String gearId) {
+        if (ownedGearIds == null) ownedGearIds = new HashSet<>();
         ownedGearIds.add(gearId);
+        notifyChange();
     }
 
     public boolean ownsGear(String gearId) {
+        if (ownedGearIds == null) ownedGearIds = new HashSet<>();
         return ownedGearIds.contains(gearId);
     }
 
@@ -786,6 +857,7 @@ public class AvatarModel {
 
     public void unequipGear(GearType slot) {
         equippedGear.remove(slot);
+        notifyChange();
     }
 
     public Map<GearType, String> getEquippedGear() {
@@ -793,6 +865,7 @@ public class AvatarModel {
     }
 
     public Set<String> getOwnedGear() {
+        if (ownedGearIds == null) ownedGearIds = new HashSet<>();
         return ownedGearIds;
     }
 
@@ -829,7 +902,7 @@ public class AvatarModel {
 
                 // If the set defines an outfit
                 if (armor.isCompletesOutfit() && pants.isCompletesOutfit() && boots.isCompletesOutfit()) {
-                    // Change avatar outfit sprite
+                    // Change avatar outfit sprite (keep the same format you use elsewhere)
                     this.outfit = "res://" + armor.getOutfitSpriteRes();
                     notifyChange();
                 }
@@ -846,31 +919,40 @@ public class AvatarModel {
     }
 
     public Map<String, GoalState> getGoalProgress() {
+        if (goalProgress == null) goalProgress = new HashMap<>();
         return goalProgress;
     }
 
     public GoalState getGoalState(String goalId) {
+        if (goalProgress == null) goalProgress = new HashMap<>();
         return goalProgress.getOrDefault(goalId, GoalState.PENDING);
     }
 
     public void setGoalState(String goalId, GoalState state) {
+        if (goalProgress == null) goalProgress = new HashMap<>();
         goalProgress.put(goalId, state);
+        notifyChange();
     }
 
     public boolean isGoalCompleted(String goalId) {
+        if (goalProgress == null) goalProgress = new HashMap<>();
         return goalProgress.getOrDefault(goalId, GoalState.PENDING) == GoalState.COMPLETED;
     }
 
     public boolean isGoalClaimed(String goalId) {
+        if (goalProgress == null) goalProgress = new HashMap<>();
         return goalProgress.getOrDefault(goalId, GoalState.PENDING) == GoalState.CLAIMED;
     }
 
     public void resetGoals() {
+        if (goalProgress == null) goalProgress = new HashMap<>();
         goalProgress.clear();
+        notifyChange();
     }
 
 
     public void copyFrom(AvatarModel other) {
+        // Intentionally only copy stats & free points (used by CharacterStats.apply)
         this.armPoints = other.armPoints;
         this.legPoints = other.legPoints;
         this.chestPoints = other.chestPoints;
@@ -882,13 +964,17 @@ public class AvatarModel {
         this.stamina = other.stamina;
         this.freePhysiquePoints = other.freePhysiquePoints;
         this.freeAttributePoints = other.freeAttributePoints;
+
+        notifyChange();
     }
 
     public List<BattleHistoryModel> getBattleHistory() {
+        if (battleHistory == null) battleHistory = new ArrayList<>();
         return battleHistory;
     }
 
     public void addBattleHistory(BattleHistoryModel battleEntry) {
+        if (battleHistory == null) battleHistory = new ArrayList<>();
         battleHistory.add(0, battleEntry); // Add to beginning of list
 
         // Keep only the last 50 battle entries
@@ -900,13 +986,15 @@ public class AvatarModel {
     }
 
     private void onLevelUp() {
+        // Called for every new level reached inside checkLevelUp()
         addFreeAttributePoints(5);
         acquireSkillsForLevel(level);
-        notifyChange();
+        // Do NOT call notifyChange() here - checkLevelUp() will notify once
     }
 
     public void setPassiveSkills(List<PassiveSkill> passiveSkills) {
-        this.passiveSkills = passiveSkills;
+        this.passiveSkills = passiveSkills != null ? new ArrayList<>(passiveSkills) : new ArrayList<>();
+        updateSkillIds();
         notifyChange();
     }
 
@@ -933,14 +1021,14 @@ public class AvatarModel {
         if (activeSkills != null) {
             activeSkillIds = new ArrayList<>();
             for (SkillModel s : activeSkills) {
-                activeSkillIds.add(s.getId());
+                if (s != null && s.getId() != null) activeSkillIds.add(s.getId());
             }
         }
 
         if (passiveSkills != null) {
             passiveSkillIds = new ArrayList<>();
             for (PassiveSkill p : passiveSkills) {
-                passiveSkillIds.add(p.getId());
+                if (p != null && p.getId() != null) passiveSkillIds.add(p.getId());
             }
         }
     }
@@ -969,5 +1057,40 @@ public class AvatarModel {
         notifyChange();
     }
 
+    public List<SkillModel> getAvailableSkills() {
+        ClassType ct = getClassType();
+        if (ct == null) return new ArrayList<>();
+        return SkillRepository.getSkillsForClass(ct);
+    }
+
+    public void setActiveSkills(List<SkillModel> activeSlots) {
+        if (activeSlots == null) {
+            this.activeSkills = new ArrayList<>(5);
+        } else {
+            this.activeSkills = new ArrayList<>(activeSlots);
+        }
+        updateSkillIds();
+        notifyChange();
+    }
+
+    public List<SkillModel> getUnlockedSkills() {
+        List<SkillModel> unlocked = new ArrayList<>();
+        ClassType ct = getClassType();
+        if (ct == null) return unlocked;
+
+        List<SkillModel> allClassSkills = SkillRepository.getSkillsForClass(ct);
+        if (allClassSkills == null) return unlocked;
+
+        int lvl = this.getLevel();
+        for (SkillModel skill : allClassSkills) {
+            if (skill.getLevelUnlock() <= lvl) {
+                unlocked.add(skill);
+            }
+        }
+
+        return unlocked;
+    }
+
 }
+
 

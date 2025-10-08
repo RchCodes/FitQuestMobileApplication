@@ -14,21 +14,31 @@ public class EnemyModel implements Parcelable {
     private final int baseStr;
     private final int baseAgi;
     private final int baseEnd;
-    private final List<SkillModel> skills;
-    private final List<PassiveSkill> passives;
+
+    // Persisted in parcel / repository: IDs only
+    private final List<String> skillIds;
+    private final List<String> passiveIds;
+
+    // Runtime: reconstructed from ids via SkillRepository
+    private transient List<SkillModel> skills;
+    private transient List<PassiveSkill> passives;
+
     private final int spriteResId;
 
     public EnemyModel(String id, String name, int baseHp, int baseStr, int baseAgi, int baseEnd,
-                      List<SkillModel> skills, List<PassiveSkill> passives, int spriteResId) {
+                      List<String> skillIds, List<String> passiveIds, int spriteResId) {
         this.id = id;
         this.name = name;
         this.baseHp = baseHp;
         this.baseStr = baseStr;
         this.baseAgi = baseAgi;
         this.baseEnd = baseEnd;
-        this.skills = skills;
-        this.passives = passives;
+        this.skillIds = skillIds != null ? new ArrayList<>(skillIds) : new ArrayList<>();
+        this.passiveIds = passiveIds != null ? new ArrayList<>(passiveIds) : new ArrayList<>();
         this.spriteResId = spriteResId;
+
+        // Build runtime lists
+        loadSkillsFromRepo();
     }
 
     protected EnemyModel(Parcel in) {
@@ -40,10 +50,11 @@ public class EnemyModel implements Parcelable {
         baseEnd = in.readInt();
         spriteResId = in.readInt();
 
-        // For skills/passives, you can either implement Parcelable on SkillModel and PassiveSkill
-        // or skip them for now if ChallengeActivity doesn't need them immediately.
-        skills = new ArrayList<>();
-        passives = new ArrayList<>();
+        skillIds = in.createStringArrayList();
+        passiveIds = in.createStringArrayList();
+
+        // Rebuild runtime objects
+        loadSkillsFromRepo();
     }
 
     public static final Creator<EnemyModel> CREATOR = new Creator<EnemyModel>() {
@@ -58,6 +69,45 @@ public class EnemyModel implements Parcelable {
         }
     };
 
+    // Reconstruct SkillModel / PassiveSkill lists from repository using ids
+    public void loadSkillsFromRepo() {
+        skills = new ArrayList<>();
+        passives = new ArrayList<>();
+
+        if (skillIds != null) {
+            for (String sid : skillIds) {
+                SkillModel s = EnemySkillRepository.getEnemySkillById(sid);
+                if (s == null) s = SkillRepository.getSkillById(sid); // fallback to player skills
+                if (s != null) skills.add(s);
+            }
+        }
+        if (passiveIds != null) {
+            for (String pid : passiveIds) {
+                PassiveSkill p = EnemySkillRepository.getEnemyPassiveById(pid);
+                if (p == null) p = SkillRepository.getPassiveById(pid); // fallback to player passives
+                if (p != null) passives.add(p);
+            }
+        }
+    }
+
+    // --- spawn: return a fresh instance that contains runtime skill/passive objects ---
+    public EnemyModel spawn() {
+        EnemyModel base = EnemyRepository.getEnemy(id);
+        if (base == null) return this;
+        // Create a new instance copying ids (so the new instance will rebuild runtime lists)
+        return new EnemyModel(
+                base.id,
+                base.name,
+                base.baseHp,
+                base.baseStr,
+                base.baseAgi,
+                base.baseEnd,
+                base.skillIds != null ? new ArrayList<>(base.skillIds) : null,
+                base.passiveIds != null ? new ArrayList<>(base.passiveIds) : null,
+                base.spriteResId
+        );
+    }
+
     // --- Getters ---
     public int getBaseHp() { return baseHp; }
     public int getBaseStr() { return baseStr; }
@@ -66,23 +116,16 @@ public class EnemyModel implements Parcelable {
     public String getId() { return id; }
     public String getName() { return name; }
     public int getSpriteResId() { return spriteResId; }
-
-    public EnemyModel spawn() {
-        // Reload from repository to ensure skills and passives exist
-        EnemyModel base = EnemyRepository.getEnemy(id);
-        if (base == null) return this;
-        return new EnemyModel(
-                id,
-                name,
-                baseHp,
-                baseStr,
-                baseAgi,
-                baseEnd,
-                new ArrayList<>(base.skills),
-                new ArrayList<>(base.passives),
-                spriteResId
-        );
+    public List<SkillModel> getSkills() {
+        if (skills == null) loadSkillsFromRepo();
+        return skills;
     }
+    public List<PassiveSkill> getPassives() {
+        if (passives == null) loadSkillsFromRepo();
+        return passives;
+    }
+    public List<String> getSkillIds() { return skillIds; }
+    public List<String> getPassiveIds() { return passiveIds; }
 
     @Override
     public int describeContents() {
@@ -98,6 +141,8 @@ public class EnemyModel implements Parcelable {
         dest.writeInt(baseAgi);
         dest.writeInt(baseEnd);
         dest.writeInt(spriteResId);
-        // skip skills/passives for simplicity if they are not Parcelable
+
+        dest.writeStringList(skillIds);
+        dest.writeStringList(passiveIds);
     }
 }

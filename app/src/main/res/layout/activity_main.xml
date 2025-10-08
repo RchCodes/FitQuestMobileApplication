@@ -335,7 +335,7 @@
             android:layout_width="70dp"
             android:layout_height="70dp"
             android:layout_marginBottom="12dp"
-            android:src="@drawable/b_friends2"
+            android:src="@drawable/b_avatar"
             android:clickable="true"
             android:focusable="true"/>
     </LinearLayout>

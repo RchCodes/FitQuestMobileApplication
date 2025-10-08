@@ -1,30 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
-    android:background="@drawable/dialog_background_rounded"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:clipToOutline="true">
+    android:background="#40000000"
+    android:orientation="vertical">
 
-    <!-- Title -->
-    <ImageView
-        android:id="@+id/battle_history_title"
+    <LinearLayout
+        android:orientation="vertical"
+        android:background="@drawable/dialog_background_rounded"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:adjustViewBounds="true"
-        android:scaleType="fitXY"
-        android:src="@drawable/banner_battle_history"
-        app:shapeAppearanceOverlay="@style/TopRoundedImageView"
-        android:clipToOutline="true"/>
+        android:clipToOutline="true">
 
-    <!-- RecyclerView for History -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerBattleHistory"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:overScrollMode="never"
-        android:padding="12dp" />
+        <ImageView
+            android:id="@+id/battle_history_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:scaleType="fitXY"
+            android:src="@drawable/banner_battle_history"
+            app:shapeAppearanceOverlay="@style/TopRoundedImageView"
+            android:clipToOutline="true"/>
+
+        <!-- RecyclerView for History -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerBattleHistory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:overScrollMode="never"
+            android:padding="12dp" />
+    </LinearLayout>
 
     <TextView
         android:layout_width="wrap_content"

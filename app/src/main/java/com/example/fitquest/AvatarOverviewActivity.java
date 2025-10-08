@@ -179,24 +179,14 @@ public class AvatarOverviewActivity extends BaseActivity {
         //tvHP.setText("HP: " + avatar.getHp());
         //tvAP.setText("AP: " + avatar.getAp());
 
-        // Exp handling
         int currentLevel = avatar.getLevel();
-        int maxLevel = LevelProgression.getMaxLevel();
+        int xpForNextLevel = LevelProgression.getMaxXpForLevel(currentLevel);
+        int currentXp = Math.min(avatar.getXp(), xpForNextLevel);
 
-        if (currentLevel >= maxLevel) {
-            expBar.setMax(1);
-            expBar.setProgress(1);
-            expTextOverlay.setText("MAX");
-        } else {
-            int prevLevelXp = currentLevel > 1 ? LevelProgression.getMaxXpForLevel(currentLevel - 1) : 0;
-            int currentLevelMaxXp = LevelProgression.getMaxXpForLevel(currentLevel);
-            int xpInLevel = Math.max(avatar.getXp() - prevLevelXp, 0);
-            int xpNeeded = Math.max(currentLevelMaxXp - prevLevelXp, 1);
+        expBar.setMax(xpForNextLevel);
+        expBar.setProgress(currentXp);
+        expTextOverlay.setText(currentXp + "/" + xpForNextLevel);
 
-            expBar.setMax(xpNeeded);
-            expBar.setProgress(Math.min(xpInLevel, xpNeeded));
-            expTextOverlay.setText(xpInLevel + "/" + xpNeeded);
-        }
 
         // Physique
         txtArms.setText(String.valueOf(avatar.getArmPoints()));

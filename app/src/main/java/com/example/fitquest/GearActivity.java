@@ -24,8 +24,8 @@ public class GearActivity extends AppCompatActivity {
     private AvatarDisplayManager avatarHelper;
 
     // UI
-    private ImageView btnBack;
-    private Button btnSave, btnEquip;
+    private ImageView btnBack, btnSave;
+    private Button  btnEquip;
     private GridView gridGear;
     private ImageView tabAll, tabWeapon, tabArmor, tabPants, tabBoots, tabAccessory;
     private TextView itemName, itemDesc, itemBoosts, itemSkill;

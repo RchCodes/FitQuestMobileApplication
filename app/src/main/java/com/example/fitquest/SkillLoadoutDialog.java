@@ -2,79 +2,100 @@ package com.example.fitquest;
 
 import android.app.Dialog;
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.view.LayoutInflater;
+import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.material.imageview.ShapeableImageView;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class SkillLoadoutDialog extends Dialog {
 
-    private AvatarModel avatar;
+    private final AvatarModel avatar;
+    private final SkillInfoPopup skillInfoPopup = new SkillInfoPopup();
+
     private LinearLayout activeContainer, passiveContainer;
     private GridLayout availableGrid;
-    private SkillModel[] activeSlots = new SkillModel[5]; // max 5
-    private ImageView[] activeSlotViews = new ImageView[5];
+    private Button saveButton, cancelButton;
+
+    private final SkillModel[] activeSlots = new SkillModel[5];
+    private final PassiveSkill[] passiveSlots = new PassiveSkill[2];
+
+    private final int SLOT_SIZE = 120; // px
+    private final int SLOT_MARGIN = 8; // px
 
     public SkillLoadoutDialog(@NonNull Context context, AvatarModel avatar) {
-        super(context);
+        super(context, com.google.android.material.R.style.Theme_MaterialComponents_Light_Dialog_Alert);
         this.avatar = avatar;
+    }
 
-        View root = LayoutInflater.from(context).inflate(R.layout.dialog_skill_loadout, null);
-        setContentView(root);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.dialog_skill_loadout);
 
-        activeContainer = root.findViewById(R.id.activeSkillsContainer);
-        passiveContainer = root.findViewById(R.id.passiveSkillsContainer);
-        availableGrid = root.findViewById(R.id.availableSkillsGrid);
+        activeContainer = findViewById(R.id.activeSkillsContainer);
+        passiveContainer = findViewById(R.id.passiveSkillsContainer);
+        availableGrid = findViewById(R.id.availableSkillsGrid);
 
-        Button saveBtn = root.findViewById(R.id.saveButton);
-        Button cancelBtn = root.findViewById(R.id.cancelButton);
+        saveButton = findViewById(R.id.saveButton);
+        cancelButton = findViewById(R.id.cancelButton);
 
-        setupActiveSlots(context);
-        setupPassiveSkills(context);
-        setupAvailableSkills(context);
+        loadActiveSlots();
+        loadPassiveSlots();
+        loadAvailableSkills();
 
-        saveBtn.setOnClickListener(v -> {
-            // Save the skill loadout
-            avatar.getActiveSkills().clear(); // reset
-            for (SkillModel sm : activeSlots) {
-                if (sm != null) avatar.addActiveSkill(sm);
+        saveButton.setOnClickListener(v -> {
+            // Build non-null active skills list
+            List<SkillModel> activeList = new ArrayList<>();
+            for (SkillModel s : activeSlots) {
+                if (s != null) activeList.add(s);
             }
-            
-            // Save avatar with new skill loadout
-            AvatarManager.saveAvatarOffline(context, avatar);
-            if (isNetworkAvailable()) {
-                AvatarManager.saveAvatarOnline(avatar);
+
+            // Warn if no active skills equipped
+            if (activeList.isEmpty()) {
+                Toast.makeText(getContext(), "You must equip at least one active skill.", Toast.LENGTH_SHORT).show();
+                return; // stop execution
             }
-            
-            Toast.makeText(context, "Skill loadout saved!", Toast.LENGTH_SHORT).show();
+
+            // Build non-null passive skills list
+            List<PassiveSkill> passiveList = new ArrayList<>();
+            for (PassiveSkill p : passiveSlots) {
+                if (p != null) passiveList.add(p);
+            }
+
+            // Save back to avatar
+            avatar.setActiveSkills(activeList);
+            avatar.setPassiveSkills(passiveList);
+
             dismiss();
         });
 
-        cancelBtn.setOnClickListener(v -> dismiss());
+
+        cancelButton.setOnClickListener(v -> dismiss());
     }
 
-    private void setupActiveSlots(Context context) {
-        List<SkillModel> current = avatar.getActiveSkills();
+    private void loadActiveSlots() {
+        List<SkillModel> active = avatar.getActiveSkills();
         activeContainer.removeAllViews();
 
         for (int i = 0; i < 5; i++) {
-            ImageView slot = new ImageView(context);
-            slot.setLayoutParams(new LinearLayout.LayoutParams(120, 120));
-            slot.setPadding(8, 8, 8, 8);
-            slot.setBackgroundResource(R.drawable.skill_slot_border);
+            ShapeableImageView slot = createSlotView();
 
-            if (i < current.size()) {
-                activeSlots[i] = current.get(i);
-                slot.setImageResource(current.get(i).getIconRes());
+            if (i < active.size()) {
+                SkillModel skill = active.get(i);
+                slot.setImageResource(skill.getIconRes());
+                activeSlots[i] = skill;
+            } else {
+                slot.setImageResource(android.R.color.transparent);
+                slot.setAlpha(0.3f);
             }
 
             int index = i;
@@ -86,66 +107,134 @@ public class SkillLoadoutDialog extends Dialog {
                 }
             });
 
-            activeSlotViews[i] = slot;
+            // Long press to show info
+            slot.setOnLongClickListener(v -> {
+                if (activeSlots[index] != null) {
+                    skillInfoPopup.show(v, activeSlots[index]);
+                }
+                return true;
+            });
+
+
             activeContainer.addView(slot);
         }
     }
 
-    private void setupPassiveSkills(Context context) {
+    private void loadPassiveSlots() {
+        List<PassiveSkill> passives = avatar.getPassiveSkills();
         passiveContainer.removeAllViews();
-        for (PassiveSkill ps : avatar.getPassiveSkills()) {
-            ImageView view = new ImageView(context);
-            view.setLayoutParams(new LinearLayout.LayoutParams(120, 120));
-            view.setPadding(8, 8, 8, 8);
-            view.setBackgroundResource(R.drawable.skill_slot_border);
-            view.setImageResource(ps.getIconResId());
-            passiveContainer.addView(view);
-        }
-    }
 
-    private void setupAvailableSkills(Context context) {
-        availableGrid.removeAllViews();
-        List<SkillModel> all = SkillRepository.getSkillsForClass(avatar.getClassType());
+        for (int i = 0; i < 2; i++) {
+            ShapeableImageView slot = createSlotView();
 
-        for (SkillModel sm : all) {
-            ImageView skillIcon = new ImageView(context);
-            skillIcon.setLayoutParams(new GridLayout.LayoutParams());
-            skillIcon.setAdjustViewBounds(true);
-            skillIcon.setPadding(8, 8, 8, 8);
-
-            // unlocked check
-            if (avatar.getLevel() >= sm.getLevelUnlock()) {
-                skillIcon.setImageResource(sm.getIconRes());
-
-                skillIcon.setOnClickListener(v -> {
-                    if (sm.isUltimate() && avatar.hasUltimateSkill()) {
-                        Toast.makeText(context, "You already have an Ultimate equipped!", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    // find free slot
-                    for (int i = 0; i < activeSlots.length; i++) {
-                        if (activeSlots[i] == null) {
-                            activeSlots[i] = sm;
-                            activeSlotViews[i].setImageResource(sm.getIconRes());
-                            break;
-                        }
-                    }
-                });
+            if (i < passives.size()) {
+                PassiveSkill passive = passives.get(i);
+                slot.setImageResource(passive.getIconResId());
+                passiveSlots[i] = passive;
             } else {
-                skillIcon.setImageResource(R.drawable.lock_2); // locked skill placeholder
-                skillIcon.setAlpha(0.5f);
+                slot.setImageResource(android.R.color.transparent);
+                slot.setAlpha(0.3f);
             }
 
-            availableGrid.addView(skillIcon);
+            int index = i;
+            slot.setOnClickListener(null);
+
+            slot.setOnLongClickListener(v -> {
+                if (passiveSlots[index] != null) {
+                    skillInfoPopup.show(v, passiveSlots[index]);
+                }
+                return true;
+            });
+
+            passiveContainer.addView(slot);
         }
     }
-    
-    private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (connectivityManager != null) {
-            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+
+    private void loadAvailableSkills() {
+        List<SkillModel> available = avatar.getUnlockedSkills(); // <-- use unlocked skills
+        availableGrid.removeAllViews();
+
+        int playerLevel = avatar.getLevel(); // get player level
+
+        for (SkillModel skill : available) {
+            if (skill.getLevelUnlock() > playerLevel) continue; // skip if somehow higher than level
+
+            ShapeableImageView slot = createSlotView();
+            slot.setImageResource(skill.getIconRes());
+
+            slot.setOnClickListener(v -> {
+                if (!canEquipSkill(skill)) return; // skip if cannot equip
+
+                // Add skill to first empty active slot
+                for (int i = 0; i < activeSlots.length; i++) {
+                    if (activeSlots[i] == null) {
+                        activeSlots[i] = skill;
+                        updateActiveSlotImage(i, skill.getIconRes());
+                        break;
+                    }
+                }
+            });
+
+            // Long press to show info
+            slot.setOnLongClickListener(v -> {
+                skillInfoPopup.show(v, skill);
+                return true;
+            });
+
+            availableGrid.addView(slot);
         }
-        return false;
+    }
+
+    private boolean canEquipSkill(SkillModel skill) {
+        if (skill == null) return false;
+
+        // Prevent duplicates
+        for (SkillModel s : activeSlots) {
+            if (s != null && s.getId().equals(skill.getId())) {
+                return false;
+            }
+        }
+
+        // Only allow 1 ultimate
+        if (skill.isUltimate()) {
+            for (SkillModel s : activeSlots) {
+                if (s != null && s.isUltimate()) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+
+    private void updateActiveSlotImage(int index, int resId) {
+        ShapeableImageView slot = (ShapeableImageView) activeContainer.getChildAt(index);
+        if (slot != null) {
+            slot.setImageResource(resId);
+            slot.setAlpha(1f);
+        }
+    }
+
+    private ShapeableImageView createSlotView() {
+        ShapeableImageView slot = new ShapeableImageView(getContext());
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(SLOT_SIZE, SLOT_SIZE);
+        params.setMargins(SLOT_MARGIN, SLOT_MARGIN, SLOT_MARGIN, SLOT_MARGIN);
+        slot.setLayoutParams(params);
+
+        slot.setScaleType(ShapeableImageView.ScaleType.CENTER_CROP);
+
+        // Circular shape + gold stroke
+        slot.setShapeAppearanceModel(
+                slot.getShapeAppearanceModel()
+                        .toBuilder()
+                        .setAllCornerSizes(SLOT_SIZE / 2f) // half width = circle
+                        .build()
+        );
+        slot.setStrokeColorResource(android.R.color.holo_orange_light);
+        slot.setStrokeWidth(2.5f);
+
+        return slot;
     }
 }

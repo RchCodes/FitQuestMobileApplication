@@ -15,6 +15,7 @@
         app:layout_constraintTop_toBottomOf="@id/playerInfo"
         app:layout_constraintStart_toStartOf="@id/playerInfo"
         app:layout_constraintEnd_toEndOf="@id/playerInfo"/>
+    
     <LinearLayout
         android:id="@+id/playerInfo"
         android:orientation="vertical"
@@ -165,8 +166,9 @@
     <ImageView
         android:id="@+id/imgVS"
         android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:src="@drawable/ic_versus"
+        android:layout_height="50dp"
+        android:src="@drawable/icon_vs"
+        android:layout_marginTop="5dp"
         app:layout_constraintTop_toTopOf="@id/playerInfo"
         app:layout_constraintStart_toEndOf="@id/playerInfo"
         app:layout_constraintEnd_toStartOf="@id/enemyInfo"
@@ -322,6 +324,7 @@
             android:scaleType="fitXY"/>
     </FrameLayout>
 
+    <!-- SETTINGS BUTTON -->
     <FrameLayout
         android:id="@+id/effectsLayer"
         android:layout_width="0dp"
@@ -333,7 +336,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" >
+        app:layout_constraintVertical_bias="0.0">
         <!-- Player side animations (like damage text or buffs) -->
         <FrameLayout
             android:id="@+id/playerEffectLayer"
@@ -357,7 +360,6 @@
             android:clipToPadding="false" />
     </FrameLayout>
 
-    <!-- SETTINGS BUTTON -->
     <ImageButton
         android:id="@+id/btnSettings"
         android:layout_width="40dp"
@@ -368,18 +370,24 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_margin="8dp" />
 
-    <TextView
-        android:id="@+id/combat_log"
+    <ScrollView
+        android:id="@+id/combat_log_scroll"
         android:layout_width="0dp"
-        android:layout_height="80dp"
-        android:textColor="@android:color/white"
-        android:textSize="12sp"
-        android:padding="8dp"
-        android:scrollbars="vertical"
+        android:layout_height="100dp"
+        android:fillViewport="true"
         app:layout_constraintBottom_toTopOf="@id/skillContainer"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="8dp"/>
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/combat_log"
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:padding="8dp"/>
+
+    </ScrollView>
 
 
     <!-- SKILL BAR -->

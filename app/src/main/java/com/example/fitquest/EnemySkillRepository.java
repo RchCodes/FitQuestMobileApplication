@@ -17,66 +17,130 @@ import java.util.Locale;
  */
 public final class EnemySkillRepository {
 
+    /**
+     * Call this to ensure all enemy skills/passives are registered (forces static block to run).
+     */
+    public static void init() {
+        // No-op: calling this ensures static block runs
+    }
+
+    // --- Skill/Passive Maps for ID lookup ---
+    private static final java.util.Map<String, SkillModel> ENEMY_SKILL_MAP = new java.util.HashMap<>();
+    private static final java.util.Map<String, PassiveSkill> ENEMY_PASSIVE_MAP = new java.util.HashMap<>();
+
+    static {
+        // Register all enemy skills and passives (singletons)
+        // Slime
+        AcidicShot acidicShot = new AcidicShot();
+        OozeSlam oozeSlam = new OozeSlam();
+        ToxicBurst toxicBurst = new ToxicBurst();
+        ENEMY_SKILL_MAP.put(acidicShot.getId(), acidicShot);
+        ENEMY_SKILL_MAP.put(oozeSlam.getId(), oozeSlam);
+        ENEMY_SKILL_MAP.put(toxicBurst.getId(), toxicBurst);
+        RegenerativeOoze regenerativeOoze = new RegenerativeOoze();
+        ENEMY_PASSIVE_MAP.put(regenerativeOoze.getId(), regenerativeOoze);
+
+        // Venopods
+        VenomSpikes venomSpikes = new VenomSpikes();
+        TentacleCrush tentacleCrush = new TentacleCrush();
+        RottingLash rottingLash = new RottingLash();
+        ENEMY_SKILL_MAP.put(venomSpikes.getId(), venomSpikes);
+        ENEMY_SKILL_MAP.put(tentacleCrush.getId(), tentacleCrush);
+        ENEMY_SKILL_MAP.put(rottingLash.getId(), rottingLash);
+        ToxicOverflow toxicOverflow = new ToxicOverflow();
+        ENEMY_PASSIVE_MAP.put(toxicOverflow.getId(), toxicOverflow);
+
+        // Flame Wolf
+        ScorchingBite scorchingBite = new ScorchingBite();
+        MoltenStrike moltenStrike = new MoltenStrike();
+        InfernalRush infernalRush = new InfernalRush();
+        ENEMY_SKILL_MAP.put(scorchingBite.getId(), scorchingBite);
+        ENEMY_SKILL_MAP.put(moltenStrike.getId(), moltenStrike);
+        ENEMY_SKILL_MAP.put(infernalRush.getId(), infernalRush);
+        BurningFury burningFury = new BurningFury();
+        ENEMY_PASSIVE_MAP.put(burningFury.getId(), burningFury);
+
+        // Slime King
+        RoyalSmash royalSmash = new RoyalSmash();
+        AcidBeam acidBeam = new AcidBeam();
+        SlimeShockwave slimeShockwave = new SlimeShockwave();
+        ENEMY_SKILL_MAP.put(royalSmash.getId(), royalSmash);
+        ENEMY_SKILL_MAP.put(acidBeam.getId(), acidBeam);
+        ENEMY_SKILL_MAP.put(slimeShockwave.getId(), slimeShockwave);
+        OverwhelmingPressure overwhelmingPressure = new OverwhelmingPressure();
+        ENEMY_PASSIVE_MAP.put(overwhelmingPressure.getId(), overwhelmingPressure);
+    }
+
+    /** Lookup an enemy skill by ID. */
+    public static SkillModel getEnemySkillById(String id) {
+        return ENEMY_SKILL_MAP.get(id);
+    }
+
+    /** Lookup an enemy passive by ID. */
+    public static PassiveSkill getEnemyPassiveById(String id) {
+        return ENEMY_PASSIVE_MAP.get(id);
+    }
+
     private EnemySkillRepository() {}
 
     // --- SLIME ---
     public static List<SkillModel> getSlimeSkills() {
-        return List.of(
-                new AcidicShot(),
-                new OozeSlam(),
-                new ToxicBurst()
-        );
+    return List.of(
+        ENEMY_SKILL_MAP.get("acidic_shot"),
+        ENEMY_SKILL_MAP.get("ooze_slam"),
+        ENEMY_SKILL_MAP.get("toxic_burst")
+    );
     }
 
     public static List<PassiveSkill> getSlimePassives() {
-        return List.of(
-                new RegenerativeOoze()
-        );
+    return List.of(
+        ENEMY_PASSIVE_MAP.get("regenerative_ooze")
+    );
     }
 
     // --- VENOPODS ---
     public static List<SkillModel> getVenopodsSkills() {
-        return List.of(
-                new VenomSpikes(),
-                new TentacleCrush(),
-                new RottingLash()
-        );
+    return List.of(
+        ENEMY_SKILL_MAP.get("venom_spikes"),
+        ENEMY_SKILL_MAP.get("tentacle_crush"),
+        ENEMY_SKILL_MAP.get("rotting_lash")
+    );
     }
 
     public static List<PassiveSkill> getVenopodsPassives() {
-        return List.of(
-                new ToxicOverflow()
-        );
+    return List.of(
+        ENEMY_PASSIVE_MAP.get("toxic_overflow")
+    );
     }
 
     // --- FLAME WOLF ---
     public static List<SkillModel> getFlameWolfSkills() {
-        return List.of(
-                new ScorchingBite(),
-                new MoltenStrike(),
-                new InfernalRush()
-        );
+    return List.of(
+        ENEMY_SKILL_MAP.get("scorching_bite"),
+        ENEMY_SKILL_MAP.get("molten_strike"),
+        ENEMY_SKILL_MAP.get("infernal_rush")
+    );
     }
 
     public static List<PassiveSkill> getFlameWolfPassives() {
-        return List.of(
-                new BurningFury()
-        );
+    return List.of(
+        ENEMY_PASSIVE_MAP.get("burning_fury")
+    );
     }
 
     // --- SLIME KING ---
     public static List<SkillModel> getSlimeKingSkills() {
-        return List.of(
-                new RoyalSmash(),
-                new AcidBeam(),
-                new SlimeShockwave()
-        );
+    return List.of(
+        ENEMY_SKILL_MAP.get("royal_smash"),
+        ENEMY_SKILL_MAP.get("acid_beam"),
+        ENEMY_SKILL_MAP.get("slime_shockwave")
+    );
     }
 
     public static List<PassiveSkill> getSlimeKingPassives() {
-        return List.of(
-                new OverwhelmingPressure()
-        );
+    return List.of(
+        ENEMY_PASSIVE_MAP.get("overwhelming_pressure")
+    );
     }
 
     // -------------------------------
