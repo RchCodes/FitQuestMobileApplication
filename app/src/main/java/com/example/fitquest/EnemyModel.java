@@ -68,7 +68,20 @@ public class EnemyModel implements Parcelable {
     public int getSpriteResId() { return spriteResId; }
 
     public EnemyModel spawn() {
-        return new EnemyModel(id, name, baseHp, baseStr, baseAgi, baseEnd, skills, passives, spriteResId);
+        // Reload from repository to ensure skills and passives exist
+        EnemyModel base = EnemyRepository.getEnemy(id);
+        if (base == null) return this;
+        return new EnemyModel(
+                id,
+                name,
+                baseHp,
+                baseStr,
+                baseAgi,
+                baseEnd,
+                new ArrayList<>(base.skills),
+                new ArrayList<>(base.passives),
+                spriteResId
+        );
     }
 
     @Override

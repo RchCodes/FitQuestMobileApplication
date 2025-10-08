@@ -184,13 +184,13 @@
         <Button
             android:id="@+id/btnSave"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="29dp"
             android:layout_gravity="bottom"
+            android:layout_marginLeft="65dp"
+            android:layout_marginBottom="8dp"
             android:backgroundTint="#FFA000"
             android:text="SAVE"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="8dp"
-            android:layout_marginLeft="65dp"/>
+            android:textColor="#FFFFFF" />
 
         <Button
             android:id="@+id/btnEquip"

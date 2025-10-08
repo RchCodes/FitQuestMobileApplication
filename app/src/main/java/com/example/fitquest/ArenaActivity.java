@@ -98,8 +98,13 @@ public class ArenaActivity extends BaseActivity {
         playerLevel.setText("LV. " + avatar.getLevel());
 
         // Set rank (default)
-        rankLabel.setText("CHAMPION");
-        rankIcon.setImageResource(R.drawable.highest_rank);
+        rankLabel.setText(avatar.getRankName());
+        int drawableId = avatar.getRankDrawableRes();
+        if (drawableId != 0) {
+            rankIcon.setImageResource(drawableId);
+        } else {
+            rankIcon.setImageResource(R.drawable.block); // fallback
+        }
     }
 
     /** Setup button listeners */

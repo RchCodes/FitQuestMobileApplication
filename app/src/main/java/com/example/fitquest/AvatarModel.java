@@ -7,6 +7,7 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -55,7 +56,7 @@ public class AvatarModel {
     private int agility = 0;
     private int flexibility = 0;
     private int stamina = 0;
-    private ProfileChangeListener listener;
+    private transient ProfileChangeListener listener;
 
     // --- Inventory ---
     private Set<String> ownedGearIds = new HashSet<>(); // all owned items (by ID)
@@ -66,29 +67,18 @@ public class AvatarModel {
     private Map<String, GoalState> goalProgress = new HashMap<>();
 
     // --- NEW: Skill System ---
-    private List<PassiveSkill> passiveSkills = new ArrayList<>(2); // fixed 2
-    private List<SkillModel> activeSkills = new ArrayList<>(5);   // up to 5
+    private transient List<PassiveSkill> passiveSkills = new ArrayList<>(2); // fixed 2
+    private transient List<SkillModel> activeSkills = new ArrayList<>(5);   // up to 5
 
     private List<BattleHistoryModel> battleHistory = new ArrayList<>();
+
+    private List<String> activeSkillIds;
+    private List<String> passiveSkillIds;
 
 
     // Constructors
     public AvatarModel() {
-        this.level = 1;
-        this.xp = 0;
-        this.coins = 0;
-        this.rank = 0;
-        this.rankPoints = 0;
-        this.playerId = generatePlayerId();
-
-        // Initialize stats to 0 first, will be set by class initialization
-        this.strength = 0;
-        this.endurance = 0;
-        this.agility = 0;
-        this.flexibility = 0;
-
-        assignClassPassiveSkills(); // auto-assign passives at level 1
-        initGearSlots();
+        initBase();
     }
 
     public AvatarModel(String username, String gender, String playerClass,
@@ -96,7 +86,9 @@ public class AvatarModel {
                        String hairOutline, String hairFill, String hairColor,
                        String eyesOutline, String eyesFill, String eyesColor,
                        String nose, String lips) {
-        this();
+
+        initBase();
+
         this.username = username;
         this.gender = gender;
         this.playerClass = playerClass;
@@ -111,10 +103,11 @@ public class AvatarModel {
         this.eyesColor = eyesColor;
         this.nose = nose;
         this.lips = lips;
-        
+
         // Initialize class-based stats and skills
         initializeClassStats();
         initializeClassSkills();
+        assignClassPassiveSkills(); // auto-assign passives at level 1
     }
 
     // --- Gear Slot Setup ---
@@ -136,6 +129,37 @@ public class AvatarModel {
         this.stamina = other.stamina;
         this.freePhysiquePoints = other.freePhysiquePoints;
         this.freeAttributePoints = other.freeAttributePoints;
+    }
+
+    public void initializeClassData() {
+        initializeClassStats();
+        initializeClassSkills();
+        assignClassPassiveSkills();
+    }
+
+    // Base initialization (no class-specific skills yet)
+    private void initBase() {
+        this.level = 1;
+        this.xp = 0;
+        this.coins = 0;
+        this.rank = 0;
+        this.rankPoints = 0;
+        this.playerId = generatePlayerId();
+        this.freePhysiquePoints = 1;
+        this.freeAttributePoints = 1;
+
+        this.armPoints = 0;
+        this.legPoints = 0;
+        this.chestPoints = 0;
+        this.backPoints = 0;
+
+        this.strength = 0;
+        this.endurance = 0;
+        this.agility = 0;
+        this.flexibility = 0;
+        this.stamina = 0;
+
+        initGearSlots();
     }
 
     private void assignClassPassiveSkills() {
@@ -162,20 +186,20 @@ public class AvatarModel {
                 break;
         }
     }
-    
+
     /**
      * Initialize base stats based on class
      */
     private void initializeClassStats() {
         ClassType ct = getClassType();
         if (ct == null) return;
-        
+
         // Reset stats to 0 first
         this.strength = 0;
         this.endurance = 0;
         this.agility = 0;
         this.flexibility = 0;
-        
+
         switch (ct) {
             case WARRIOR:
                 // Warriors are balanced with slight strength focus
@@ -207,17 +231,17 @@ public class AvatarModel {
                 break;
         }
     }
-    
+
     /**
      * Initialize starting active skills based on class
      */
     private void initializeClassSkills() {
         ClassType ct = getClassType();
         if (ct == null) return;
-        
+
         // Clear any existing active skills
         activeSkills.clear();
-        
+
         switch (ct) {
             case WARRIOR:
                 // Warriors start with basic attack and defensive skills
@@ -247,11 +271,14 @@ public class AvatarModel {
         return Collections.unmodifiableList(passiveSkills);
     }
 
+
     public List<SkillModel> getActiveSkills() {
         return Collections.unmodifiableList(activeSkills);
     }
 
-    /** Adds a new active skill (non-ultimate). */
+    /**
+     * Adds a new active skill (non-ultimate).
+     */
     public boolean addActiveSkill(SkillModel skill) {
         if (activeSkills.stream().anyMatch(s -> s.getId().equals(skill.getId()))) return false;
         if (activeSkills.size() >= 5) return false; // full
@@ -260,7 +287,9 @@ public class AvatarModel {
         return true;
     }
 
-    /** Replace an existing active skill at slot. */
+    /**
+     * Replace an existing active skill at slot.
+     */
     public boolean replaceActiveSkill(int slot, SkillModel skill) {
         if (slot < 0 || slot >= activeSkills.size()) return false;
         if (skill.isUltimate() && hasUltimateSkill() && !activeSkills.get(slot).isUltimate()) {
@@ -270,7 +299,9 @@ public class AvatarModel {
         return true;
     }
 
-    /** Checks if ultimate already exists. */
+    /**
+     * Checks if ultimate already exists.
+     */
     public boolean hasUltimateSkill() {
         return activeSkills.stream().anyMatch(SkillModel::isUltimate);
     }
@@ -282,62 +313,159 @@ public class AvatarModel {
     }
 
     public ClassType getClassType() {
+        if (playerClass == null) return null;
         try {
-            return ClassType.valueOf(playerClass);
-        } catch (Exception e) {
-            return null;
+            // accept both "WARRIOR" and "warrior"
+            return ClassType.valueOf(playerClass.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            // fallback mapping in case playerClass is something custom
+            switch (playerClass.toLowerCase(Locale.ROOT)) {
+                case "warrior":
+                    return ClassType.WARRIOR;
+                case "rogue":
+                    return ClassType.ROGUE;
+                case "tank":
+                    return ClassType.TANK;
+                default:
+                    return null;
+            }
         }
     }
 
     // --- Getters & Setters ---
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public String getUsername() {
+        return username;
+    }
 
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    public String getPlayerClass() { return playerClass; }
-    public void setPlayerClass(String playerClass) { this.playerClass = playerClass; }
+    public String getGender() {
+        return gender;
+    }
 
-    public String getBodyStyle() { return bodyStyle; }
-    public void setBodyStyle(String bodyStyle) { this.bodyStyle = bodyStyle; }
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
 
-    public String getOutfit() { return outfit; }
-    public void setOutfit(String outfit) { this.outfit = outfit; }
+    public String getPlayerClass() {
+        return playerClass;
+    }
 
-    public String getWeapon() { return weapon; }
-    public void setWeapon(String weapon) { this.weapon = weapon; }
+    public void setPlayerClass(String playerClass) {
+        this.playerClass = playerClass;
+    }
 
-    public String getHairOutline() { return hairOutline; }
-    public void setHairOutline(String hairOutline) { this.hairOutline = hairOutline; }
+    public String getBodyStyle() {
+        return bodyStyle;
+    }
 
-    public String getHairFill() { return hairFill; }
-    public void setHairFill(String hairFill) { this.hairFill = hairFill; }
+    public void setBodyStyle(String bodyStyle) {
+        this.bodyStyle = bodyStyle;
+    }
 
-    public String getHairColor() { return hairColor; }
-    public void setHairColor(String hairColor) { this.hairColor = hairColor; }
+    public String getOutfit() {
+        return outfit;
+    }
 
-    public String getEyesOutline() { return eyesOutline; }
-    public void setEyesOutline(String eyesOutline) { this.eyesOutline = eyesOutline; }
+    public void setOutfit(String outfit) {
+        this.outfit = outfit;
+    }
 
-    public String getEyesFill() { return eyesFill; }
-    public void setEyesFill(String eyesFill) { this.eyesFill = eyesFill; }
+    public String getWeapon() {
+        return weapon;
+    }
 
-    public String getEyesColor() { return eyesColor; }
-    public void setEyesColor(String eyesColor) { this.eyesColor = eyesColor; }
+    public void setWeapon(String weapon) {
+        this.weapon = weapon;
+    }
 
-    public String getNose() { return nose; }
-    public void setNose(String nose) { this.nose = nose; }
+    public String getHairOutline() {
+        return hairOutline;
+    }
 
-    public String getLips() { return lips; }
-    public void setLips(String lips) { this.lips = lips; }
+    public void setHairOutline(String hairOutline) {
+        this.hairOutline = hairOutline;
+    }
 
-    public int getCoins() { return coins; }
-    public void setCoins(int coins) { this.coins = coins; notifyChange(); }
-    public void addCoins(int amount) { this.coins += amount; notifyChange(); }
+    public String getHairFill() {
+        return hairFill;
+    }
 
-    public int getXp() { return xp; }
-    /** Adds XP and returns true if level increased */
+    public void setHairFill(String hairFill) {
+        this.hairFill = hairFill;
+    }
+
+    public String getHairColor() {
+        return hairColor;
+    }
+
+    public void setHairColor(String hairColor) {
+        this.hairColor = hairColor;
+    }
+
+    public String getEyesOutline() {
+        return eyesOutline;
+    }
+
+    public void setEyesOutline(String eyesOutline) {
+        this.eyesOutline = eyesOutline;
+    }
+
+    public String getEyesFill() {
+        return eyesFill;
+    }
+
+    public void setEyesFill(String eyesFill) {
+        this.eyesFill = eyesFill;
+    }
+
+    public String getEyesColor() {
+        return eyesColor;
+    }
+
+    public void setEyesColor(String eyesColor) {
+        this.eyesColor = eyesColor;
+    }
+
+    public String getNose() {
+        return nose;
+    }
+
+    public void setNose(String nose) {
+        this.nose = nose;
+    }
+
+    public String getLips() {
+        return lips;
+    }
+
+    public void setLips(String lips) {
+        this.lips = lips;
+    }
+
+    public int getCoins() {
+        return coins;
+    }
+
+    public void setCoins(int coins) {
+        this.coins = coins;
+        notifyChange();
+    }
+
+    public void addCoins(int amount) {
+        this.coins += amount;
+        notifyChange();
+    }
+
+    public int getXp() {
+        return xp;
+    }
+
+    /**
+     * Adds XP and returns true if level increased
+     */
     public boolean addXp(int amount) {
         if (level >= LevelProgression.getMaxLevel()) {
             xp = LevelProgression.getMaxXpForLevel(level);
@@ -352,75 +480,158 @@ public class AvatarModel {
     }
 
 
-    public int getLevel() { return level; }
-    public int getRank() { return rank; }
-    public int getRankPoints() { return rankPoints; }
-    
+    public int getLevel() {
+        return level;
+    }
+
+    public int getRank() {
+        return rank;
+    }
+
+    public int getRankPoints() {
+        return rankPoints;
+    }
+
     public void addRankPoints(int points) {
         this.rankPoints += points;
         updateRank();
         notifyChange();
     }
-    
+
     public void setRankPoints(int points) {
         this.rankPoints = Math.max(0, points);
         updateRank();
         notifyChange();
     }
-    
+
     public String getRankName() {
         switch (rank) {
-            case 0: return "Novice";
-            case 1: return "Veteran";
-            case 2: return "Elite";
-            case 3: return "Hero";
-            case 4: return "Legendary";
-            default: return "Unknown";
+            case 0:
+                return "Novice";
+            case 1:
+                return "Veteran";
+            case 2:
+                return "Elite";
+            case 3:
+                return "Hero";
+            case 4:
+                return "Legendary";
+            default:
+                return "Unknown";
         }
     }
-    
+
     public int getRankDrawableRes() {
         switch (rank) {
-            case 0: return R.drawable.rank_novice;
-            case 1: return R.drawable.rank_veteran;
-            case 2: return R.drawable.rank_elite;
-            case 3: return R.drawable.rank_hero;
-            case 4: return R.drawable.rank_legendary;
-            default: return R.drawable.rank_novice;
+            case 0:
+                return R.drawable.rank_novice;
+            case 1:
+                return R.drawable.rank_veteran;
+            case 2:
+                return R.drawable.rank_elite;
+            case 3:
+                return R.drawable.rank_hero;
+            case 4:
+                return R.drawable.rank_legendary;
+            default:
+                return R.drawable.rank_novice;
         }
     }
 
-    public String getPlayerId() { return playerId; }
+    public String getPlayerId() {
+        return playerId;
+    }
 
     // --- Free Points ---
-    public int getFreePhysiquePoints() { return freePhysiquePoints; }
-    public int getFreeAttributePoints() { return freeAttributePoints; }
-    public void addFreePhysiquePoints(int pts) { freePhysiquePoints += pts; }
-    public void addFreeAttributePoints(int pts) { freeAttributePoints += pts; }
+    public int getFreePhysiquePoints() {
+        return freePhysiquePoints;
+    }
+
+    public int getFreeAttributePoints() {
+        return freeAttributePoints;
+    }
+
+    public void addFreePhysiquePoints(int pts) {
+        freePhysiquePoints += pts;
+    }
+
+    public void addFreeAttributePoints(int pts) {
+        freeAttributePoints += pts;
+    }
 
     // --- Physique ---
-    public int getArmPoints() { return armPoints; }
-    public int getLegPoints() { return legPoints; }
-    public int getChestPoints() { return chestPoints; }
-    public int getBackPoints() { return backPoints; }
+    public int getArmPoints() {
+        return armPoints;
+    }
 
-    public void addArmPoints(int pts) { armPoints += pts; }
-    public void addLegPoints(int pts) { legPoints += pts; }
-    public void addChestPoints(int pts) { chestPoints += pts; }
-    public void addBackPoints(int pts) { backPoints += pts; }
+    public int getLegPoints() {
+        return legPoints;
+    }
+
+    public int getChestPoints() {
+        return chestPoints;
+    }
+
+    public int getBackPoints() {
+        return backPoints;
+    }
+
+    public void addArmPoints(int pts) {
+        armPoints += pts;
+    }
+
+    public void addLegPoints(int pts) {
+        legPoints += pts;
+    }
+
+    public void addChestPoints(int pts) {
+        chestPoints += pts;
+    }
+
+    public void addBackPoints(int pts) {
+        backPoints += pts;
+    }
 
     // --- Attributes ---
-    public int getStrength() { return strength; }
-    public int getEndurance() { return endurance; }
-    public int getAgility() { return agility; }
-    public int getFlexibility() { return flexibility; }
-    public int getStamina() { return stamina; }
+    public int getStrength() {
+        return strength;
+    }
 
-    public void addStrength(int pts) { strength += pts; }
-    public void addEndurance(int pts) { endurance += pts; }
-    public void addAgility(int pts) { agility += pts; }
-    public void addFlexibility(int pts) { flexibility += pts; }
-    public void addStamina(int pts) { stamina += pts; }
+    public int getEndurance() {
+        return endurance;
+    }
+
+    public int getAgility() {
+        return agility;
+    }
+
+    public int getFlexibility() {
+        return flexibility;
+    }
+
+    public int getStamina() {
+        return stamina;
+    }
+
+    public void addStrength(int pts) {
+        strength += pts;
+    }
+
+    public void addEndurance(int pts) {
+        endurance += pts;
+    }
+
+    public void addAgility(int pts) {
+        agility += pts;
+    }
+
+    public void addFlexibility(int pts) {
+        flexibility += pts;
+    }
+
+    public void addStamina(int pts) {
+        stamina += pts;
+    }
 
     // --- Level & Rank logic ---
     private void checkLevelUp() {
@@ -428,7 +639,7 @@ public class AvatarModel {
         while (level < LevelProgression.getMaxLevel() && xp >= LevelProgression.getMaxXpForLevel(level)) {
             xp -= LevelProgression.getMaxXpForLevel(level);
             level++;
-            
+
             // Handle skill acquisition for each level gained
             acquireSkillsForLevel(level);
         }
@@ -439,17 +650,17 @@ public class AvatarModel {
         onLevelUp();
         updateRank();
     }
-    
+
     /**
      * Acquire new skills based on the avatar's level and class
      */
     private void acquireSkillsForLevel(int newLevel) {
         ClassType ct = getClassType();
         if (ct == null) return;
-        
+
         // Get all available skills for this class
         List<SkillModel> availableSkills = SkillRepository.getSkillsForClass(ct);
-        
+
         for (SkillModel skill : availableSkills) {
             // Check if this skill should be unlocked at this level
             if (skill.getLevelUnlock() == newLevel) {
@@ -461,7 +672,7 @@ public class AvatarModel {
                         break;
                     }
                 }
-                
+
                 // If we don't have this skill yet, add it
                 if (!alreadyHasSkill) {
                     // Try to auto-equip if there's space
@@ -476,7 +687,7 @@ public class AvatarModel {
             }
         }
     }
-    
+
     /**
      * Get newly acquired skills for a specific level (for display purposes)
      */
@@ -484,9 +695,9 @@ public class AvatarModel {
         List<SkillModel> newSkills = new ArrayList<>();
         ClassType ct = getClassType();
         if (ct == null) return newSkills;
-        
+
         List<SkillModel> availableSkills = SkillRepository.getSkillsForClass(ct);
-        
+
         for (SkillModel skill : availableSkills) {
             if (skill.getLevelUnlock() == targetLevel) {
                 // Check if we already have this skill
@@ -497,13 +708,13 @@ public class AvatarModel {
                         break;
                     }
                 }
-                
+
                 if (!alreadyHasSkill) {
                     newSkills.add(skill);
                 }
             }
         }
-        
+
         return newSkills;
     }
 
@@ -524,7 +735,7 @@ public class AvatarModel {
 
     // --- Utility ---
     private String generatePlayerId() {
-        return String.valueOf(10000000 + (int)(Math.random() * 89999999));
+        return String.valueOf(10000000 + (int) (Math.random() * 89999999));
     }
 
     // --- Setters for XP, Level, Rank ---
@@ -676,15 +887,15 @@ public class AvatarModel {
     public List<BattleHistoryModel> getBattleHistory() {
         return battleHistory;
     }
-    
+
     public void addBattleHistory(BattleHistoryModel battleEntry) {
         battleHistory.add(0, battleEntry); // Add to beginning of list
-        
+
         // Keep only the last 50 battle entries
         if (battleHistory.size() > 50) {
             battleHistory = new ArrayList<>(battleHistory.subList(0, 50));
         }
-        
+
         notifyChange();
     }
 
@@ -693,5 +904,70 @@ public class AvatarModel {
         acquireSkillsForLevel(level);
         notifyChange();
     }
+
+    public void setPassiveSkills(List<PassiveSkill> passiveSkills) {
+        this.passiveSkills = passiveSkills;
+        notifyChange();
+    }
+
+
+    public void loadSkillsFromIds() {
+        activeSkills = new ArrayList<>();
+        if (activeSkillIds != null) {
+            for (String id : activeSkillIds) {
+                SkillModel skill = SkillRepository.getSkillById(id);
+                if (skill != null) activeSkills.add(skill);
+            }
+        }
+
+        passiveSkills = new ArrayList<>();
+        if (passiveSkillIds != null) {
+            for (String id : passiveSkillIds) {
+                PassiveSkill skill = SkillRepository.getPassiveById(id);
+                if (skill != null) passiveSkills.add(skill);
+            }
+        }
+    }
+
+    public void updateSkillIds() {
+        if (activeSkills != null) {
+            activeSkillIds = new ArrayList<>();
+            for (SkillModel s : activeSkills) {
+                activeSkillIds.add(s.getId());
+            }
+        }
+
+        if (passiveSkills != null) {
+            passiveSkillIds = new ArrayList<>();
+            for (PassiveSkill p : passiveSkills) {
+                passiveSkillIds.add(p.getId());
+            }
+        }
+    }
+
+    // --- Skill ID getters (used for saving) ---
+    public List<String> getActiveSkillIds() {
+        return activeSkillIds;
+    }
+
+    public List<String> getPassiveSkillIds() {
+        return passiveSkillIds;
+    }
+
+    // --- Skill ID setters (used when loading from Firebase) ---
+    public void setActiveSkillIds(List<String> ids) {
+        this.activeSkillIds = ids != null ? new ArrayList<>(ids) : new ArrayList<>();
+        // Rebuild runtime skill objects
+        loadSkillsFromIds();
+        notifyChange();
+    }
+
+    public void setPassiveSkillIds(List<String> ids) {
+        this.passiveSkillIds = ids != null ? new ArrayList<>(ids) : new ArrayList<>();
+        // Rebuild runtime passive objects
+        loadSkillsFromIds();
+        notifyChange();
+    }
+
 }
 

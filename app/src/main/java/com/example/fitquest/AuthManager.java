@@ -32,7 +32,7 @@ public class AuthManager {
     }
 
     public DatabaseReference getDbRef() {
-        return dbRef;
+        return FirebaseDatabase.getInstance().getReference("users");
     }
 
     public DatabaseReference getUsernameRef() {
@@ -132,7 +132,7 @@ public class AuthManager {
     }
 
     private void saveUserData(String uid, UserModel userModel, String username, FirebaseUser firebaseUser, AuthCallback callback) {
-        dbRef.child(uid).setValue(userModel)
+        dbRef.child(uid).child("profile").setValue(userModel)
                 .addOnSuccessListener(unused -> {
                     usernameRef.child(username).setValue(uid)
                             .addOnSuccessListener(unused2 -> callback.onSuccess(firebaseUser))
@@ -163,7 +163,7 @@ public class AuthManager {
                             
                             // Save/update user data in DB
                             UserModel userModel = new UserModel(uid, displayName != null ? displayName : "User", email);
-                            dbRef.child(uid).setValue(userModel)
+                            dbRef.child(uid).child("profile").setValue(userModel)
                                     .addOnSuccessListener(unused -> {
                                         // If user has a display name, also save it as username
                                         if (displayName != null && !displayName.isEmpty()) {
@@ -177,19 +177,19 @@ public class AuthManager {
                                                     }
                                                     callback.onSuccess(user);
                                                 }
-                                                
                                                 @Override
                                                 public void onCancelled(@NonNull DatabaseError error) {
-                                                    callback.onSuccess(user); // Continue even if username save fails
+                                                    callback.onSuccess(user);
                                                 }
                                             });
                                         } else {
                                             callback.onSuccess(user);
                                         }
                                     })
-                                    .addOnFailureListener(e -> callback.onFailure("Database save failed: " + e.getMessage()));
-                        } else {
-                            callback.onFailure("User is null after OAuth login");
+                                    .addOnFailureListener(e -> {
+                                        Log.e(TAG, "Database save failed: " + e.getMessage());
+                                        callback.onFailure("Database error: " + e.getMessage());
+                                    });
                         }
                     } else {
                         callback.onFailure(task.getException() != null ? task.getException().getMessage() : "OAuth login failed");

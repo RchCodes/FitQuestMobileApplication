@@ -12,7 +12,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class AvatarManager {
@@ -27,6 +29,7 @@ public class AvatarManager {
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         Gson gson = new Gson();
+        avatar.updateSkillIds();
         String avatarJson = gson.toJson(avatar);
         editor.putString(AVATAR_KEY, avatarJson);
         editor.apply();
@@ -39,55 +42,154 @@ public class AvatarManager {
         if (avatarJson == null) {
             return null; // no saved avatar
         }
-        Gson gson = new Gson();
+
         try {
-            return gson.fromJson(avatarJson, AvatarModel.class);
+            // Try to sanitize older JSON that might contain concrete skill objects
+            com.google.gson.JsonElement rootElem = com.google.gson.JsonParser.parseString(avatarJson);
+            if (rootElem != null && rootElem.isJsonObject()) {
+                com.google.gson.JsonObject rootObj = rootElem.getAsJsonObject();
+
+                // Helper: sanitize one field (activeSkills / passiveSkills)
+                sanitizeSkillField(rootObj, "activeSkills");
+                sanitizeSkillField(rootObj, "passiveSkills");
+
+                // Also handle older naming if you saved under activeSkillIds/passiveSkillIds
+                sanitizeSkillField(rootObj, "activeSkillIds");
+                sanitizeSkillField(rootObj, "passiveSkillIds");
+
+                // Convert back to string for Gson
+                avatarJson = rootObj.toString();
+            }
+
+            Gson gson = new Gson();
+            AvatarModel avatar = gson.fromJson(avatarJson, AvatarModel.class);
+
+            // If the JSON contained only skill IDs, load runtime skill objects now.
+            if (avatar != null) {
+                avatar.loadSkillsFromIds();
+            }
+            return avatar;
+
         } catch (Exception e) {
             e.printStackTrace();
-            return null; // fallback if JSON corrupted
+            // If parsing failed, remove corrupted data to avoid repeated crashes:
+            // prefs.edit().remove(AVATAR_KEY).apply();
+            return null;
         }
     }
 
-    // --- Save online (Firebase RTDB) ---
+    /** Utility used above to turn an array of skill objects into array of ids (strings) */
+    private static void sanitizeSkillField(com.google.gson.JsonObject rootObj, String fieldName) {
+        if (!rootObj.has(fieldName)) return;
+        com.google.gson.JsonElement el = rootObj.get(fieldName);
+        if (el == null || !el.isJsonArray()) return;
+
+        com.google.gson.JsonArray arr = el.getAsJsonArray();
+        boolean needsFix = false;
+
+        // If first element is an object (likely serialized SkillModel), we need to extract ids
+        for (com.google.gson.JsonElement item : arr) {
+            if (item != null && item.isJsonObject()) {
+                needsFix = true;
+                break;
+            }
+        }
+
+        if (!needsFix) return; // already an array of strings
+
+        com.google.gson.JsonArray idArray = new com.google.gson.JsonArray();
+        for (com.google.gson.JsonElement item : arr) {
+            if (item != null && item.isJsonObject()) {
+                com.google.gson.JsonObject obj = item.getAsJsonObject();
+                // try 'id' property
+                if (obj.has("id")) {
+                    com.google.gson.JsonElement idEl = obj.get("id");
+                    if (idEl != null && idEl.isJsonPrimitive()) {
+                        idArray.add(idEl.getAsString());
+                        continue;
+                    }
+                }else if (obj.has("skillId")) {
+                    idArray.add(obj.get("skillId").getAsString());
+                }
+                // fallback: try 'getId' style property or 'skillId' etc. (adapt as needed)
+                // If can't find an id, skip it.
+            } else if (item != null && item.isJsonPrimitive()) {
+                // already string -> keep
+                idArray.add(item.getAsString());
+            }
+        }
+
+        // Replace field with array of id strings
+        rootObj.add(fieldName, idArray);
+    }
+
+
     public static void saveAvatarOnline(AvatarModel avatar) {
+        saveAvatarOnline(avatar, null);
+    }
+
+    // --- Save online (Firebase RTDB) ---
+    public static void saveAvatarOnline(AvatarModel avatar, SaveCallback callback) {
         FirebaseAuth auth = FirebaseAuth.getInstance();
-        if (auth.getCurrentUser() == null) return; // Ensure user is signed in
+        if (auth.getCurrentUser() == null) {
+            if (callback != null) callback.onFailure(new IllegalStateException("User not signed in"));
+            return;
+        }
 
         String uid = auth.getCurrentUser().getUid();
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference("users").child(uid);
 
-        // Build a map with all avatar fields + stats
+        Map<String, Object> rootMap = new HashMap<>();
+        rootMap.put("username", avatar.getUsername());
+        rootMap.put("gender", avatar.getGender());
+        rootMap.put("playerClass", avatar.getPlayerClass());
+        rootMap.put("coins", avatar.getCoins());
+        rootMap.put("xp", avatar.getXp());
+        rootMap.put("level", avatar.getLevel());
+        rootMap.put("rank", avatar.getRank());
+
+        // Avatar appearance (nested map)
         Map<String, Object> avatarMap = new HashMap<>();
-        avatarMap.put("username", avatar.getUsername());
-        avatarMap.put("gender", avatar.getGender());
-        avatarMap.put("playerClass", avatar.getPlayerClass());
+        avatarMap.put("body", avatar.getBodyStyle());
+        avatarMap.put("outfit", avatar.getOutfit());
+        avatarMap.put("weapon", avatar.getWeapon());
 
-        avatarMap.put("avatar/body", avatar.getBodyStyle());
-        avatarMap.put("avatar/outfit", avatar.getOutfit());
-        avatarMap.put("avatar/weapon", avatar.getWeapon());
+        Map<String, Object> hairMap = new HashMap<>();
+        hairMap.put("outline", avatar.getHairOutline());
+        hairMap.put("fill", avatar.getHairFill());
+        hairMap.put("color", avatar.getHairColor());
+        avatarMap.put("hair", hairMap);
 
-        avatarMap.put("avatar/hair/outline", avatar.getHairOutline());
-        avatarMap.put("avatar/hair/fill", avatar.getHairFill());
-        avatarMap.put("avatar/hair/color", avatar.getHairColor());
+        Map<String, Object> eyesMap = new HashMap<>();
+        eyesMap.put("outline", avatar.getEyesOutline());
+        eyesMap.put("fill", avatar.getEyesFill());
+        eyesMap.put("color", avatar.getEyesColor());
+        avatarMap.put("eyes", eyesMap);
 
-        avatarMap.put("avatar/eyes/outline", avatar.getEyesOutline());
-        avatarMap.put("avatar/eyes/fill", avatar.getEyesFill());
-        avatarMap.put("avatar/eyes/color", avatar.getEyesColor());
+        avatarMap.put("nose", avatar.getNose());
+        avatarMap.put("lips", avatar.getLips());
 
-        avatarMap.put("avatar/nose", avatar.getNose());
-        avatarMap.put("avatar/lips", avatar.getLips());
+        rootMap.put("avatar", avatarMap);
 
-        // Stats
-        avatarMap.put("coins", avatar.getCoins());
-        avatarMap.put("xp", avatar.getXp());
-        avatarMap.put("level", avatar.getLevel());
-        avatarMap.put("rank", avatar.getRank()); // <-- add rank
+        // Collections/skills
+        rootMap.put("ownedGear", new ArrayList<>(avatar.getOwnedGear()));
+        // ensure ID lists are up to date
+        avatar.updateSkillIds();
+        rootMap.put("activeSkillIds", avatar.getActiveSkillIds() != null ? avatar.getActiveSkillIds() : new ArrayList<>());
+        rootMap.put("passiveSkillIds", avatar.getPassiveSkillIds() != null ? avatar.getPassiveSkillIds() : new ArrayList<>());
 
-        // Push all at once
-        ref.updateChildren(avatarMap)
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "Avatar saved online successfully"))
-                .addOnFailureListener(e -> Log.e(TAG, "Failed to save avatar online", e));
+
+        ref.updateChildren(rootMap)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Avatar saved online successfully");
+                    if (callback != null) callback.onSuccess();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to save avatar online", e);
+                    if (callback != null) callback.onFailure(e);
+                });
     }
+
 
     // Callback interface for async loading
     public interface AvatarLoadCallback {
@@ -122,21 +224,31 @@ public class AvatarManager {
                     avatar.setUsername(snapshot.child("username").getValue(String.class));
                     avatar.setGender(snapshot.child("gender").getValue(String.class));
                     avatar.setPlayerClass(snapshot.child("playerClass").getValue(String.class));
+                    avatar.initializeClassData();
 
-                    avatar.setBodyStyle(snapshot.child("avatar/body").getValue(String.class));
-                    avatar.setOutfit(snapshot.child("avatar/outfit").getValue(String.class));
-                    avatar.setWeapon(snapshot.child("avatar/weapon").getValue(String.class));
+                    DataSnapshot avatarSnap = snapshot.child("avatar");
+                    if (avatarSnap.exists()) {
+                        avatar.setBodyStyle(avatarSnap.child("body").getValue(String.class));
+                        avatar.setOutfit(avatarSnap.child("outfit").getValue(String.class));
+                        avatar.setWeapon(avatarSnap.child("weapon").getValue(String.class));
 
-                    avatar.setHairOutline(snapshot.child("avatar/hair/outline").getValue(String.class));
-                    avatar.setHairFill(snapshot.child("avatar/hair/fill").getValue(String.class));
-                    avatar.setHairColor(snapshot.child("avatar/hair/color").getValue(String.class));
+                        DataSnapshot hairSnap = avatarSnap.child("hair");
+                        if (hairSnap.exists()) {
+                            avatar.setHairOutline(hairSnap.child("outline").getValue(String.class));
+                            avatar.setHairFill(hairSnap.child("fill").getValue(String.class));
+                            avatar.setHairColor(hairSnap.child("color").getValue(String.class));
+                        }
 
-                    avatar.setEyesOutline(snapshot.child("avatar/eyes/outline").getValue(String.class));
-                    avatar.setEyesFill(snapshot.child("avatar/eyes/fill").getValue(String.class));
-                    avatar.setEyesColor(snapshot.child("avatar/eyes/color").getValue(String.class));
+                        DataSnapshot eyesSnap = avatarSnap.child("eyes");
+                        if (eyesSnap.exists()) {
+                            avatar.setEyesOutline(eyesSnap.child("outline").getValue(String.class));
+                            avatar.setEyesFill(eyesSnap.child("fill").getValue(String.class));
+                            avatar.setEyesColor(eyesSnap.child("color").getValue(String.class));
+                        }
 
-                    avatar.setNose(snapshot.child("avatar/nose").getValue(String.class));
-                    avatar.setLips(snapshot.child("avatar/lips").getValue(String.class));
+                        avatar.setNose(avatarSnap.child("nose").getValue(String.class));
+                        avatar.setLips(avatarSnap.child("lips").getValue(String.class));
+                    }
 
                     // Stats
                     Long coins = snapshot.child("coins").getValue(Long.class);
@@ -148,6 +260,56 @@ public class AvatarManager {
                     avatar.setXp(xp != null ? xp.intValue() : 0);
                     avatar.setLevel(level != null ? level.intValue() : 1);
                     avatar.setRank(rank != null ? rank.intValue() : 0);
+
+                    // Load active skill IDs
+                    // --- read active skill ids (support both "activeSkillIds" and old "activeSkills") ---
+                    List<String> activeSkillIds = new ArrayList<>();
+                    DataSnapshot activeIdsSnap = snapshot.child("activeSkillIds");
+                    DataSnapshot activeSkillsSnap = snapshot.child("activeSkills");
+
+                    if (activeIdsSnap.exists()) {
+                        for (DataSnapshot s : activeIdsSnap.getChildren()) {
+                            String id = s.getValue(String.class);
+                            if (id != null) activeSkillIds.add(id);
+                        }
+                    } else if (activeSkillsSnap.exists()) {
+                        for (DataSnapshot s : activeSkillsSnap.getChildren()) {
+                            // value might be a string id, or a map/object with an "id" field
+                            String id = s.getValue(String.class);
+                            if (id != null) {
+                                activeSkillIds.add(id);
+                            } else if (s.getValue() instanceof Map) {
+                                Object maybeId = s.child("id").getValue();
+                                if (maybeId != null) activeSkillIds.add(String.valueOf(maybeId));
+                            }
+                        }
+                    }
+                    avatar.setActiveSkillIds(activeSkillIds);
+
+// --- passive ---
+                    List<String> passiveSkillIds = new ArrayList<>();
+                    DataSnapshot passiveIdsSnap = snapshot.child("passiveSkillIds");
+                    DataSnapshot passiveSkillsSnap = snapshot.child("passiveSkills");
+
+                    if (passiveIdsSnap.exists()) {
+                        for (DataSnapshot s : passiveIdsSnap.getChildren()) {
+                            String id = s.getValue(String.class);
+                            if (id != null) passiveSkillIds.add(id);
+                        }
+                    } else if (passiveSkillsSnap.exists()) {
+                        for (DataSnapshot s : passiveSkillsSnap.getChildren()) {
+                            String id = s.getValue(String.class);
+                            if (id != null) {
+                                passiveSkillIds.add(id);
+                            } else if (s.getValue() instanceof Map) {
+                                Object maybeId = s.child("id").getValue();
+                                if (maybeId != null) passiveSkillIds.add(String.valueOf(maybeId));
+                            }
+                        }
+                    }
+                    avatar.setPassiveSkillIds(passiveSkillIds);
+
+
 
                     if (callback != null) callback.onLoaded(avatar);
 
@@ -165,6 +327,9 @@ public class AvatarManager {
         });
     }
 
-    public static void saveAvatar(Context context, AvatarModel avatar) {
+    public interface SaveCallback {
+        void onSuccess();
+        void onFailure(Exception e);
     }
+
 }

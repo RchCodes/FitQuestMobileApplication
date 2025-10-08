@@ -248,8 +248,6 @@ public class AvatarCreationActivity extends BaseActivity {
             avatar.setLevel(1);
             avatar.setRank(0);
 
-            avatar.getPassiveSkills();
-
 
             // Save using ProgressSyncManager for intelligent saving
             ProgressSyncManager.saveProgress(this, avatar, false); // Save offline first

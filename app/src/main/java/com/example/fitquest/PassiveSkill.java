@@ -73,4 +73,17 @@ public abstract class PassiveSkill {
 
     public int getIconResId() { return iconResId; }
     public String getDescription() { return description; }
+
+    public int getCritBonus() {
+        return (int) (critBonus * 100);
+    }
+
+    public int getStrDamageBonus() {
+        return (int) (strDamageBonus * 100);
+
+    }
+
+    public int getDefScalingBonus() {
+        return (int) (defScalingBonus * 100);
+    }
 }

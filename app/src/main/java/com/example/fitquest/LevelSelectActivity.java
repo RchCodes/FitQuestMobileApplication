@@ -55,8 +55,8 @@ public class LevelSelectActivity extends BaseActivity {
             btnLevel.setPadding(20, 10, 20, 10);
 
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.width = dpToPx(50);
-            params.height = dpToPx(50);
+            params.width = dpToPx(75);
+            params.height = dpToPx(75);
             params.setMargins(dpToPx(10), dpToPx(10), dpToPx(10), dpToPx(10));
             btnLevel.setLayoutParams(params);
 

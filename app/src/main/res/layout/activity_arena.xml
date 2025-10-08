@@ -41,11 +41,11 @@
 
         <ImageView
             android:id="@+id/rank_icon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="5dp"
             android:layout_gravity="top|center"
-            android:layout_marginTop="20dp"
-            android:src="@drawable/highest_rank"/>
+            android:src="@drawable/rank_novice"/>
 
         <TextView
             android:id="@+id/rank_label"

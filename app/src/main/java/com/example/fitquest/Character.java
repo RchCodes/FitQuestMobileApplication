@@ -18,24 +18,58 @@ public class Character {
     // Buffs & debuffs
     private final List<StatusEffect> statusEffects = new ArrayList<>();
 
+    private final List<PassiveSkill> passiveSkills;
+
     // Skill cooldown tracking
     private final List<SkillModel> activeSkills;
 
     // --- Constructor ---
     public Character(AvatarModel avatar) {
         this.avatar = avatar;
-        this.activeSkills = new ArrayList<>(avatar.getActiveSkills());
+
+        // --- Initialize Active Skills ---
+        List<SkillModel> avatarSkills = avatar.getActiveSkills();
+        if (avatarSkills == null || avatarSkills.isEmpty()) {
+            ClassType type = avatar.getClassType();
+            if (type != null) {
+                this.activeSkills = new ArrayList<>(SkillRepository.getSkillsForClass(type));
+            } else {
+                this.activeSkills = new ArrayList<>();
+            }
+        } else {
+            this.activeSkills = new ArrayList<>(avatarSkills);
+        }
+
+        // --- Initialize Passive Skills ---
+        List<PassiveSkill> avatarPassives = avatar.getPassiveSkills();
+        if (avatarPassives == null || avatarPassives.isEmpty()) {
+            ClassType type = avatar.getClassType();
+            if (type != null) {
+                this.passiveSkills = new ArrayList<>(SkillRepository.getPassivesForClass(type));
+            } else {
+                this.passiveSkills = new ArrayList<>();
+            }
+            avatar.setPassiveSkills(this.passiveSkills); // Sync back to avatar
+        } else {
+            this.passiveSkills = new ArrayList<>(avatarPassives);
+        }
+
+        // --- Initialize stats ---
         recalcMaxHp();
         this.currentHp = this.maxHp;
         this.actionBar = 0;
         this.isAlive = true;
     }
 
-    public Character(String name, int baseHP, int baseAttack, int baseDefense, int baseSpeed, AvatarModel avatar, List<SkillModel> activeSkills) {
+
+    public Character(String name, int baseHP, int baseAttack, int baseDefense, int baseSpeed, AvatarModel avatar, List<PassiveSkill> passiveSkills, List<SkillModel> activeSkills) {
 
         this.avatar = avatar;
+        this.passiveSkills = passiveSkills;
         this.activeSkills = activeSkills;
     }
+
+
 
     // --- Core Calculations ---
     private void recalcMaxHp() {

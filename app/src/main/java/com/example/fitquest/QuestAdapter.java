@@ -144,9 +144,31 @@ public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHol
 
         holder.actionButton.setOnClickListener(v -> {
             if (!quest.isCompleted()) {
-                // Only allow clicking for SINGLE completion type quests (daily quests)
-                if (quest.getCompletionType() == QuestCompletionType.SINGLE) {
-                    // Launch exercise activity
+                // Special logic for "Complete 5 Quests" daily quest
+                if ("q_daily_quests_5".equals(quest.getId())) {
+                    // Find all other incomplete daily quests
+                    List<QuestModel> dailyQuests = QuestManager.getDailyQuests(context);
+                    List<QuestModel> incomplete = new java.util.ArrayList<>();
+                    for (QuestModel q : dailyQuests) {
+                        if (!q.isCompleted() && !"q_daily_quests_5".equals(q.getId())) {
+                            incomplete.add(q);
+                        }
+                    }
+                    if (!incomplete.isEmpty()) {
+                        // Pick one at random
+                        QuestModel randomQuest = incomplete.get(new java.util.Random().nextInt(incomplete.size()));
+                        // Launch its activity
+                        Intent intent = new Intent(context, ExerciseTrackingActivity.class);
+                        intent.putExtra("EXERCISE_TYPE", randomQuest.getExerciseType());
+                        intent.putExtra("MAX_PROGRESS", randomQuest.getTarget());
+                        intent.putExtra("DIFFICULTY_LEVEL", "beginner");
+                        intent.putExtra("QUEST_ID", randomQuest.getId());
+                        context.startActivity(intent);
+                    } else {
+                        Toast.makeText(context, "No incomplete daily quests available!", Toast.LENGTH_SHORT).show();
+                    }
+                } else if (quest.getCompletionType() == QuestCompletionType.SINGLE) {
+                    // Launch exercise activity as normal
                     Context ctx = v.getContext();
                     Intent intent = new Intent(ctx, ExerciseTrackingActivity.class);
                     intent.putExtra("EXERCISE_TYPE", quest.getExerciseType());
@@ -154,9 +176,6 @@ public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHol
                     intent.putExtra("DIFFICULTY_LEVEL", "beginner"); // optional
                     intent.putExtra("QUEST_ID", quest.getId()); // link quest for tracking
                     ctx.startActivity(intent);
-
-                    // Do NOT call applyRewards or auto-claim here
-                    // Rewards will only be claimed manually in the dialog
                 } else {
                     // For ACCUMULATED quests (weekly/monthly), show info message
                     Toast.makeText(context, "This quest requires accumulated progress over time. Complete related daily quests to progress!", Toast.LENGTH_LONG).show();
