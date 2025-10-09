@@ -1,5 +1,11 @@
 package com.example.fitquest;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.app.Dialog;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -66,6 +72,11 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
 
     private boolean waitingForPlayerInput = false;
     private SkillModel chosenSkill = null;
+
+    private boolean isPaused = false;
+    private PauseDialog pauseDialog;
+
+    private ImageView btnPause;
 
 
     @Override
@@ -145,6 +156,7 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
         }
 
         combatLog = findViewById(R.id.combat_log);
+        btnPause = findViewById(R.id.btnSettings);
 
         // Setup skill button listeners (guard nulls)
         for (int i = 0; i < skillButtons.length; i++) {
@@ -514,6 +526,26 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
                 if (btn != null) btn.setEnabled(enabled);
             }
         }
+
+        // Pause/Settings button
+        if (btnPause != null) {
+            btnPause.setOnClickListener(v -> {
+                if (pauseDialog == null) {
+                    pauseDialog = new PauseDialog(this, () -> {
+                        // End combat safely and exit
+                        if (combatActive && combatContext != null) {
+                            combatContext.endCombat(false); // mark as lost
+                            combatActive = false;
+                        }
+                        finish();
+                    });
+
+                    pauseDialog.dialog.setOnDismissListener(d -> isPaused = false);
+                }
+                isPaused = true;
+                pauseDialog.show();
+            });
+        }
     }
 
     private void useSkill(int skillIndex) {
@@ -691,13 +723,27 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
     public void onDamageApplied(Character attacker, Character defender, int amount, String logEntry) {
         runOnUiThread(() -> {
             addCombatLog(logEntry);
+
             if (defender == playerCharacter) {
-                if (playerHpBar != null && playerHpText != null) updateHealthBar(playerHpBar, playerHpText, playerCharacter);
+                updateHealthBar(playerHpBar, playerHpText, playerCharacter);
+                playHitAnimation(findViewById(R.id.baseBodyLayer));
+
+                if (!playerCharacter.isAlive()) {
+                    playPlayerDeathAnimation(findViewById(R.id.baseBodyLayer));
+                }
+
             } else if (defender == enemyCharacter) {
-                if (enemyHpBar != null && enemyHpText != null) updateHealthBar(enemyHpBar, enemyHpText, enemyCharacter);
+                updateHealthBar(enemyHpBar, enemyHpText, enemyCharacter);
+                playHitAnimation(findViewById(R.id.enemyBaseBodyLayer));
+
+                if (!enemyCharacter.isAlive()) {
+                    playDeathAnimation(findViewById(R.id.enemyBaseBodyLayer));
+                }
             }
         });
     }
+
+
 
     @Override
     public void onStatusApplied(Character target, StatusEffect effect, String logEntry) {
@@ -822,6 +868,129 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
         );
     }
 
+    private void playHitAnimation(View view) {
+        if (view == null) return;
+
+        // --- Shake animation ---
+        ObjectAnimator shake = ObjectAnimator.ofFloat(view, "translationX", 0, 20, -20, 15, -15, 10, -10, 5, -5, 0);
+        shake.setDuration(400);
+
+        // --- Flash (color overlay / alpha blink) ---
+        ValueAnimator flash = ValueAnimator.ofFloat(0f, 1f);
+        flash.setDuration(200);
+        flash.setRepeatMode(ValueAnimator.REVERSE);
+        flash.setRepeatCount(1);
+
+        flash.addUpdateListener(animation -> {
+            float value = (float) animation.getAnimatedValue();
+            view.setAlpha(1f - (0.3f * value)); // briefly fade to simulate flash
+            if (view instanceof ImageView) {
+                ((ImageView) view).setColorFilter(
+                        android.graphics.Color.argb((int) (150 * value), 255, 0, 0),
+                        android.graphics.PorterDuff.Mode.SRC_ATOP
+                );
+            }
+        });
+
+        flash.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                view.setAlpha(1f);
+                if (view instanceof ImageView) {
+                    ((ImageView) view).clearColorFilter();
+                }
+            }
+        });
+
+        // --- Combine both animations ---
+        AnimatorSet set = new AnimatorSet();
+        set.playTogether(shake, flash);
+        set.start();
+    }
+
+    private void playDeathAnimation(View view) {
+        if (view == null) return;
+
+        // Fade out + fall down
+        ObjectAnimator fadeOut = ObjectAnimator.ofFloat(view, "alpha", 1f, 0f);
+        fadeOut.setDuration(800);
+
+        ObjectAnimator fallDown = ObjectAnimator.ofFloat(view, "translationY", 0f, 200f);
+        fallDown.setDuration(800);
+        fallDown.setInterpolator(new android.view.animation.AccelerateInterpolator());
+
+        ObjectAnimator shrink = ObjectAnimator.ofFloat(view, "scaleX", 1f, 0.6f);
+        shrink.setDuration(800);
+
+        ObjectAnimator shrinkY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 0.6f);
+        shrinkY.setDuration(800);
+
+        AnimatorSet deathSet = new AnimatorSet();
+        deathSet.playTogether(fadeOut, fallDown, shrink, shrinkY);
+        deathSet.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                view.setVisibility(View.INVISIBLE);
+            }
+        });
+        deathSet.start();
+    }
+
+    private void playPlayerDeathAnimation(View view) {
+        if (view == null) return;
+
+        // Step 1: Flash faintly before collapse
+        ValueAnimator flash = ValueAnimator.ofFloat(0f, 1f);
+        flash.setDuration(200);
+        flash.setRepeatMode(ValueAnimator.REVERSE);
+        flash.setRepeatCount(2);
+        flash.addUpdateListener(animator -> {
+            float value = (float) animator.getAnimatedValue();
+            view.setAlpha(1f - (0.4f * value)); // subtle flicker
+        });
+
+        // Step 2: Slight backward fall
+        ObjectAnimator fallBack = ObjectAnimator.ofFloat(view, "translationY", 0f, 100f);
+        fallBack.setInterpolator(new android.view.animation.AccelerateInterpolator());
+        fallBack.setDuration(1000);
+
+        // Step 3: Gradual fade-out
+        ObjectAnimator fadeOut = ObjectAnimator.ofFloat(view, "alpha", 1f, 0f);
+        fadeOut.setDuration(1000);
+
+        // Step 4: Scale down slightly as if collapsing
+        ObjectAnimator scaleX = ObjectAnimator.ofFloat(view, "scaleX", 1f, 0.8f);
+        ObjectAnimator scaleY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 0.8f);
+        scaleX.setDuration(1000);
+        scaleY.setDuration(1000);
+
+        // Combine everything
+        AnimatorSet deathSet = new AnimatorSet();
+        deathSet.playSequentially(flash, fadeOut);
+        deathSet.playTogether(fallBack, scaleX, scaleY, fadeOut);
+        deathSet.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                view.setVisibility(View.INVISIBLE);
+                // Optionally trigger game over UI or message
+                showPlayerDefeatDialog();
+            }
+        });
+        deathSet.start();
+    }
+
+    private void showPlayerDefeatDialog() {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Defeat")
+                .setMessage("You have been defeated... Try again?")
+                .setPositiveButton("Retry", (dialog, which) -> {
+                    recreate(); // reloads activity (simple reset)
+                })
+                .setNegativeButton("Exit", (dialog, which) -> finish())
+                .setCancelable(false)
+                .show();
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -834,36 +1003,6 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
         MusicManager.resume();
     }
 
-//    @Override
-//    public SkillModel onRequestPlayerSkillChoice(List<SkillModel> availableSkills, Character player, Character enemy) {
-//        runOnUiThread(() -> {
-//            waitingForPlayerInput = true;
-//            setSkillButtonsEnabled(true);
-//        });
-//        return null; // return null so CombatContext waits for onPlayerChosenSkill
-//    }
-
-//    private void setSkillButtonsEnabled(boolean enabled) {
-//        if (skillButtons != null) {
-//            for (Button btn : skillButtons) {
-//                if (btn != null) btn.setEnabled(enabled);
-//            }
-//        }
-//    }
-
-//    private void useSkill(int skillIndex) {
-//        if (!waitingForPlayerInput) return; // ignore clicks outside your turn
-//
-//        List<SkillModel> availableSkills = getAvailableSkills(playerCharacter);
-//        if (skillIndex < availableSkills.size()) {
-//            SkillModel chosen = availableSkills.get(skillIndex);
-//            waitingForPlayerInput = false;
-//            setSkillButtonsEnabled(false);
-//            if (combatContext != null) {
-//                combatContext.onPlayerChosenSkill(chosen);
-//            }
-//        }
-//    }
 
     @Override
     protected void onDestroy() {

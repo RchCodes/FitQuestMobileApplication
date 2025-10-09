@@ -118,7 +118,7 @@ public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHol
         int pos = findQuestPosition(quest);
         if (pos >= 0) {
             quests.set(pos, quest);
-            notifyItemChanged(pos); // triggers onBindViewHolder -> updates button text
+            notifyItemChanged(pos); // ✅ auto-refresh
         }
     }
 
@@ -176,7 +176,7 @@ public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHol
         // Button logic
 
         // Special logic for Walk 5,000 Steps quest
-        boolean isStepQuest = "q_daily_steps_5000".equals(quest.getId());
+        boolean isStepQuest = "q_daily_steps_2500".equals(quest.getId());
         if (isStepQuest) {
             if (!quest.isCompleted()) {
                 holder.actionButton.setText("Tracked Automatically");

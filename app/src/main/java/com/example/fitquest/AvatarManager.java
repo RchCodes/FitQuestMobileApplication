@@ -326,7 +326,10 @@ public class AvatarManager {
 
                     // After setting all avatar fields, load battle history
                     avatar.loadBattleHistoryFromFirebase(() -> {
-                        if (callback != null) callback.onAvatarLoaded(avatar);
+                        if (callback != null) {
+                            callback.onAvatarLoaded(avatar); // optional early callback
+                            callback.onLoaded(avatar);       // main callback → triggers navigation
+                        }
                     });
                     return;
 

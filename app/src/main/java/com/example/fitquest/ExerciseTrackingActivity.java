@@ -27,6 +27,7 @@ import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.pose.Pose;
@@ -45,7 +46,7 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
     private PreviewView previewView;
     private PoseOverlayView poseOverlay;
 
-    private ProgressBar circularProgress;
+    private CircularProgressIndicator circularProgress;
     private TextView progressText;
 
     private TextView feedbackText, instructionText;
@@ -191,12 +192,11 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
             // send detection
             poseDetector.process(inputImage)
                     .addOnSuccessListener(pose -> {
-                        // update overlay and detector
                         poseOverlay.post(() -> {
                             poseOverlay.setFrameInfo(imageProxy.getWidth(), imageProxy.getHeight(),
                                     rotation, true, previewView.getWidth(), previewView.getHeight());
+                            poseOverlay.setPose(pose);
                         });
-                        poseOverlay.post(() -> poseOverlay.setPose(pose));
                         exerciseDetector.processPose(pose, exerciseType);
                     })
                     .addOnFailureListener(e -> Log.e(TAG, "Pose detection failed", e))
@@ -214,9 +214,7 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
         runOnUiThread(() -> {
             circularProgress.setMax(target);
 
-            // animate from old progress to new progress
-            int oldProgress = circularProgress.getProgress();
-            animateProgress(circularProgress, oldProgress, currentReps);
+            circularProgress.setProgress(currentReps, true);
 
             progressText.setText(currentReps + "/" + target);
 
@@ -235,8 +233,8 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
 
             int remaining = (int) (requiredSeconds - seconds);
 
-            int oldProgress = circularProgress.getProgress();
-            animateProgress(circularProgress, oldProgress, remaining);
+            circularProgress.setProgress((int) seconds, true);
+
 
             progressText.setText(remaining + "s");
         });
@@ -249,12 +247,13 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
         }
     }
 
-    private void animateProgress(ProgressBar progressBar, int from, int to) {
-        ObjectAnimator animation = ObjectAnimator.ofInt(progressBar, "progress", from, to);
-        animation.setDuration(300); // 0.3s smooth transition
-        animation.setInterpolator(new DecelerateInterpolator());
-        animation.start();
-    }
+//    private void animateProgress(CircularProgressIndicator progressBar, int from, int to) {
+//        ObjectAnimator animation = ObjectAnimator.ofInt(progressBar, "indicatorProgress", from, to);
+//        animation.setDuration(300);
+//        animation.setInterpolator(new DecelerateInterpolator());
+//        animation.start();
+//    }
+
 
     private String lastFeedback = "";
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/exercise_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -9,23 +10,27 @@
         android:id="@+id/previewView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="fitCenter" />
+        android:scaleType="fitStart" />
 
-    <!-- Pose Overlay for Joint Visualization -->
+    <!-- Pose Overlay -->
     <com.example.fitquest.PoseOverlayView
         android:id="@+id/poseOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Permission Request Button (overlay) - hidden by default -->
+    <!-- Permission Overlay -->
     <LinearLayout
         android:id="@+id/permission_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:orientation="vertical"
         android:gravity="center"
         android:background="#80000000"
-        android:visibility="gone">
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
             android:layout_width="wrap_content"
@@ -56,7 +61,7 @@
             android:padding="12dp" />
     </LinearLayout>
 
-    <!-- Exercise Instructions (top center) -->
+    <!-- Instruction Text -->
     <TextView
         android:id="@+id/instructionText"
         android:layout_width="wrap_content"
@@ -67,44 +72,49 @@
         android:textColor="@android:color/white"
         android:background="#80000000"
         android:padding="12dp"
-        android:layout_gravity="top|center_horizontal"
-        android:layout_margin="16dp"
         android:maxWidth="300dp"
-        android:gravity="center" />
+        android:gravity="center"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="16dp" />
 
-    <!-- Circular Progress with text inside -->
+    <!-- Circular Progress -->
     <FrameLayout
         android:id="@+id/progressContainer"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp">
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginRight="24dp"
+        android:layout_marginBottom="48dp">
 
-        <ProgressBar
+        <com.google.android.material.progressindicator.CircularProgressIndicator
             android:id="@+id/circularProgress"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:indeterminate="false"
-            android:max="100"
-            android:progress="0"
-            android:rotation="-90"
-            android:progressDrawable="@drawable/circular_progress_drawable"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:indicatorSize="160dp"
+            app:indicatorInset="8dp"
+            app:trackThickness="8dp"
+            app:trackCornerRadius="50dp"
+            app:indicatorDirectionCircular="clockwise"
+            app:trackColor="#33FFFFFF"
+            app:indicatorColor="@android:color/white"/>
 
         <TextView
             android:id="@+id/progressText"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_gravity="center"
             android:gravity="center"
             android:text="0/10"
             android:textColor="@android:color/white"
             android:textStyle="bold"
             android:textSize="18sp"/>
     </FrameLayout>
-    ```
 
-
-    <!-- Feedback Text (bottom center) -->
+    <!-- Feedback -->
     <TextView
         android:id="@+id/feedbackText"
         android:layout_width="wrap_content"
@@ -115,9 +125,11 @@
         android:textColor="@android:color/white"
         android:background="#80000000"
         android:padding="12dp"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_margin="16dp"
         android:maxWidth="300dp"
-        android:gravity="center" />
+        android:gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="16dp" />
 
-</FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

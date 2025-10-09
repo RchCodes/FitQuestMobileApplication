@@ -138,8 +138,17 @@ public class Login extends BaseActivity {
     }
 
     private void signInWithGoogle() {
-        startActivityForResult(googleSignInClient.getSignInIntent(), RC_SIGN_IN);
+        progressOverlay.setVisibility(View.VISIBLE);
+
+        FirebaseAuth.getInstance().signOut();
+
+        googleSignInClient.signOut().addOnCompleteListener(task -> {
+            progressOverlay.setVisibility(View.GONE);
+            Intent signInIntent = googleSignInClient.getSignInIntent();
+            startActivityForResult(signInIntent, RC_SIGN_IN);
+        });
     }
+
 
     private void handleGoogleSignIn(GoogleSignInAccount account) {
         AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);

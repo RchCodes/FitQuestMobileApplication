@@ -15,6 +15,8 @@ public class QuestManager {
 
     private static List<QuestModel> quests = null;
 
+    public static int lastReportedDailyTotal = 0;
+
     public static List<QuestModel> getAllQuests(Context context) {
         ensureLoaded(context);
         return quests;
@@ -38,6 +40,9 @@ public class QuestManager {
 
     // Lazy load quests from storage
     private static void ensureLoaded(Context ctx) {
+        SharedPreferences prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        lastReportedDailyTotal = prefs.getInt("last_reported_steps", 0);
+
         if (quests != null) return;
         quests = QuestStorage.loadQuestsOffline(ctx);
         if (quests == null || quests.isEmpty()) {
@@ -114,6 +119,11 @@ public class QuestManager {
             progressListener.onQuestCompleted(quest, leveledUp);
         }
 
+        // --- NEW: trigger day-trained reporting for weekly/monthly completion quests ---
+        if ("q_daily_quests_5".equals(quest.getId())) {
+            reportDayTrained(ctx); // Increment weekly/monthly day-count quests
+        }
+
         return leveledUp;
     }
 
@@ -185,28 +195,28 @@ public class QuestManager {
         // Daily
         list.add(new QuestModel("q_daily_push_10", "Complete 10 Push-ups", "Complete 10 pushups in one session",
                 new QuestReward(50,50,1,0,0,0,1,0), QuestCategory.DAILY,10,"pushups"));
-        list.add(new QuestModel("q_daily_squat_15", "Execute 15 Squats", "Do 15 squats in one session",
-                new QuestReward(15,40,0,1,0,0,1,0), QuestCategory.DAILY,15,"squats"));
-        list.add(new QuestModel("q_daily_plank_30", "Hold Plank 30 Seconds", "Maintain a plank for 30 seconds",
-                new QuestReward(25,50,0,0,1,1,1,1), QuestCategory.DAILY,30,"plank"));
-        list.add(new QuestModel("q_daily_crunches_20", "Do 20 Crunches", "Complete 20 crunches in one session",
-                new QuestReward(15,40,0,0,1,1,1,0), QuestCategory.DAILY,20,"crunches"));
-        list.add(new QuestModel("q_daily_steps_5000", "Walk 5,000 Steps", "Accumulate 5,000 steps today using your device's step counter",
-                new QuestReward(40, 40, 0, 0, 0, 0, 0, 0), QuestCategory.DAILY, 5000, "steps"));
+        list.add(new QuestModel("q_daily_squat_10", "Execute 10 Squats", "Do 10 squats in one session",
+                new QuestReward(15,40,0,1,0,0,1,0), QuestCategory.DAILY,10,"squats"));
+        list.add(new QuestModel("q_daily_plank_20", "Hold Plank 20 Seconds", "Maintain a plank for 20 seconds",
+                new QuestReward(25,50,0,0,1,1,1,1), QuestCategory.DAILY,20,"plank"));
+        list.add(new QuestModel("q_daily_crunches_10", "Do 10 Crunches", "Complete 10 crunches in one session",
+                new QuestReward(15,40,0,0,1,1,1,0), QuestCategory.DAILY,10,"crunches"));
+        list.add(new QuestModel("q_daily_steps_2500", "Walk 2,500 Steps", "Accumulate 2,500 steps today using your device's step counter",
+                new QuestReward(40, 40, 0, 0, 0, 0, 0, 0), QuestCategory.DAILY, 2500, "steps"));
         list.add(new QuestModel("q_daily_quests_5", "Complete 5 Quests", "Complete 5 quests in today",
                 new QuestReward(100, 50, 0, 0, 0, 0, 0, 5), QuestCategory.DAILY, 5, "completion"));
 
         // Weekly
         list.add(new QuestModel("q_weekly_push_50", "Accumulate 50 Push-ups", "Do 50 pushups this week",
                 new QuestReward(100,200,0,0,0,0,0,3), QuestCategory.WEEKLY,50,"pushups"));
-        list.add(new QuestModel("q_weekly_squat_75", "Accumulate 150 Squats", "Do 75 squats this week",
-                new QuestReward(90,180,0,0,0,0,0,2), QuestCategory.WEEKLY,75,"squats"));
-        list.add(new QuestModel("q_weekly_plank_150", "Accumulate 150 Plank Seconds", "Maintain a plank for 150 seconds this week",
-                new QuestReward(75,60,0,0,0,0,0,3), QuestCategory.WEEKLY,300,"plank"));
-        list.add(new QuestModel("q_weekly_crunches_100", "Accumulate 100 Crunches", "Complete 100 crunches this week",
-                new QuestReward(60,40,0,0,0,0,0,2), QuestCategory.WEEKLY,100,"crunches"));
-        list.add(new QuestModel("q_weekly_steps_25000", "Walk 25,000 Steps", "Accumulate 25,000 this week using your device's step counter",
-                new QuestReward(250, 150, 0, 0, 0, 0, 0, 2), QuestCategory.WEEKLY, 25000, "steps"));
+        list.add(new QuestModel("q_weekly_squat_50", "Accumulate 50 Squats", "Do 50 squats this week",
+                new QuestReward(90,180,0,0,0,0,0,2), QuestCategory.WEEKLY,50,"squats"));
+        list.add(new QuestModel("q_weekly_plank_100", "Accumulate 100 Plank Seconds", "Maintain a plank for 100 seconds this week",
+                new QuestReward(75,60,0,0,0,0,0,3), QuestCategory.WEEKLY,100,"plank"));
+        list.add(new QuestModel("q_weekly_crunches_50", "Accumulate 50 Crunches", "Complete 50 crunches this week",
+                new QuestReward(60,40,0,0,0,0,0,2), QuestCategory.WEEKLY,50,"crunches"));
+        list.add(new QuestModel("q_weekly_steps_12500", "Walk 12,500 Steps", "Accumulate 12,500 this week using your device's step counter",
+                new QuestReward(250, 150, 0, 0, 0, 0, 0, 2), QuestCategory.WEEKLY, 12500, "steps"));
         list.add(new QuestModel("q_weekly_quests_5", "Train 5 Days this week", "Log exercise on 5 separate days",
                 new QuestReward(250, 50, 0, 0, 0, 0, 0, 5), QuestCategory.WEEKLY, 5, "completion"));
 
@@ -215,14 +225,14 @@ public class QuestManager {
                 new QuestReward(300,500,0,0,0,0,0,4), QuestCategory.MONTHLY,20,"completion"));
         list.add(new QuestModel("q_monthly_200push", "Accumulate 200 Push-ups This Month", "Do 200 pushups this month",
                 new QuestReward(350,250,0,0,0,0,0,5), QuestCategory.MONTHLY,200,"pushups"));
-        list.add(new QuestModel("q_monthly_squat_600", "Accumulate 600 Squats", "Do 150 squats this month",
-                new QuestReward(90,180,0,0,0,0,0,7), QuestCategory.MONTHLY,600,"squats"));
-        list.add(new QuestModel("q_monthly_plank_1200", "Accumulate 1200 Plank Seconds", "Maintain a plank for 1200 seconds this month",
-                new QuestReward(75,60,0,0,0,0,0,10), QuestCategory.MONTHLY,1200,"plank"));
-        list.add(new QuestModel("q_monthly_crunches_400", "Accumulate 400 Crunches", "Complete 400 crunches this month",
-                new QuestReward(60,40,0,0,0,0,0,8), QuestCategory.MONTHLY,400,"crunches"));
-        list.add(new QuestModel("q_monthly_steps_90000", "Walk 90,000 Steps", "Accumulate 90,000 this month using your device's step counter",
-                new QuestReward(900, 300, 0, 0, 0, 0, 0, 10), QuestCategory.MONTHLY, 90000, "steps"));
+        list.add(new QuestModel("q_monthly_squat_200", "Accumulate 200 Squats", "Do 200 squats this month",
+                new QuestReward(90,180,0,0,0,0,0,7), QuestCategory.MONTHLY,200,"squats"));
+        list.add(new QuestModel("q_monthly_plank_400", "Accumulate 400 Plank Seconds", "Maintain a plank for 400 seconds this month",
+                new QuestReward(75,60,0,0,0,0,0,10), QuestCategory.MONTHLY,400,"plank"));
+        list.add(new QuestModel("q_monthly_crunches_200", "Accumulate 400 Crunches", "Complete 400 crunches this month",
+                new QuestReward(60,40,0,0,0,0,0,8), QuestCategory.MONTHLY,200,"crunches"));
+        list.add(new QuestModel("q_monthly_steps_50000", "Walk 50,000 Steps", "Accumulate 50,000 this month using your device's step counter",
+                new QuestReward(900, 300, 0, 0, 0, 0, 0, 10), QuestCategory.MONTHLY, 50000, "steps"));
 
         return list;
     }
@@ -237,7 +247,66 @@ public class QuestManager {
         return count;
     }
 
+    public static void reportSteps(Context ctx, int currentDailyTotal) {
+        ensureLoaded(ctx);
+        int delta = currentDailyTotal - lastReportedDailyTotal;
+        if (delta > 0) {
+            addToStepQuest(delta);
+            lastReportedDailyTotal = currentDailyTotal;
 
+            // Save updated lastReportedDailyTotal
+            SharedPreferences prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+            prefs.edit().putInt("last_reported_steps", lastReportedDailyTotal).apply();
+
+            persistAll(ctx);
+        }
+    }
+
+    static void addToStepQuest(int delta) {
+        for (QuestModel q : quests) {
+            if (q.getId().equals("q_daily_steps_2500") && !q.isCompleted()) {
+                q.addProgress(delta);
+
+                // Notify listener
+                if (progressListener != null) {
+                    progressListener.onQuestProgressUpdated(q);
+                }
+            }
+        }
+    }
+
+    public static void resetDailyStepCounterIfNeeded(Context ctx) {
+        SharedPreferences prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        long lastReset = prefs.getLong("last_daily_reset", 0);
+
+        Calendar now = Calendar.getInstance();
+        Calendar resetTime = Calendar.getInstance();
+        resetTime.set(Calendar.HOUR_OF_DAY, getResetHour(ctx));
+        resetTime.set(Calendar.MINUTE, 0);
+        resetTime.set(Calendar.SECOND, 0);
+        resetTime.set(Calendar.MILLISECOND, 0);
+
+        if (lastReset < resetTime.getTimeInMillis() && now.getTimeInMillis() >= resetTime.getTimeInMillis()) {
+            lastReportedDailyTotal = 0;
+            prefs.edit().putLong("last_daily_reset", now.getTimeInMillis()).apply();
+        }
+    }
+
+    public static void reportDayTrained(Context ctx) {
+        ensureLoaded(ctx);
+        for (QuestModel q : quests) {
+            if (!q.isCompleted() && "completion".equals(q.getExerciseType())) {
+                // Only for weekly/monthly “day count” quests
+                if (q.getId().equals("q_weekly_quests_5") || q.getId().equals("q_monthly_20days")) {
+                    q.addProgress(1);
+                    if (progressListener != null) {
+                        progressListener.onQuestProgressUpdated(q);
+                    }
+                }
+            }
+        }
+        persistAll(ctx);
+    }
 
 
 }

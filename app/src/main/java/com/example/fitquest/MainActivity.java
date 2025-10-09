@@ -14,6 +14,9 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import com.facebook.CallbackManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -22,6 +25,8 @@ import com.google.android.gms.fitness.Fitness;
 import com.google.android.gms.fitness.FitnessOptions;
 import com.google.android.gms.fitness.data.DataType;
 import com.google.android.gms.fitness.data.Field;
+
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends BaseActivity implements QuestManager.QuestProgressListener {
 
@@ -54,6 +59,13 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         setupButtons();
         initGoogleFit();
         MusicManager.start(this);
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                "step_quest_update",
+                ExistingPeriodicWorkPolicy.REPLACE,
+                new PeriodicWorkRequest.Builder(StepQuestWorker.class, 15, TimeUnit.MINUTES)
+                        .build()
+        );
     }
 
     private void bindViews() {
@@ -194,11 +206,14 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         super.onResume();
         QuestManager.setQuestProgressListener(this);
         MusicManager.onActivityResume(this);
+
+        QuestManager.resetDailyStepCounterIfNeeded(this);
         
         // Load profile info and refresh
         loadProfileInfo();
         refreshProfile();
-        
+        updateStepQuestRealtime();
+
         // Check for pending sync if avatar exists
         if (avatar != null && isNetworkAvailable()) {
             ProgressSyncManager.forceSync(this, new ProgressSyncManager.AvatarSyncCallback() {
@@ -269,8 +284,10 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
             );
         } else {
             readDailySteps();
+            startRealtimeStepTracking(); // ✅ Start live updates
         }
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -280,6 +297,7 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
             if (resultCode == Activity.RESULT_OK) {
                 setFitAuthorized(true);
                 readDailySteps();
+                startRealtimeStepTracking();
             } else {
                 Toast.makeText(this, "Google Fit permissions denied", Toast.LENGTH_SHORT).show();
             }
@@ -305,6 +323,56 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
                 })
                 .addOnFailureListener(e -> Log.e("FitQuest", "Failed to read steps", e));
     }
+
+    private void updateStepQuestRealtime() {
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account == null) return;
+
+        QuestManager.resetDailyStepCounterIfNeeded(this);
+
+        Fitness.getHistoryClient(this, account)
+                .readDailyTotal(DataType.TYPE_STEP_COUNT_DELTA)
+                .addOnSuccessListener(dataSet -> {
+                    int totalSteps = 0;
+                    if (dataSet != null && !dataSet.isEmpty()) {
+                        totalSteps = dataSet.getDataPoints().get(0)
+                                .getValue(Field.FIELD_STEPS)
+                                .asInt();
+                    }
+
+                    // Report progress to QuestManager
+                    QuestManager.reportSteps(this, totalSteps);
+
+                })
+                .addOnFailureListener(e -> Log.e("FitQuest", "Failed to read steps", e));
+    }
+
+
+    private void startRealtimeStepTracking() {
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account == null) return;
+
+
+
+        Fitness.getSensorsClient(this, account)
+                .add(new com.google.android.gms.fitness.request.SensorRequest.Builder()
+                                .setDataType(DataType.TYPE_STEP_COUNT_DELTA)
+                                .setSamplingRate(5, java.util.concurrent.TimeUnit.SECONDS)
+                                .build(),
+                        dataPoint -> {
+                            QuestManager.resetDailyStepCounterIfNeeded(this);
+
+                            int steps = dataPoint.getValue(Field.FIELD_STEPS).asInt();
+
+                            // Add to quest directly, using delta-safe method
+                            QuestManager.addToStepQuest(steps);
+
+                            Log.d("FitQuest", "Realtime steps: +" + steps);
+                        })
+                .addOnSuccessListener(unused -> Log.d("FitQuest", "Realtime step tracking started"))
+                .addOnFailureListener(e -> Log.e("FitQuest", "Failed to start realtime step tracking", e));
+    }
+
 
     // ------------------ QUEST LISTENER ------------------
     @Override
