@@ -9,16 +9,13 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.fitquest.AvatarModel;
-import com.example.fitquest.R;
-
 import java.util.List;
 
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
 
-    private List<AvatarModel> players;
+    private List<RankLeaderboardEntry> players;
 
-    public LeaderboardAdapter(List<AvatarModel> players) {
+    public LeaderboardAdapter(List<RankLeaderboardEntry> players) {
         this.players = players;
     }
 
@@ -32,33 +29,23 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull LeaderboardAdapter.ViewHolder holder, int position) {
-        AvatarModel player = players.get(position);
+        RankLeaderboardEntry player = players.get(position);
 
         holder.tvName.setText(player.getUsername());
         holder.tvLevel.setText("Lv. " + player.getLevel());
-        holder.tvScore.setText(String.valueOf(player.getXp()));
+        holder.tvScore.setText(player.getScoreLabel());
 
-        int rank = position + 1; // ranking based on sorted list
+        int rank = position + 1;
 
-        if (rank <= 3) {
-            holder.tvRank.setText("");
-            switch (rank) {
-                case 1:
-                    holder.tvRank.setBackgroundResource(R.drawable.ic_rank_gold);
-                    break;
-                case 2:
-                    holder.tvRank.setBackgroundResource(R.drawable.ic_rank_silver);
-                    break;
-                case 3:
-                    holder.tvRank.setBackgroundResource(R.drawable.ic_rank_bronze);
-                    break;
-            }
-        } else {
-            holder.imgRank.setBackgroundResource(R.drawable.bg_rank_generic);
-            holder.tvRank.setText(String.valueOf(rank));
+        holder.tvRank.setText(rank <= 3 ? "" : String.valueOf(rank));
+
+        switch(rank) {
+            case 1: holder.tvRank.setBackgroundResource(R.drawable.ic_rank_gold); break;
+            case 2: holder.tvRank.setBackgroundResource(R.drawable.ic_rank_silver); break;
+            case 3: holder.tvRank.setBackgroundResource(R.drawable.ic_rank_bronze); break;
+            default: holder.tvRank.setBackgroundResource(R.drawable.bg_rank_generic); break;
         }
 
-        // TODO: Render avatar (bodyStyle, outfit, etc.) into imgAvatar if needed
     }
 
     @Override
@@ -69,11 +56,9 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvRank, tvName, tvLevel, tvScore;
         ImageView imgAvatar;
-        View imgRank;
 
         ViewHolder(View itemView) {
             super(itemView);
-            imgRank = itemView.findViewById(R.id.img_avatar);
             tvRank = itemView.findViewById(R.id.tv_rank);
             imgAvatar = itemView.findViewById(R.id.img_avatar);
             tvName = itemView.findViewById(R.id.tv_name);
@@ -82,3 +67,4 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         }
     }
 }
+

@@ -25,7 +25,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+
 public class ChallengeActivity extends BaseActivity implements CombatContext.CombatListener {
+    // ...existing fields...
+    private boolean waitingForPlayerInput = false;
 
     private static final String TAG = "ChallengeActivity";
 
@@ -128,13 +131,28 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
             if (skillButtons[i] != null) {
                 skillButtons[i].setOnClickListener(v -> {
                     showSkillPopup(v, index);
-                    useSkill(index);
+                    if (waitingForPlayerInput) {
+                        List<SkillModel> skills = getAvailableSkills(playerCharacter);
+                        if (index < skills.size()) {
+                            SkillModel chosen = skills.get(index);
+                            combatContext.onPlayerChosenSkill(chosen);
+                            waitingForPlayerInput = false;
+                            setSkillButtonsEnabled(false);
+                        }
+                    }
                 });
             }
             if (skillImages.length > i && skillImages[i] != null) {
                 final int idx = i;
                 skillImages[i].setOnClickListener(v -> showSkillPopup(v, idx));
             }
+        }
+
+    }
+
+    private void setSkillButtonsEnabled(boolean enabled) {
+        for (Button btn : skillButtons) {
+            if (btn != null) btn.setEnabled(enabled);
         }
 
         // Pause/Settings button
@@ -655,10 +673,14 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
         });
     }
 
-    // Auto-select skill for player if UI isn't implemented (we keep manual via buttons)
+    // Manual skill selection: enable buttons and wait for user input
     @Override
     public SkillModel onRequestPlayerSkillChoice(List<SkillModel> availableSkills, Character player, Character enemy) {
-        return null; // null => CombatContext will auto-select
+        runOnUiThread(() -> {
+            waitingForPlayerInput = true;
+            setSkillButtonsEnabled(true);
+        });
+        return null; // return null so CombatContext waits for onPlayerChosenSkill
     }
 
     private boolean isNetworkAvailable() {

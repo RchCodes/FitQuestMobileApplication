@@ -15,6 +15,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.fitquest.AvatarModel;
 import com.example.fitquest.R;
+import com.example.fitquest.RankLeaderboardEntry;
+import com.example.fitquest.LeaderboardManager;
+import com.example.fitquest.LeaderboardEntry;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -32,6 +35,8 @@ public class LeaderboardDialog extends DialogFragment {
     private ImageView btnBack;
     private DatabaseReference dbRef;
     private List<AvatarModel> players = new ArrayList<>();
+    private List<RankLeaderboardEntry> leaderboardEntries = new ArrayList<>();
+    private RecyclerView.Adapter adapter;
 
     @NonNull
     @Override
@@ -67,38 +72,33 @@ public class LeaderboardDialog extends DialogFragment {
         btnBack = view.findViewById(R.id.btn_back);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        // recyclerView.setAdapter(adapter); // plug in your adapter here
+        adapter = new LeaderboardAdapter(leaderboardEntries); // You must have a LeaderboardAdapter for RankLeaderboardEntry
+        recyclerView.setAdapter(adapter);
 
         btnBack.setOnClickListener(v -> dismiss());
 
-        // Firebase setup
-        dbRef = FirebaseDatabase.getInstance().getReference("avatars");
         loadLeaderboard();
 
         return view;
     }
 
     private void loadLeaderboard() {
-        dbRef.addValueEventListener(new ValueEventListener() {
+        LeaderboardManager.loadRankLeaderboard(new LeaderboardManager.LeaderboardCallback() {
             @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                players.clear();
-                for (DataSnapshot child : snapshot.getChildren()) {
-                    AvatarModel avatar = child.getValue(AvatarModel.class);
-                    if (avatar != null) {
-                        players.add(avatar);
+            public void onLeaderboardLoaded(List<LeaderboardEntry> entries, String type) {
+                leaderboardEntries.clear();
+                for (LeaderboardEntry entry : entries) {
+                    if (entry instanceof RankLeaderboardEntry) {
+                        leaderboardEntries.add((RankLeaderboardEntry) entry);
                     }
                 }
-                // Example: sort by level (highest first)
-                Collections.sort(players, Comparator.comparingInt(AvatarModel::getLevel).reversed());
-
-                // if you have adapter:
-                // adapter.notifyDataSetChanged();
+                // Sort by rank points descending (should already be sorted)
+                leaderboardEntries.sort(Comparator.comparingInt(RankLeaderboardEntry::getRankPoints).reversed());
+                if (adapter != null) adapter.notifyDataSetChanged();
             }
-
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                // Log or toast error
+            public void onError(String message) {
+                // Optionally show a toast or log
             }
         });
     }

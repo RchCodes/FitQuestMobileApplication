@@ -23,6 +23,20 @@ import java.util.Random;
  */
 public class CombatContext {
 
+
+
+    public void onPlayerChosenSkill(SkillModel chosenSkill) {
+        if (chosenSkill != null && awaitingPlayerChoice) {
+            // Use the chosen skill
+            playerUseSkill(chosenSkill.getId());
+            awaitingPlayerChoice = false;
+
+            // After skill is used, check for combat end
+            checkCombatEnd();
+        }
+    }
+
+
     public enum Mode { ARENA, CHALLENGE }
     public enum Result { ONGOING, PLAYER_WON, ENEMY_WON, DRAW }
 
@@ -105,9 +119,7 @@ public class CombatContext {
     public void tick(double elapsedSeconds) {
         if (result != Result.ONGOING) return;
 
-
-
-        // Fill AB for each combatant
+        // 1) Fill AB for each combatant
         for (Character c : allCombatants) {
             double fill = computeAbFillPerSecond(c) * elapsedSeconds;
             int intFill = Math.max(0, (int)Math.round(fill));
@@ -117,7 +129,7 @@ public class CombatContext {
             }
         }
 
-        // Build ready queue (who has AB full)
+        // 2) Build ready queue (who has AB full)
         readyQueue.clear();
         for (Character c : allCombatants) {
             if (c.isActionBarFull() && c.isAlive()) {
@@ -125,45 +137,38 @@ public class CombatContext {
             }
         }
 
-        // If both ready, order by AGI tiebreaker
+        // 3) Sort ready queue by AGI tiebreaker
         if (readyQueue.size() == 2) {
             Character first = readyQueue.get(0);
             Character second = readyQueue.get(1);
             int aAgi = first.getEffectiveAgility();
             int bAgi = second.getEffectiveAgility();
-            if (bAgi > aAgi) {
-                // swap so higher AGI acts first
-                Character tmp = first;
+            if (bAgi > aAgi || (bAgi == aAgi && rng.nextBoolean())) {
                 readyQueue.set(0, second);
-                readyQueue.set(1, tmp);
-            } else if (bAgi == aAgi) {
-                // tie-break by random but deterministic-ish
-                if (rng.nextBoolean()) {
-                    Character tmp = first;
-                    readyQueue.set(0, second);
-                    readyQueue.set(1, tmp);
-                }
+                readyQueue.set(1, first);
             }
         }
 
-        // Process actions for everyone ready (keep looping while actions available)
+        // 4) Process ready actions
         for (Character actor : new ArrayList<>(readyQueue)) {
             if (!actor.isAlive()) continue;
-            Character target = actor == player ? enemy : player;
 
-            // If actor is player and we're in interactive mode, request UI choice
-            if (actor == player && listener != null && mode != Mode.ARENA) {
-                // Ask listener for a skill choice (UI can respond synchronously)
-                List<SkillModel> available = getAvailableSkills(actor);
-                SkillModel chosen = listener.onRequestPlayerSkillChoice(available, actor, target);
-                if (chosen != null) {
-                    playerUseSkill(chosen.getId());
-                } else {
-                    // Auto choose if null
-                    autoUseBestSkill(actor, target);
+            Character target = (actor == player) ? enemy : player;
+
+            if (actor == player && mode == Mode.ARENA) {
+                // --- PAUSE for player input ---
+                if (!awaitingPlayerChoice) {
+                    awaitingPlayerChoice = true;
+                    List<SkillModel> available = getAvailableSkills(actor);
+                    if (listener != null) {
+                        // UI should respond asynchronously via onPlayerChosenSkill()
+                        listener.onRequestPlayerSkillChoice(available, actor, target);
+                    }
                 }
+                // Do NOT auto-act yet; wait for onPlayerChosenSkill()
+                continue;
             } else {
-                // AI-controlled actor (enemy in all cases; or player when AI/autoplay)
+                // AI-controlled actor (enemy or auto player)
                 autoUseBestSkill(actor, target);
             }
 
@@ -172,26 +177,24 @@ public class CombatContext {
             if (result != Result.ONGOING) return;
         }
 
-        // On each tick, call onTurnStart hooks (passives + status effects)
-        // We'll call them once per tick for both
+        // 5) Call turn start hooks & process status effects
         turnCounter++;
         for (Character c : allCombatants) {
             if (c.isAlive()) {
                 c.onTurnStart(this);
                 if (listener != null) listener.onTurnStart(c, this);
-                if (c.isAlive()) {
-                    c.processStatusEffects(this); // ensures durations tick down
-                }
+                if (c.isAlive()) c.processStatusEffects(this);
             }
         }
 
+        // 6) Optional AB decay if no one ready
         if (readyQueue.isEmpty()) {
-            // Optional: slowly drain AB or trigger "skip" mechanic
             for (Character c : allCombatants) {
-                c.increaseActionBar(-1); // small decay to re-enter loop
+                c.increaseActionBar(-1);
             }
         }
     }
+
 
     private void checkCombatEnd() {
         if (!player.isAlive() && !enemy.isAlive()) {

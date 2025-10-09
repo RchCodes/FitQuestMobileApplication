@@ -1,7 +1,13 @@
+
 package com.example.fitquest;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +15,42 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.fitness.FitnessOptions;
+import com.google.android.gms.fitness.data.DataType;
+
+import java.util.List;
+
+// App-specific imports
+import com.example.fitquest.QuestModel;
+import com.example.fitquest.QuestManager;
+import com.example.fitquest.QuestRewardManager;
+import com.example.fitquest.AvatarManager;
+import com.example.fitquest.ExerciseTrackingActivity;
+
+
+import android.content.Context;
+import android.content.Intent;
+import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.provider.Settings;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.fitness.FitnessOptions;
+import com.google.android.gms.fitness.data.DataType;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
@@ -132,17 +174,40 @@ public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHol
         holder.progressPercent.setText(percent + "%");
 
         // Button logic
-        if (!quest.isCompleted()) {
-            holder.actionButton.setText("DO QUEST");
-        } else if (quest.isCompleted() && !quest.isClaimed()) {
-            holder.actionButton.setText("CLAIM");
+
+        // Special logic for Walk 5,000 Steps quest
+        boolean isStepQuest = "q_daily_steps_5000".equals(quest.getId());
+        if (isStepQuest) {
+            if (!quest.isCompleted()) {
+                holder.actionButton.setText("Tracked Automatically");
+                holder.actionButton.setEnabled(false);
+            } else if (quest.isCompleted() && !quest.isClaimed()) {
+                holder.actionButton.setText("CLAIM");
+                holder.actionButton.setEnabled(true);
+            } else {
+                holder.actionButton.setText("COMPLETED");
+                holder.actionButton.setEnabled(false);
+            }
         } else {
-            holder.actionButton.setText("COMPLETED");
-            holder.actionButton.setEnabled(false);
+            if (!quest.isCompleted()) {
+                holder.actionButton.setText("DO QUEST");
+                holder.actionButton.setEnabled(true);
+            } else if (quest.isCompleted() && !quest.isClaimed()) {
+                holder.actionButton.setText("CLAIM");
+                holder.actionButton.setEnabled(true);
+            } else {
+                holder.actionButton.setText("COMPLETED");
+                holder.actionButton.setEnabled(false);
+            }
         }
 
 
+
         holder.actionButton.setOnClickListener(v -> {
+            if (isStepQuest) {
+                // Do nothing, tracked automatically
+                return;
+            }
             if (!quest.isCompleted()) {
                 // Special logic for "Complete 5 Quests" daily quest
                 if ("q_daily_quests_5".equals(quest.getId())) {

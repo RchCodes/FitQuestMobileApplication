@@ -193,9 +193,23 @@ public class AvatarManager {
 
     // Callback interface for async loading
     public interface AvatarLoadCallback {
+        /**
+         * Called when the avatar is fully loaded (main callback)
+         */
         void onLoaded(AvatarModel avatar);
+
+        /**
+         * Called if loading fails
+         */
         void onError(String message);
+
+        /**
+         * Optional early callback for when avatar data is available before full processing
+         * Default implementation does nothing so old code won’t break
+         */
+        default void onAvatarLoaded(AvatarModel avatar) { }
     }
+
 
     /** Load avatar from Firebase Realtime Database */
     public static void loadAvatarOnline(AvatarLoadCallback callback) {
@@ -310,12 +324,15 @@ public class AvatarManager {
                     avatar.setPassiveSkillIds(passiveSkillIds);
 
 
-
-                    if (callback != null) callback.onLoaded(avatar);
+                    // After setting all avatar fields, load battle history
+                    avatar.loadBattleHistoryFromFirebase(() -> {
+                        if (callback != null) callback.onAvatarLoaded(avatar);
+                    });
+                    return;
 
                 } catch (Exception e) {
-                    Log.e(TAG, "Failed to parse avatar from Firebase", e);
-                    if (callback != null) callback.onError("Failed to parse avatar");
+                    if (callback != null) callback.onError("Failed to parse avatar: " + e.getMessage());
+                    return;
                 }
             }
 

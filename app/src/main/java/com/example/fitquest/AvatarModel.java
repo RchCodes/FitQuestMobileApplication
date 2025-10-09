@@ -1,5 +1,11 @@
 package com.example.fitquest;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -976,13 +982,39 @@ public class AvatarModel {
     public void addBattleHistory(BattleHistoryModel battleEntry) {
         if (battleHistory == null) battleHistory = new ArrayList<>();
         battleHistory.add(0, battleEntry); // Add to beginning of list
-
         // Keep only the last 50 battle entries
         if (battleHistory.size() > 50) {
             battleHistory = new ArrayList<>(battleHistory.subList(0, 50));
         }
-
         notifyChange();
+        saveBattleHistoryToFirebase();
+    }
+
+    private void saveBattleHistoryToFirebase() {
+        if (playerId == null) return;
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("users").child(playerId).child("battleHistory");
+        ref.setValue(battleHistory);
+    }
+
+    public void loadBattleHistoryFromFirebase(final Runnable onLoaded) {
+        if (playerId == null) { if (onLoaded != null) onLoaded.run(); return; }
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("users").child(playerId).child("battleHistory");
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                List<BattleHistoryModel> loaded = new ArrayList<>();
+                for (DataSnapshot child : snapshot.getChildren()) {
+                    BattleHistoryModel entry = child.getValue(BattleHistoryModel.class);
+                    if (entry != null) loaded.add(entry);
+                }
+                battleHistory = loaded;
+                if (onLoaded != null) onLoaded.run();
+            }
+            @Override
+            public void onCancelled(DatabaseError error) {
+                if (onLoaded != null) onLoaded.run();
+            }
+        });
     }
 
     private void onLevelUp() {
@@ -1091,6 +1123,20 @@ public class AvatarModel {
         return unlocked;
     }
 
+    public boolean hasSprite() {
+        return bodyStyle != null && !bodyStyle.isEmpty()
+                && outfit != null && !outfit.isEmpty()
+                && weapon != null && !weapon.isEmpty()
+                && hairOutline != null && !hairOutline.isEmpty()
+                && hairFill != null && !hairFill.isEmpty()
+                && hairColor != null && !hairColor.isEmpty()
+                && eyesOutline != null && !eyesOutline.isEmpty()
+                && eyesFill != null && !eyesFill.isEmpty()
+                && eyesColor != null && !eyesColor.isEmpty()
+                && nose != null && !nose.isEmpty()
+                && lips != null && !lips.isEmpty();
+    
+    }
 }
 
 

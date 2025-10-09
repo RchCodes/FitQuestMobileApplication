@@ -64,6 +64,10 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
     private boolean combatActive = false;
     private Random random = new Random();
 
+    private boolean waitingForPlayerInput = false;
+    private SkillModel chosenSkill = null;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -246,6 +250,49 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
         };
     }
 
+    private void createEnemyMirrorDisplay(AvatarModel enemyAvatar) {
+        if (playerDisplay == null) return;
+
+        // Create ImageView layers for enemy if missing
+        ImageView eBody = findViewById(R.id.enemyBaseBodyLayer);
+        ImageView eOutfit = findViewById(R.id.enemyOutfitLayer);
+        ImageView eWeapon = findViewById(R.id.enemyWeaponLayer);
+        ImageView eHairOutline = findViewById(R.id.enemyHairOutlineLayer);
+        ImageView eHairFill = findViewById(R.id.enemyHairFillLayer);
+        ImageView eEyesOutline = findViewById(R.id.enemyEyesOutlineLayer);
+        ImageView eEyesFill = findViewById(R.id.enemyEyesFillLayer);
+        ImageView eNose = findViewById(R.id.enemyNoseLayer);
+        ImageView eLips = findViewById(R.id.enemyLipsLayer);
+
+        if (eBody == null || eOutfit == null || eWeapon == null) return;
+
+        // Load same layers as player avatar
+        enemyDisplay = new AvatarDisplayManager(
+                this,
+                eBody, eOutfit, eWeapon,
+                eHairOutline, eHairFill, eEyesOutline, eEyesFill, eNose, eLips
+        );
+
+        // Load a “mirror” of player avatar
+        AvatarModel playerAvatar = playerCharacter.getAvatar();
+        enemyDisplay.loadAvatar(playerAvatar);
+
+        // Apply tint to all layers to differentiate
+        float tintFactor = 0.5f; // 0 = black, 1 = normal
+        int tintColor = 0x88FF0000; // semi-transparent red overlay, adjust color
+
+        eBody.setColorFilter(tintColor);
+        eOutfit.setColorFilter(tintColor);
+        eWeapon.setColorFilter(tintColor);
+        if (eHairOutline != null) eHairOutline.setColorFilter(tintColor);
+        if (eHairFill != null) eHairFill.setColorFilter(tintColor);
+        if (eEyesOutline != null) eEyesOutline.setColorFilter(tintColor);
+        if (eEyesFill != null) eEyesFill.setColorFilter(tintColor);
+        if (eNose != null) eNose.setColorFilter(tintColor);
+        if (eLips != null) eLips.setColorFilter(tintColor);
+    }
+
+
     private void loadPlayerCharacter() {
         AvatarModel playerAvatar = AvatarManager.loadAvatarOffline(this);
         if (playerAvatar == null) {
@@ -410,11 +457,17 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
         enemyCharacter = new Character(currentEnemyGhost);
         updateEnemyUI();
 
-        // ensure enemyDisplay shows the new enemy avatar
         if (enemyDisplay != null && currentEnemyGhost != null) {
-            enemyDisplay.loadAvatar(currentEnemyGhost);
+            if (currentEnemyGhost.hasSprite()) {
+                // load enemy’s own sprite
+                enemyDisplay.loadAvatar(currentEnemyGhost);
+            } else {
+                // fallback: mirror of player with tint
+                createEnemyMirrorDisplay(currentEnemyGhost);
+            }
         }
     }
+
 
     /**
      * Start combat only when both playerCharacter and enemyCharacter are available.
@@ -443,15 +496,41 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
         }
     }
 
+    /**
+     * Manual skill selection: enable buttons and wait for user input
+     */
+    @Override
+    public SkillModel onRequestPlayerSkillChoice(List<SkillModel> availableSkills, Character player, Character enemy) {
+        runOnUiThread(() -> {
+            waitingForPlayerInput = true;
+            setSkillButtonsEnabled(true);
+        });
+        return null; // return null so CombatContext waits for onPlayerChosenSkill
+    }
+
+    private void setSkillButtonsEnabled(boolean enabled) {
+        if (skillButtons != null) {
+            for (Button btn : skillButtons) {
+                if (btn != null) btn.setEnabled(enabled);
+            }
+        }
+    }
+
     private void useSkill(int skillIndex) {
-        if (playerCharacter == null || combatContext == null) return;
+        if (!waitingForPlayerInput) return; // ignore clicks outside your turn
 
         List<SkillModel> availableSkills = getAvailableSkills(playerCharacter);
         if (skillIndex < availableSkills.size()) {
-            SkillModel skill = availableSkills.get(skillIndex);
-            combatContext.playerUseSkill(skill.getId());
+            SkillModel chosen = availableSkills.get(skillIndex);
+            waitingForPlayerInput = false;
+            setSkillButtonsEnabled(false);
+            if (combatContext != null) {
+                combatContext.onPlayerChosenSkill(chosen);
+            }
         }
     }
+
+
 
     private List<SkillModel> getAvailableSkills(Character character) {
         List<SkillModel> available = new ArrayList<>();
@@ -755,11 +834,36 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
         MusicManager.resume();
     }
 
-    @Override
-    public SkillModel onRequestPlayerSkillChoice(List<SkillModel> availableSkills, Character player, Character enemy) {
-        // For arena mode, we auto-select skills (AI-controlled)
-        return null; // This triggers auto-selection (implement if you want manual selection)
-    }
+//    @Override
+//    public SkillModel onRequestPlayerSkillChoice(List<SkillModel> availableSkills, Character player, Character enemy) {
+//        runOnUiThread(() -> {
+//            waitingForPlayerInput = true;
+//            setSkillButtonsEnabled(true);
+//        });
+//        return null; // return null so CombatContext waits for onPlayerChosenSkill
+//    }
+
+//    private void setSkillButtonsEnabled(boolean enabled) {
+//        if (skillButtons != null) {
+//            for (Button btn : skillButtons) {
+//                if (btn != null) btn.setEnabled(enabled);
+//            }
+//        }
+//    }
+
+//    private void useSkill(int skillIndex) {
+//        if (!waitingForPlayerInput) return; // ignore clicks outside your turn
+//
+//        List<SkillModel> availableSkills = getAvailableSkills(playerCharacter);
+//        if (skillIndex < availableSkills.size()) {
+//            SkillModel chosen = availableSkills.get(skillIndex);
+//            waitingForPlayerInput = false;
+//            setSkillButtonsEnabled(false);
+//            if (combatContext != null) {
+//                combatContext.onPlayerChosenSkill(chosen);
+//            }
+//        }
+//    }
 
     @Override
     protected void onDestroy() {

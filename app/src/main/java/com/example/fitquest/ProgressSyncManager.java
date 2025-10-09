@@ -6,23 +6,14 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.Constraints;
-import androidx.work.Data;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class ProgressSyncManager {
@@ -109,7 +100,7 @@ public class ProgressSyncManager {
                     AvatarManager.saveAvatarOffline(context, avatar);
                     callback.onLoaded(avatar);
                 }
-                
+
                 @Override
                 public void onError(String message) {
                     // Fallback to offline
