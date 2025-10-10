@@ -2,31 +2,24 @@ package com.example.fitquest;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
 
 import androidx.appcompat.app.AppCompatActivity;
 
 public class ArenaActivity extends BaseActivity {
-
-    private static final String PREF_NAME = "FitQuestPrefs";
-    private static final String KEY_USERNAME = "username";
-    private static final String KEY_GENDER = "gender";
-    private static final String KEY_LEVEL = "level";
-
-    // Avatar helper
-    private AvatarDisplayManager avatarHelper;
 
     // Profile info
     private TextView playerName, playerLevel;
     private ImageView rankIcon;
     private TextView rankLabel;
     private ImageButton backBtn, fightButton, leaderboardButton, battleHistoryButton;
+
+    // Avatar helper
+    private AvatarDisplayManager avatarHelper;
+    private AvatarModel avatar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,50 +54,32 @@ public class ArenaActivity extends BaseActivity {
 
         MusicManager.start(this);
 
-        // Load avatar safely and redirect if none exists
-        loadAvatarIfExists();
-
-        // Load profile info into views
-        loadProfileInfo();
+        // Load avatar safely and initialize UI
+        loadAvatar();
 
         // Setup button listeners
         setupButtons();
     }
 
-    /** Load avatar from offline storage and redirect if missing */
-    private void loadAvatarIfExists() {
-        AvatarModel avatar = AvatarManager.loadAvatarOffline(this);
-        if (avatar != null) {
-            avatarHelper.loadAvatar(avatar);
-
-            // Set name and level
-            playerName.setText(avatar.getUsername());
-            playerLevel.setText("LV. " + avatar.getLevel());
-        } else {
-            // Redirect to avatar creation
-            Intent intent = new Intent(this, AvatarCreationActivity.class); // this causes problem if the data is not available
-            startActivity(intent);
+    /** Load avatar and initialize profile views */
+    private void loadAvatar() {
+        avatar = AvatarManager.loadAvatarOffline(this);
+        if (avatar == null) {
+            // Redirect to avatar creation if missing
+            startActivity(new Intent(this, AvatarCreationActivity.class));
             finish();
+            return;
         }
-    }
 
-    /** Load profile info into UI elements */
-    private void loadProfileInfo() {
-        AvatarModel avatar = AvatarManager.loadAvatarOffline(this);
-        if (avatar == null) return;
+        // Load avatar into helper
+        avatarHelper.loadAvatar(avatar);
 
-        // Set name & level
+        // Set profile info
         playerName.setText(avatar.getUsername());
         playerLevel.setText("LV. " + avatar.getLevel());
-
-        // Set rank (default)
         rankLabel.setText(avatar.getRankName());
         int drawableId = avatar.getRankDrawableRes();
-        if (drawableId != 0) {
-            rankIcon.setImageResource(drawableId);
-        } else {
-            rankIcon.setImageResource(R.drawable.block); // fallback
-        }
+        rankIcon.setImageResource(drawableId != 0 ? drawableId : R.drawable.block);
     }
 
     /** Setup button listeners */
@@ -117,15 +92,13 @@ public class ArenaActivity extends BaseActivity {
         });
 
         battleHistoryButton.setOnClickListener(v -> {
-            BattleHistoryDialog dialog = new BattleHistoryDialog(avatarHelper.getBattleHistory());
+            // Pass the AvatarModel so BattleHistoryDialog loads history asynchronously
+            BattleHistoryDialog dialog = new BattleHistoryDialog(avatar);
             dialog.show(getSupportFragmentManager(), "BattleHistoryDialog");
         });
 
         fightButton.setOnClickListener(v ->
-                startActivity(
-                        new Intent(this, ArenaCombatActivity.class)
-                )
-                //Toast.makeText(this, "Combat Started!", Toast.LENGTH_SHORT).show()
+                startActivity(new Intent(this, ArenaCombatActivity.class))
         );
     }
 

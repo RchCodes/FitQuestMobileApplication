@@ -7,6 +7,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.app.Dialog;
 import android.content.Context;
+import android.graphics.drawable.AnimationDrawable;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -24,6 +25,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.imageview.ShapeableImageView;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DataSnapshot;
@@ -74,6 +76,9 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
     private SkillModel chosenSkill = null;
 
     private boolean isPaused = false;
+
+    private boolean animationPlaying = false; // pause during animations
+    private boolean turnWaiting = false;      // pause when a turn is waiting for input
     private PauseDialog pauseDialog;
 
     private ImageView btnPause;
@@ -240,27 +245,28 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
         combatTickRunnable = new Runnable() {
             @Override
             public void run() {
-                if (combatActive && combatContext != null) {
-                    try {
-                        // advance simulation by 0.1s
-                        combatContext.tick(0.1);
-
-                        // Inform listener (UI) about the tick — CombatContext currently doesn't call the tick callback,
-                        // so we call it here to keep UI synced (this is safe because we're on the main looper).
+                try {
+                    // Only advance simulation when allowed, but ALWAYS schedule next run while combatActive
+                    if (combatActive && combatContext != null && !animationPlaying && !turnWaiting) {
                         try {
+                            combatContext.tick(0.1);
                             onCombatTick(0.1);
                         } catch (Exception e) {
                             Log.w(TAG, "onCombatTick(double) threw: " + e.getMessage());
                         }
-
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error during combat tick", e);
                     }
-                    combatHandler.postDelayed(this, 100);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error during combat tick", e);
+                } finally {
+                    // Keep the loop alive while combatActive so it resumes automatically after pauses
+                    if (combatActive && combatHandler != null) {
+                        combatHandler.postDelayed(this, 100);
+                    }
                 }
             }
         };
     }
+
 
     private void createEnemyMirrorDisplay(AvatarModel enemyAvatar) {
         if (playerDisplay == null) return;
@@ -515,6 +521,7 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
     public SkillModel onRequestPlayerSkillChoice(List<SkillModel> availableSkills, Character player, Character enemy) {
         runOnUiThread(() -> {
             waitingForPlayerInput = true;
+            turnWaiting = true; // pause combat tick
             setSkillButtonsEnabled(true);
         });
         return null; // return null so CombatContext waits for onPlayerChosenSkill
@@ -559,6 +566,8 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
             if (combatContext != null) {
                 combatContext.onPlayerChosenSkill(chosen);
             }
+            // Resume combat tick AFTER notifying CombatContext
+            turnWaiting = false;
         }
     }
 
@@ -726,18 +735,18 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
 
             if (defender == playerCharacter) {
                 updateHealthBar(playerHpBar, playerHpText, playerCharacter);
-                playHitAnimation(findViewById(R.id.baseBodyLayer));
+                playHitAnimation(findViewById(R.id.playerFrame));
 
                 if (!playerCharacter.isAlive()) {
-                    playPlayerDeathAnimation(findViewById(R.id.baseBodyLayer));
+                    playPlayerDeathAnimation(findViewById(R.id.playerFrame));
                 }
 
             } else if (defender == enemyCharacter) {
                 updateHealthBar(enemyHpBar, enemyHpText, enemyCharacter);
-                playHitAnimation(findViewById(R.id.enemyBaseBodyLayer));
+                playHitAnimation(findViewById(R.id.enemyFrame));
 
                 if (!enemyCharacter.isAlive()) {
-                    playDeathAnimation(findViewById(R.id.enemyBaseBodyLayer));
+                    playDeathAnimation(findViewById(R.id.enemyFrame));
                 }
             }
         });
@@ -871,6 +880,8 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
     private void playHitAnimation(View view) {
         if (view == null) return;
 
+        animationPlaying = true; // pause tick
+
         // --- Shake animation ---
         ObjectAnimator shake = ObjectAnimator.ofFloat(view, "translationX", 0, 20, -20, 15, -15, 10, -10, 5, -5, 0);
         shake.setDuration(400);
@@ -883,7 +894,7 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
 
         flash.addUpdateListener(animation -> {
             float value = (float) animation.getAnimatedValue();
-            view.setAlpha(1f - (0.3f * value)); // briefly fade to simulate flash
+            view.setAlpha(1f - (0.3f * value));
             if (view instanceof ImageView) {
                 ((ImageView) view).setColorFilter(
                         android.graphics.Color.argb((int) (150 * value), 255, 0, 0),
@@ -892,24 +903,26 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
             }
         });
 
-        flash.addListener(new android.animation.AnimatorListenerAdapter() {
+        // Combine both animations and listen for the AnimatorSet end
+        AnimatorSet set = new AnimatorSet();
+        set.playTogether(shake, flash);
+        set.addListener(new AnimatorListenerAdapter() {
             @Override
-            public void onAnimationEnd(android.animation.Animator animation) {
+            public void onAnimationEnd(Animator animation) {
                 view.setAlpha(1f);
                 if (view instanceof ImageView) {
                     ((ImageView) view).clearColorFilter();
                 }
+                animationPlaying = false; // resume ticking
             }
         });
-
-        // --- Combine both animations ---
-        AnimatorSet set = new AnimatorSet();
-        set.playTogether(shake, flash);
         set.start();
     }
 
     private void playDeathAnimation(View view) {
         if (view == null) return;
+
+        animationPlaying = true; // pause tick
 
         // Fade out + fall down
         ObjectAnimator fadeOut = ObjectAnimator.ofFloat(view, "alpha", 1f, 0f);
@@ -931,6 +944,7 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
             @Override
             public void onAnimationEnd(Animator animation) {
                 view.setVisibility(View.INVISIBLE);
+                animationPlaying = false;
             }
         });
         deathSet.start();
@@ -939,45 +953,103 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
     private void playPlayerDeathAnimation(View view) {
         if (view == null) return;
 
-        // Step 1: Flash faintly before collapse
+        animationPlaying = true; // pause tick
+
+        // Flash faintly before collapse
         ValueAnimator flash = ValueAnimator.ofFloat(0f, 1f);
         flash.setDuration(200);
         flash.setRepeatMode(ValueAnimator.REVERSE);
         flash.setRepeatCount(2);
         flash.addUpdateListener(animator -> {
             float value = (float) animator.getAnimatedValue();
-            view.setAlpha(1f - (0.4f * value)); // subtle flicker
+            view.setAlpha(1f - (0.4f * value));
         });
 
-        // Step 2: Slight backward fall
+        // Slight backward fall
         ObjectAnimator fallBack = ObjectAnimator.ofFloat(view, "translationY", 0f, 100f);
         fallBack.setInterpolator(new android.view.animation.AccelerateInterpolator());
         fallBack.setDuration(1000);
 
-        // Step 3: Gradual fade-out
+        // Gradual fade-out
         ObjectAnimator fadeOut = ObjectAnimator.ofFloat(view, "alpha", 1f, 0f);
         fadeOut.setDuration(1000);
 
-        // Step 4: Scale down slightly as if collapsing
+        // Scale down
         ObjectAnimator scaleX = ObjectAnimator.ofFloat(view, "scaleX", 1f, 0.8f);
         ObjectAnimator scaleY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 0.8f);
         scaleX.setDuration(1000);
         scaleY.setDuration(1000);
 
-        // Combine everything
         AnimatorSet deathSet = new AnimatorSet();
-        deathSet.playSequentially(flash, fadeOut);
-        deathSet.playTogether(fallBack, scaleX, scaleY, fadeOut);
+        // Play the short flash together with the longer collapse so callbacks are deterministic.
+        deathSet.playTogether(flash, fallBack, fadeOut, scaleX, scaleY);
         deathSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 view.setVisibility(View.INVISIBLE);
-                // Optionally trigger game over UI or message
+                animationPlaying = false; // resume ticking (if still applicable)
                 showPlayerDefeatDialog();
             }
         });
         deathSet.start();
     }
+
+    private void playSkillSprite(View targetView, List<Integer> frameResIds, int frameDuration) {
+        if (targetView == null || frameResIds == null || frameResIds.isEmpty()) return;
+
+        ImageView overlay = findViewById(R.id.skillAnimationView);
+        if (overlay == null) return;
+
+        animationPlaying = true;
+        turnWaiting = true;
+
+        AnimationDrawable animation = new AnimationDrawable();
+        for (int resId : frameResIds) {
+            animation.addFrame(getResources().getDrawable(resId), frameDuration);
+        }
+        animation.setOneShot(true);
+
+        overlay.setImageDrawable(animation);
+        overlay.setVisibility(View.VISIBLE);
+
+        animation.start();
+
+        // Stop and hide after total duration
+        int totalDuration = frameResIds.size() * frameDuration;
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            overlay.setVisibility(View.GONE);
+            animation.stop();
+            animationPlaying = false;
+            turnWaiting = false;
+        }, totalDuration);
+    }
+
+
+    private void playSkillAnimation(View targetView, int gifResId, long duration) {
+        if (targetView == null) return;
+
+        ImageView gifOverlay = findViewById(R.id.skillAnimationView);
+        if (gifOverlay == null) return;
+
+        animationPlaying = true;  // pause combat tick
+        turnWaiting = true;       // pause turn until animation ends
+
+        gifOverlay.setVisibility(View.VISIBLE);
+
+        Glide.with(this)
+                .asGif()
+                .load(gifResId)
+                .into(gifOverlay);
+
+        // Hide overlay after duration and resume combat
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            gifOverlay.setVisibility(View.GONE);
+            animationPlaying = false;
+            turnWaiting = false;
+        }, duration);
+    }
+
+
 
     private void showPlayerDefeatDialog() {
         new android.app.AlertDialog.Builder(this)

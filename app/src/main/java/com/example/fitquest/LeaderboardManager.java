@@ -113,32 +113,62 @@ public class LeaderboardManager {
     public static void loadRankLeaderboard(LeaderboardCallback callback) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference rankRef = database.getReference(RANK_LEADERBOARD_PATH);
-        
+
         rankRef.orderByChild("rankPoints").limitToLast(100).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 List<LeaderboardEntry> entries = new ArrayList<>();
-                
+
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     RankLeaderboardEntry entry = snapshot.getValue(RankLeaderboardEntry.class);
+
                     if (entry != null) {
+                        boolean needsUpdate = false;
+
+                        // Fill missing rankPoints
+                        if (entry.getRankPoints() < 0) {
+                            entry.setRankPoints(0);
+                            needsUpdate = true;
+                        }
+
+                        // Fill missing level
+                        if (entry.getLevel() <= 0) {
+                            entry.setLevel(1);
+                            needsUpdate = true;
+                        }
+
+                        // Fill missing rank
+                        if (entry.getRank() < 0) {
+                            entry.setRank(0);
+                            needsUpdate = true;
+                        }
+
+                        // Push fixed entry back to Firebase if any field was missing
+                        if (needsUpdate) {
+                            rankRef.child(entry.getUserId()).setValue(entry)
+                                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Updated missing fields for: " + entry.getUsername()))
+                                    .addOnFailureListener(e -> Log.e(TAG, "Failed to update missing fields: " + e.getMessage()));
+                        }
+
                         entries.add(entry);
                     }
                 }
-                
-                // Sort by rank points (descending)
-                Collections.sort(entries, (a, b) -> Integer.compare(b.getRankPoints(), a.getRankPoints()));
-                
+
+                // Sort by rank points descending
+                entries.sort((a, b) -> Integer.compare(((RankLeaderboardEntry)b).getRankPoints(),
+                        ((RankLeaderboardEntry)a).getRankPoints()));
+
                 callback.onLeaderboardLoaded(entries, "rank");
             }
-            
+
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 callback.onError("Failed to load rank leaderboard: " + databaseError.getMessage());
             }
         });
     }
-    
+
+
     /**
      * Load quest leaderboard (top players by quests completed)
      */

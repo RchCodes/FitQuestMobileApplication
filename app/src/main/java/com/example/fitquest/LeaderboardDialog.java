@@ -1,8 +1,8 @@
 package com.example.fitquest;
 
 import android.app.Dialog;
-import androidx.fragment.app.DialogFragment;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,38 +10,29 @@ import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.fitquest.AvatarModel;
-import com.example.fitquest.R;
-import com.example.fitquest.RankLeaderboardEntry;
-import com.example.fitquest.LeaderboardManager;
-import com.example.fitquest.LeaderboardEntry;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class LeaderboardDialog extends DialogFragment {
 
     private RecyclerView recyclerView;
-    private ImageView btnBack;
-    private DatabaseReference dbRef;
-    private List<AvatarModel> players = new ArrayList<>();
+    private ImageView btnBack, btnArena, btnQuest;
     private List<RankLeaderboardEntry> leaderboardEntries = new ArrayList<>();
-    private RecyclerView.Adapter adapter;
+    private LeaderboardAdapter adapter;
+
+    private static final String TAG = "LeaderboardDialog";
+
+    private enum LeaderboardType { RANK, QUEST }
+    private LeaderboardType currentType = LeaderboardType.RANK;
 
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        // Make background transparent, style will handle the rest
         Dialog dialog = super.onCreateDialog(savedInstanceState);
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
@@ -52,7 +43,6 @@ public class LeaderboardDialog extends DialogFragment {
     @Override
     public void onStart() {
         super.onStart();
-        // Force dialog to match parent AFTER it’s created
         if (getDialog() != null && getDialog().getWindow() != null) {
             getDialog().getWindow().setLayout(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -66,23 +56,48 @@ public class LeaderboardDialog extends DialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.leaderboard_dialog, container, false);
 
         recyclerView = view.findViewById(R.id.recycler_leaderboard);
         btnBack = view.findViewById(R.id.btn_back);
+        btnArena = view.findViewById(R.id.button_lb_arena);
+        btnQuest = view.findViewById(R.id.button_lb_quest2);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new LeaderboardAdapter(leaderboardEntries); // You must have a LeaderboardAdapter for RankLeaderboardEntry
+        adapter = new LeaderboardAdapter(leaderboardEntries, getCurrentUserId());
         recyclerView.setAdapter(adapter);
 
         btnBack.setOnClickListener(v -> dismiss());
 
-        loadLeaderboard();
+        // Tab switching
+        btnArena.setOnClickListener(v -> switchLeaderboard(LeaderboardType.RANK));
+        btnQuest.setOnClickListener(v -> switchLeaderboard(LeaderboardType.QUEST));
+
+        // Load default leaderboard (Rank)
+        switchLeaderboard(currentType);
 
         return view;
     }
 
-    private void loadLeaderboard() {
+    /** Switch leaderboard type and reload data */
+    private void switchLeaderboard(LeaderboardType type) {
+        currentType = type;
+        if (type == LeaderboardType.RANK) {
+            loadRankLeaderboard();
+            btnArena.setAlpha(1f);
+            btnQuest.setImageResource(R.drawable.button_lb_quest);
+            btnQuest.setAlpha(0.5f);
+        } else {
+            loadQuestLeaderboard();
+            btnArena.setAlpha(0.5f);
+            btnArena.setImageResource(R.drawable.button_lb_arena2);
+            btnQuest.setAlpha(1f);
+        }
+    }
+
+    /** Load rank leaderboard from Firebase */
+    private void loadRankLeaderboard() {
         LeaderboardManager.loadRankLeaderboard(new LeaderboardManager.LeaderboardCallback() {
             @Override
             public void onLeaderboardLoaded(List<LeaderboardEntry> entries, String type) {
@@ -92,14 +107,56 @@ public class LeaderboardDialog extends DialogFragment {
                         leaderboardEntries.add((RankLeaderboardEntry) entry);
                     }
                 }
-                // Sort by rank points descending (should already be sorted)
-                leaderboardEntries.sort(Comparator.comparingInt(RankLeaderboardEntry::getRankPoints).reversed());
-                if (adapter != null) adapter.notifyDataSetChanged();
+                // Sort descending
+                leaderboardEntries.sort((a, b) -> Integer.compare(b.getRankPoints(), a.getRankPoints()));
+                adapter.notifyDataSetChanged();
+                Log.d(TAG, "Rank leaderboard loaded: " + leaderboardEntries.size() + " players");
             }
+
             @Override
             public void onError(String message) {
-                // Optionally show a toast or log
+                Log.e(TAG, "Rank leaderboard load error: " + message);
             }
         });
+    }
+
+    /** Load quest leaderboard from Firebase */
+    private void loadQuestLeaderboard() {
+        LeaderboardManager.loadQuestLeaderboard(new LeaderboardManager.LeaderboardCallback() {
+            @Override
+            public void onLeaderboardLoaded(List<LeaderboardEntry> entries, String type) {
+                leaderboardEntries.clear();
+                for (LeaderboardEntry entry : entries) {
+                    // Map QuestLeaderboardEntry → RankLeaderboardEntry for adapter compatibility
+                    if (entry instanceof QuestLeaderboardEntry) {
+                        QuestLeaderboardEntry q = (QuestLeaderboardEntry) entry;
+                        RankLeaderboardEntry rankEntry = new RankLeaderboardEntry(
+                                q.getUsername(),
+                                q.getUserId(),
+                                q.getQuestsCompleted(), // treat as "score"
+                                1, // default level
+                                0, // default rank
+                                q.getLastQuestTime()
+                        );
+                        leaderboardEntries.add(rankEntry);
+                    }
+                }
+                // Sort descending by quests completed
+                leaderboardEntries.sort((a, b) -> Integer.compare(b.getRankPoints(), a.getRankPoints()));
+                adapter.notifyDataSetChanged();
+                Log.d(TAG, "Quest leaderboard loaded: " + leaderboardEntries.size() + " players");
+            }
+
+            @Override
+            public void onError(String message) {
+                Log.e(TAG, "Quest leaderboard load error: " + message);
+            }
+        });
+    }
+
+    /** Get current user ID from AvatarManager */
+    private String getCurrentUserId() {
+        AvatarModel avatar = AvatarManager.loadAvatarOffline(getContext());
+        return avatar != null ? avatar.getPlayerId() : "";
     }
 }

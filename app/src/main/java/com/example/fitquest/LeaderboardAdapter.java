@@ -14,9 +14,11 @@ import java.util.List;
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
 
     private List<RankLeaderboardEntry> players;
+    private String currentUserId; // Add this
 
-    public LeaderboardAdapter(List<RankLeaderboardEntry> players) {
+    public LeaderboardAdapter(List<RankLeaderboardEntry> players, String currentUserId) {
         this.players = players;
+        this.currentUserId = currentUserId;
     }
 
     @NonNull
@@ -36,7 +38,6 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         holder.tvScore.setText(player.getScoreLabel());
 
         int rank = position + 1;
-
         holder.tvRank.setText(rank <= 3 ? "" : String.valueOf(rank));
 
         switch(rank) {
@@ -46,6 +47,12 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
             default: holder.tvRank.setBackgroundResource(R.drawable.bg_rank_generic); break;
         }
 
+        // Highlight current user
+        if (player.getUserId().equals(currentUserId)) {
+            holder.itemView.setBackgroundResource(R.drawable.bg_current_user_highlight);
+        } else {
+            holder.itemView.setBackgroundResource(R.drawable.bg_lb_item); // normal
+        }
     }
 
     @Override
@@ -67,4 +74,3 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         }
     }
 }
-

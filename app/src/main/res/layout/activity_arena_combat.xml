@@ -246,6 +246,13 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/skillAnimationView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:scaleType="centerInside"/>
     </FrameLayout>
 
     <ImageView
@@ -322,6 +329,13 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="fitXY"/>
+
+        <ImageView
+            android:id="@+id/enemySkillAnimationView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            android:scaleType="centerInside"/>
     </FrameLayout>
 
     <!-- SETTINGS BUTTON -->

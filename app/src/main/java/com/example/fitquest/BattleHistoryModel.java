@@ -28,4 +28,6 @@ public class BattleHistoryModel {
     public int getRightLevel() { return rightLevel; }
     public int getRightIconRes() { return rightIconRes; }
     public int getScoreChange() { return scoreChange; }
+
+
 }

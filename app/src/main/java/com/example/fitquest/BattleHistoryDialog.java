@@ -1,24 +1,29 @@
 package com.example.fitquest;
 
-import android.app.Dialog;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.view.GestureDetectorCompat;
+import androidx.fragment.app.DialogFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import android.view.GestureDetector;
+import android.view.MotionEvent;
 
 import java.util.List;
 
 public class BattleHistoryDialog extends DialogFragment {
 
-    private List<BattleHistoryModel> historyList;
+    private AvatarModel avatar;
 
-    public BattleHistoryDialog(List<BattleHistoryModel> historyList) {
-        this.historyList = historyList;
+    public BattleHistoryDialog(AvatarModel avatar) {
+        this.avatar = avatar;
     }
 
     @Nullable
@@ -26,11 +31,35 @@ public class BattleHistoryDialog extends DialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+
         View view = inflater.inflate(R.layout.battle_history_dialog, container, false);
 
         RecyclerView recyclerView = view.findViewById(R.id.recyclerBattleHistory);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(new BattleHistoryAdapter(historyList));
+
+        List<BattleHistoryModel> historyList = avatar != null ? avatar.getBattleHistory() : null;
+
+        BattleHistoryAdapter adapter = new BattleHistoryAdapter(historyList);
+        recyclerView.setAdapter(adapter);
+
+        // Animate RecyclerView items
+        recyclerView.setAlpha(0f);
+        recyclerView.animate().alpha(1f).setDuration(400).start();
+
+        // Swipe-to-dismiss
+        GestureDetectorCompat gestureDetector = new GestureDetectorCompat(getContext(),
+                new GestureDetector.SimpleOnGestureListener() {
+                    @Override
+                    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                        if (Math.abs(e2.getY() - e1.getY()) > 200 && Math.abs(velocityY) > 1000) {
+                            dismiss();
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+
+        view.setOnTouchListener((v, event) -> gestureDetector.onTouchEvent(event));
 
         return view;
     }
@@ -38,10 +67,11 @@ public class BattleHistoryDialog extends DialogFragment {
     @Override
     public void onStart() {
         super.onStart();
-        Dialog dialog = getDialog();
-        if (dialog != null) {
-            dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT);
+        if (getDialog() != null) {
+            getDialog().getWindow().setLayout(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
         }
     }
 }

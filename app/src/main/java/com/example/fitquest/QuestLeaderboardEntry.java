@@ -33,4 +33,8 @@ public class QuestLeaderboardEntry extends LeaderboardEntry {
     public String getScoreLabel() {
         return questsCompleted + " Quests";
     }
+
+    public long getLastQuestTime() {
+        return lastUpdateTime;
+    }
 }

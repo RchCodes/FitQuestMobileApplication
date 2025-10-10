@@ -57,6 +57,8 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
     private Handler combatHandler;
     private Runnable combatTickRunnable;
 
+    private boolean animationPlaying = false;
+
     // --- Gauntlet / Challenge ---
     private List<AvatarModel> challengeEnemies = new ArrayList<>(); // avatars used for CombatContext
     private List<EnemyModel> enemyModelsReceived = new ArrayList<>(); // original enemy models from LevelSelect (if any)
@@ -213,7 +215,7 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
             @Override
             public void run() {
                 // Only tick when combat active and not paused
-                if (combatActive && combatContext != null && !combatPaused) {
+                if (combatActive && combatContext != null && !combatPaused && !animationPlaying) {
                     try {
                         combatContext.tick(0.1); // 100ms tick
                         // keep UI in sync by calling the listener tick hook
@@ -563,18 +565,18 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
 
             if (defender == playerCharacter) {
                 updateHealthBar(playerHpBar, playerHpText, playerCharacter);
-                playHitAnimation(findViewById(R.id.baseBodyLayer));
+                playHitAnimation(findViewById(R.id.imgPlayer), null);
 
                 if (!playerCharacter.isAlive()) {
-                    playPlayerDeathAnimation(findViewById(R.id.baseBodyLayer));
+                    playPlayerDeathAnimation(findViewById(R.id.imgPlayer), null);
                 }
 
             } else if (defender == enemyCharacter) {
                 updateHealthBar(enemyHpBar, enemyHpText, enemyCharacter);
-                playHitAnimation(findViewById(R.id.enemyBaseBodyLayer));
+                playHitAnimation(findViewById(R.id.imgEnemy), null);
 
                 if (!enemyCharacter.isAlive()) {
-                    playDeathAnimation(findViewById(R.id.enemyBaseBodyLayer));
+                    playDeathAnimation(findViewById(R.id.imgEnemy), null);
                 }
             }
         });
@@ -609,56 +611,59 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
 
             if (playerWon) {
                 resultMessage = "Victory! You defeated " + loser.getName();
-                boolean leveledUp = playerAvatar.addXp(20 + (levelNumber * 5)); // scaled reward
-                playerAvatar.addCoins(50 + (levelNumber * 10));
+                // --- Calculate rewards ---
+                int xpGained = 20 + (levelNumber * 5);
+                int coinsGained = 50 + (levelNumber * 10);
+                List<String> itemsGained = new ArrayList<>(); // populate if granting items
 
-                // record battle history if your AvatarModel supports
-                BattleHistoryModel entry = new BattleHistoryModel(
-                        playerAvatar.getUsername(),
-                        playerAvatar.getLevel(),
-                        playerAvatar.getRankDrawableRes(),
-                        loser.getName(),
-                        loser.getLevel(),
-                        R.drawable.rank_novice,
-                        0
-                );
-                playerAvatar.addBattleHistory(entry);
+                boolean leveledUp = playerAvatar.addXp(xpGained);
+                playerAvatar.addCoins(coinsGained);
 
-                // Save locally; attempt network sync if available
+                // Save progress locally and sync if network available
                 ProgressSyncManager.saveProgress(this, playerAvatar, false);
                 if (isNetworkAvailable()) ProgressSyncManager.saveProgress(this, playerAvatar, true);
 
-                if (leveledUp) {
-                    QuestRewardManager.showLevelUpPopup(this, playerAvatar.getLevel(), playerAvatar.getRank());
-                }
+                // Show rewards dialog first
+                showCombatRewardsDialog(xpGained, coinsGained, itemsGained, () -> {
+                    // After rewards dialog is dismissed, show level-up popup if leveled up
+                    if (leveledUp) {
+                        QuestRewardManager.showLevelUpPopup(this, playerAvatar.getLevel(), playerAvatar.getRank());
+                    }
 
-                // Move to next enemy if any
-                currentEnemyIndex++;
-                if (currentEnemyIndex < challengeEnemies.size()) {
-                    selectNextEnemy();
-                    // small delay before new combat
-                    new Handler(Looper.getMainLooper()).postDelayed(this::startCombat, 1500);
-                } else {
-                    addCombatLog("Challenge cleared!");
-                    Toast.makeText(this, "Challenge cleared!", Toast.LENGTH_LONG).show();
-                    finish();
-                }
+                    // Move to next enemy if any
+                    currentEnemyIndex++;
+                    if (currentEnemyIndex < challengeEnemies.size()) {
+                        selectNextEnemy();
+                        new Handler(Looper.getMainLooper()).postDelayed(this::startCombat, 1500);
+                    } else {
+                        addCombatLog("Challenge cleared!");
+                        Toast.makeText(this, "Challenge cleared!", Toast.LENGTH_LONG).show();
+                        finish();
+                    }
+                });
+
             } else {
                 resultMessage = "Defeat! You were defeated by " + winner.getName();
-                boolean leveledUp = playerAvatar.addXp(5);
+                int xpGained = 5;
+                playerAvatar.addXp(xpGained);
                 ProgressSyncManager.saveProgress(this, playerAvatar, false);
                 if (isNetworkAvailable()) ProgressSyncManager.saveProgress(this, playerAvatar, true);
+
+                // Show level-up popup if leveled up
+                boolean leveledUp = playerAvatar.getLevel() > 0; // optional: check if xp triggered level-up
                 if (leveledUp) {
                     QuestRewardManager.showLevelUpPopup(this, playerAvatar.getLevel(), playerAvatar.getRank());
                 }
-                Toast.makeText(this, resultMessage, Toast.LENGTH_LONG).show();
-                // End challenge on defeat
-                finish();
+
+                // Show defeat dialog
+                showPlayerDefeatDialog();
             }
 
             addCombatLog(resultMessage);
         });
     }
+
+
 
     // This hook is used by CombatContext.endCombat(playerWon)
     @Override
@@ -718,8 +723,13 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
         );
     }
 
-    private void playHitAnimation(View view) {
-        if (view == null) return;
+    private void playHitAnimation(View view, Runnable onEnd) {
+        if (view == null) {
+            if (onEnd != null) onEnd.run();
+            return;
+        }
+
+        animationPlaying = true; // pause combat ticks
 
         // --- Shake animation ---
         ObjectAnimator shake = ObjectAnimator.ofFloat(view, "translationX", 0, 20, -20, 15, -15, 10, -10, 5, -5, 0);
@@ -730,10 +740,9 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
         flash.setDuration(200);
         flash.setRepeatMode(ValueAnimator.REVERSE);
         flash.setRepeatCount(1);
-
         flash.addUpdateListener(animation -> {
             float value = (float) animation.getAnimatedValue();
-            view.setAlpha(1f - (0.3f * value)); // briefly fade to simulate flash
+            view.setAlpha(1f - (0.3f * value));
             if (view instanceof ImageView) {
                 ((ImageView) view).setColorFilter(
                         android.graphics.Color.argb((int) (150 * value), 255, 0, 0),
@@ -742,26 +751,37 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
             }
         });
 
-        flash.addListener(new android.animation.AnimatorListenerAdapter() {
+        flash.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(android.animation.Animator animation) {
                 view.setAlpha(1f);
-                if (view instanceof ImageView) {
-                    ((ImageView) view).clearColorFilter();
-                }
+                if (view instanceof ImageView) ((ImageView) view).clearColorFilter();
             }
         });
 
         // --- Combine both animations ---
         AnimatorSet set = new AnimatorSet();
         set.playTogether(shake, flash);
+        set.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                animationPlaying = false; // resume ticks
+                if (onEnd != null) onEnd.run();
+            }
+        });
         set.start();
     }
 
-    private void playDeathAnimation(View view) {
-        if (view == null) return;
 
-        // Fade out + fall down
+    private void playDeathAnimation(View view, Runnable onEnd) {
+        if (view == null) {
+            if (onEnd != null) onEnd.run();
+            return;
+        }
+
+        animationPlaying = true;
+
+        // Fade out + fall down + shrink
         ObjectAnimator fadeOut = ObjectAnimator.ofFloat(view, "alpha", 1f, 0f);
         fadeOut.setDuration(800);
 
@@ -769,65 +789,71 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
         fallDown.setDuration(800);
         fallDown.setInterpolator(new android.view.animation.AccelerateInterpolator());
 
-        ObjectAnimator shrink = ObjectAnimator.ofFloat(view, "scaleX", 1f, 0.6f);
-        shrink.setDuration(800);
-
+        ObjectAnimator shrinkX = ObjectAnimator.ofFloat(view, "scaleX", 1f, 0.6f);
         ObjectAnimator shrinkY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 0.6f);
+        shrinkX.setDuration(800);
         shrinkY.setDuration(800);
 
         AnimatorSet deathSet = new AnimatorSet();
-        deathSet.playTogether(fadeOut, fallDown, shrink, shrinkY);
+        deathSet.playTogether(fadeOut, fallDown, shrinkX, shrinkY);
         deathSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 view.setVisibility(View.INVISIBLE);
+                animationPlaying = false; // resume ticks
+                if (onEnd != null) onEnd.run();
             }
         });
         deathSet.start();
     }
 
-    private void playPlayerDeathAnimation(View view) {
-        if (view == null) return;
 
-        // Step 1: Flash faintly before collapse
+    private void playPlayerDeathAnimation(View view, Runnable onEnd) {
+        if (view == null) {
+            if (onEnd != null) onEnd.run();
+            return;
+        }
+
+        animationPlaying = true;
+
+        // Step 1: Flash faintly
         ValueAnimator flash = ValueAnimator.ofFloat(0f, 1f);
         flash.setDuration(200);
         flash.setRepeatMode(ValueAnimator.REVERSE);
         flash.setRepeatCount(2);
         flash.addUpdateListener(animator -> {
             float value = (float) animator.getAnimatedValue();
-            view.setAlpha(1f - (0.4f * value)); // subtle flicker
+            view.setAlpha(1f - (0.4f * value));
         });
 
-        // Step 2: Slight backward fall
+        // Step 2: Fall back, fade out, scale down
         ObjectAnimator fallBack = ObjectAnimator.ofFloat(view, "translationY", 0f, 100f);
         fallBack.setInterpolator(new android.view.animation.AccelerateInterpolator());
         fallBack.setDuration(1000);
 
-        // Step 3: Gradual fade-out
         ObjectAnimator fadeOut = ObjectAnimator.ofFloat(view, "alpha", 1f, 0f);
         fadeOut.setDuration(1000);
 
-        // Step 4: Scale down slightly as if collapsing
         ObjectAnimator scaleX = ObjectAnimator.ofFloat(view, "scaleX", 1f, 0.8f);
         ObjectAnimator scaleY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 0.8f);
         scaleX.setDuration(1000);
         scaleY.setDuration(1000);
 
-        // Combine everything
         AnimatorSet deathSet = new AnimatorSet();
-        deathSet.playSequentially(flash, fadeOut);
+        deathSet.playSequentially(flash);
         deathSet.playTogether(fallBack, scaleX, scaleY, fadeOut);
         deathSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
                 view.setVisibility(View.INVISIBLE);
-                // Optionally trigger game over UI or message
+                animationPlaying = false;
+                if (onEnd != null) onEnd.run();
                 showPlayerDefeatDialog();
             }
         });
         deathSet.start();
     }
+
 
     private void showPlayerDefeatDialog() {
         new android.app.AlertDialog.Builder(this)
@@ -840,6 +866,33 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
                 .setCancelable(false)
                 .show();
     }
+
+    private void showCombatRewardsDialog(int xpGained, int coinsGained, List<String> itemsGained, Runnable onDismiss) {
+        runOnUiThread(() -> {
+            StringBuilder message = new StringBuilder();
+            message.append("You earned:\n")
+                    .append(xpGained).append(" XP\n")
+                    .append(coinsGained).append(" Coins\n");
+
+            if (itemsGained != null && !itemsGained.isEmpty()) {
+                message.append("Items:\n");
+                for (String item : itemsGained) {
+                    message.append("- ").append(item).append("\n");
+                }
+            }
+
+            new android.app.AlertDialog.Builder(this)
+                    .setTitle("Rewards")
+                    .setMessage(message.toString())
+                    .setPositiveButton("OK", (dialog, which) -> {
+                        dialog.dismiss();
+                        if (onDismiss != null) onDismiss.run();
+                    })
+                    .setCancelable(false)
+                    .show();
+        });
+    }
+
 
 
     @Override
