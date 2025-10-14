@@ -435,13 +435,14 @@
                 app:strokeColor="#FFD700"
                 app:strokeWidth="2.5dp"
                 android:src="@drawable/ic_warrior_skill_1"/>
+
             <Button
                 android:id="@+id/skill1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Skill 1"
                 android:layout_marginRight="5sp"
-                android:background="@drawable/bg_skill_button"/>
+                android:background="@drawable/bg_skill_button"
+                android:text="Skill 1" />
 
             <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/imgSkill2"

@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class LevelProgression {
 
-    private static final int MAX_LEVEL = 30;
+    private static final int MAX_LEVEL = 50;
 
     // Map of level -> max XP required for that level
     private static final Map<Integer, Integer> levelMaxXpMap = new HashMap<>();

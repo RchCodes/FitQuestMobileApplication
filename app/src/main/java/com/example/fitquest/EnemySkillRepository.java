@@ -1,5 +1,6 @@
 package com.example.fitquest;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -83,66 +84,59 @@ public final class EnemySkillRepository {
 
     private EnemySkillRepository() {}
 
+    private static List<SkillModel> safeGetSkills(String... ids) {
+        List<SkillModel> out = new ArrayList<>();
+        for (String id : ids) {
+            SkillModel s = ENEMY_SKILL_MAP.get(id);
+            if (s != null) out.add(s);
+        }
+        return out;
+    }
+
+    private static List<PassiveSkill> safeGetPassives(String... ids) {
+        List<PassiveSkill> out = new ArrayList<>();
+        for (String id : ids) {
+            PassiveSkill p = ENEMY_PASSIVE_MAP.get(id);
+            if (p != null) out.add(p);
+        }
+        return out;
+    }
+
     // --- SLIME ---
     public static List<SkillModel> getSlimeSkills() {
-    return List.of(
-        ENEMY_SKILL_MAP.get("acidic_shot"),
-        ENEMY_SKILL_MAP.get("ooze_slam"),
-        ENEMY_SKILL_MAP.get("toxic_burst")
-    );
+        return safeGetSkills("acidic_shot","ooze_slam","toxic_burst");
     }
 
     public static List<PassiveSkill> getSlimePassives() {
-    return List.of(
-        ENEMY_PASSIVE_MAP.get("regenerative_ooze")
-    );
+        return safeGetPassives("regenerative_ooze");
     }
 
     // --- VENOPODS ---
     public static List<SkillModel> getVenopodsSkills() {
-    return List.of(
-        ENEMY_SKILL_MAP.get("venom_spikes"),
-        ENEMY_SKILL_MAP.get("tentacle_crush"),
-        ENEMY_SKILL_MAP.get("rotting_lash")
-    );
+        return safeGetSkills("venom_spikes","tentacle_crush","rotting_lash");
     }
 
     public static List<PassiveSkill> getVenopodsPassives() {
-    return List.of(
-        ENEMY_PASSIVE_MAP.get("toxic_overflow")
-    );
+        return safeGetPassives("toxic_overflow");
     }
 
     // --- FLAME WOLF ---
     public static List<SkillModel> getFlameWolfSkills() {
-    return List.of(
-        ENEMY_SKILL_MAP.get("scorching_bite"),
-        ENEMY_SKILL_MAP.get("molten_strike"),
-        ENEMY_SKILL_MAP.get("infernal_rush")
-    );
+        return safeGetSkills("scorching_bite","molten_strike","infernal_rush");
     }
 
     public static List<PassiveSkill> getFlameWolfPassives() {
-    return List.of(
-        ENEMY_PASSIVE_MAP.get("burning_fury")
-    );
+        return safeGetPassives("burning_fury");
     }
 
     // --- SLIME KING ---
     public static List<SkillModel> getSlimeKingSkills() {
-    return List.of(
-        ENEMY_SKILL_MAP.get("royal_smash"),
-        ENEMY_SKILL_MAP.get("acid_beam"),
-        ENEMY_SKILL_MAP.get("slime_shockwave")
-    );
+        return safeGetSkills("royal_smash","acid_beam","slime_shockwave");
     }
 
     public static List<PassiveSkill> getSlimeKingPassives() {
-    return List.of(
-        ENEMY_PASSIVE_MAP.get("overwhelming_pressure")
-    );
+        return safeGetPassives("overwhelming_pressure");
     }
-
     // -------------------------------
     // --- SLIME: Skills & Passive ---
     // -------------------------------

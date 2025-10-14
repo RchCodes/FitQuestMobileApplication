@@ -1,7 +1,6 @@
 package com.example.fitquest;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -16,15 +15,14 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 
-import java.util.ArrayList;
+import java.net.CookieHandler;
 import java.util.List;
 
 public class LevelSelectActivity extends BaseActivity {
 
     private GridLayout gridLevels;
     private ImageView btnBack;
-
-    private static final int TOTAL_LEVELS = 10;
+    private static final int TOTAL_CHALLENGES = 24;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,108 +31,63 @@ public class LevelSelectActivity extends BaseActivity {
 
         gridLevels = findViewById(R.id.gridLevels);
         btnBack = findViewById(R.id.btnBack);
-
         btnBack.setOnClickListener(v -> finish());
 
-        // Load player progress (example)
-        SharedPreferences prefs = getSharedPreferences("PlayerPrefs", Context.MODE_PRIVATE);
-        int playerLevel = prefs.getInt("playerLevel", 1); // Default: level 1
+        // Initialize Challenge Data
+        ChallengeManager.init(this);
 
-        generateLevelButtons(playerLevel);
+        generateChallengeButtons();
     }
 
-    private void generateLevelButtons(int playerLevel) {
+    private void generateChallengeButtons() {
         gridLevels.removeAllViews();
 
-        for (int i = 1; i <= TOTAL_LEVELS; i++) {
-            Button btnLevel = new Button(this);
-            btnLevel.setText(String.valueOf(i));
-            btnLevel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 30);
-            btnLevel.setTypeface(ResourcesCompat.getFont(this, R.font.bungee_regular), Typeface.BOLD);
-            btnLevel.setShadowLayer(4, 2, 3, Color.parseColor("#FAFAFA"));
-            btnLevel.setPadding(20, 10, 20, 10);
+        List<ChallengeModel> challenges = ChallengeManager.getAll(this);
+
+        if (challenges.isEmpty()) {
+            Toast.makeText(this, "No challenges available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        for (int i = 0; i < TOTAL_CHALLENGES && i < challenges.size(); i++) {
+            ChallengeModel challenge = challenges.get(i);
+
+            Button btnChallenge = new Button(this);
+            btnChallenge.setText(String.valueOf(i + 1));
+            btnChallenge.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
+            btnChallenge.setTypeface(ResourcesCompat.getFont(this, R.font.bungee_regular), Typeface.BOLD);
+            btnChallenge.setShadowLayer(4, 2, 3, Color.parseColor("#FAFAFA"));
+            btnChallenge.setPadding(20, 10, 20, 10);
 
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
             params.width = dpToPx(75);
             params.height = dpToPx(75);
             params.setMargins(dpToPx(10), dpToPx(10), dpToPx(10), dpToPx(10));
-            btnLevel.setLayoutParams(params);
+            btnChallenge.setLayoutParams(params);
 
-            if (i <= playerLevel) {
-                // Unlocked
-                btnLevel.setBackgroundResource(R.drawable.button_level_unlocked);
-                btnLevel.setTextColor(Color.parseColor("#AA5A1E"));
-                int level = i;
-                btnLevel.setOnClickListener(v -> openChallenge(level));
+            if (!challenge.isCompleted()) {
+                // Unlocked and available
+                btnChallenge.setBackgroundResource(R.drawable.button_level_unlocked);
+                btnChallenge.setTextColor(Color.parseColor("#AA5A1E"));
+
+                int finalI = i;
+                btnChallenge.setOnClickListener(v ->
+                        ChallengeDialog.show(
+                                this,
+                                challenge,
+                                false, // or true if this challenge uses strict mode
+                                finalI
+                        )
+                );
             } else {
-                // Locked
-                btnLevel.setBackgroundResource(R.drawable.button_level_locked);
-                btnLevel.setTextColor(Color.GRAY);
-                btnLevel.setEnabled(false);
+                // Completed / locked after done
+                btnChallenge.setBackgroundResource(R.drawable.button_level_locked);
+                btnChallenge.setTextColor(Color.GRAY);
+                btnChallenge.setEnabled(false);
             }
 
-            gridLevels.addView(btnLevel);
+            gridLevels.addView(btnChallenge);
         }
-    }
-
-    private void openChallenge(int level) {
-        List<EnemyModel> enemiesForLevel = getEnemiesForLevel(level);
-        if (enemiesForLevel.isEmpty()) {
-            Toast.makeText(this, "No enemies defined for this level", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        Intent intent = new Intent(this, ChallengeActivity.class);
-        intent.putParcelableArrayListExtra("enemies", new ArrayList<>(enemiesForLevel));
-        intent.putExtra("level", level);
-        startActivity(intent);
-    }
-
-    private List<EnemyModel> getEnemiesForLevel(int level) {
-        List<EnemyModel> enemies = new ArrayList<>();
-        switch (level) {
-            case 1:
-                enemies.add(EnemyRepository.getEnemy("slime").spawn());
-                break;
-            case 2:
-                enemies.add(EnemyRepository.getEnemy("slime").spawn());
-                enemies.add(EnemyRepository.getEnemy("venopods").spawn());
-                break;
-            case 3:
-                enemies.add(EnemyRepository.getEnemy("venopods").spawn());
-                enemies.add(EnemyRepository.getEnemy("slime").spawn());
-                break;
-            case 4:
-                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
-                break;
-            case 5:
-                enemies.add(EnemyRepository.getEnemy("slime").spawn());
-                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
-                break;
-            case 6:
-                enemies.add(EnemyRepository.getEnemy("venopods").spawn());
-                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
-                break;
-            case 7:
-                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
-                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
-                break;
-            case 8:
-                enemies.add(EnemyRepository.getEnemy("slime_king").spawn());
-                break;
-            case 9:
-                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
-                enemies.add(EnemyRepository.getEnemy("slime_king").spawn());
-                break;
-            case 10:
-                enemies.add(EnemyRepository.getEnemy("slime_king").spawn());
-                enemies.add(EnemyRepository.getEnemy("flame_wolf").spawn());
-                enemies.add(EnemyRepository.getEnemy("venopods").spawn());
-                break;
-            default:
-                break;
-        }
-        return enemies;
     }
 
     private int dpToPx(int dp) {

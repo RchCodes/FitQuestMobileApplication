@@ -10,7 +10,122 @@ import com.google.mlkit.vision.pose.PoseLandmark;
 
 import static java.lang.Math.atan2;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 public class ExerciseDetector {
+
+    // Track last few distance readings
+    private final Deque<Float> distanceHistory = new ArrayDeque<>();
+    private static final int DISTANCE_STABLE_FRAMES = 5; // about 0.2s at 30fps
+    private static final float DISTANCE_TOLERANCE = 0.15f; // ±15cm variation allowed
+
+    private AudioManager audioManager;
+
+    public boolean isInPosition(Pose pose, String exerciseType) {
+        if (pose == null) return false;
+
+        switch (exerciseType.toLowerCase()) {
+            case "plank":
+                return isPlankAligned(pose);
+
+            case "squats":
+                return isSquatFormCorrect(pose);
+
+            case "jumpingjacks":
+                return isJumpingJackAligned(pose);
+
+            case "situps":
+                return isSitupFormCorrect(pose);
+
+            case "treepose":
+                return isTreePoseAligned(pose);
+
+            default:
+                return true; // fallback, assume valid if not defined
+        }
+    }
+
+    private boolean isTreePoseAligned(Pose pose) {
+        PoseLandmark leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
+        PoseLandmark rightAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE);
+        PoseLandmark leftKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE);
+        PoseLandmark rightKnee = pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE);
+        PoseLandmark leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
+        PoseLandmark rightHip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP);
+
+        if (leftAnkle == null || rightAnkle == null || leftKnee == null || rightKnee == null) return false;
+
+        // Check if one leg is lifted (knee much higher than other)
+        boolean oneLegRaised = Math.abs(leftKnee.getPosition().y - rightKnee.getPosition().y) > 200;
+
+        // Torso balanced (hips not tilted)
+        boolean hipsBalanced = Math.abs(leftHip.getPosition().y - rightHip.getPosition().y) < 50;
+
+        return oneLegRaised && hipsBalanced;
+    }
+
+    private boolean isSitupFormCorrect(Pose pose) {
+        PoseLandmark shoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER);
+        PoseLandmark hip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP);
+        PoseLandmark knee = pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE);
+
+        if (shoulder == null || hip == null || knee == null) return false;
+
+        float torsoAngle = Math.abs(shoulder.getPosition().y - hip.getPosition().y);
+        float legAngle = Math.abs(hip.getPosition().y - knee.getPosition().y);
+
+        // Hip and shoulder alignment implies user is sitting up straight
+        return torsoAngle < 200 && legAngle > 100;
+    }
+
+    private boolean isJumpingJackAligned(Pose pose) {
+        PoseLandmark leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
+        PoseLandmark rightWrist = pose.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
+        PoseLandmark leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
+        PoseLandmark rightAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE);
+
+        if (leftWrist == null || rightWrist == null || leftAnkle == null || rightAnkle == null) return false;
+
+        float handDistance = Math.abs(leftWrist.getPosition().y - rightWrist.getPosition().y);
+        float legDistance = Math.abs(leftAnkle.getPosition().x - rightAnkle.getPosition().x);
+
+        // Hands roughly level, legs evenly apart
+        return handDistance < 60 && legDistance > 200;
+    }
+
+
+    private boolean isSquatFormCorrect(Pose pose) {
+        PoseLandmark knee = pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE);
+        PoseLandmark ankle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE);
+        PoseLandmark hip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP);
+        PoseLandmark shoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER);
+
+        if (knee == null || ankle == null || hip == null || shoulder == null) return false;
+
+        // Check if knee is roughly above ankle (not past toes)
+        boolean kneeOverAnkle = Math.abs(knee.getPosition().x - ankle.getPosition().x) < 50;
+
+        // Check if torso isn’t leaning too far
+        boolean torsoUpright = Math.abs(shoulder.getPosition().x - hip.getPosition().x) < 80;
+
+        return kneeOverAnkle && torsoUpright;
+    }
+
+    private boolean isPlankAligned(Pose pose) {
+        PoseLandmark shoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER);
+        PoseLandmark hip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP);
+        PoseLandmark ankle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE);
+
+        if (shoulder == null || hip == null || ankle == null) return false;
+
+        float shoulderToHip = Math.abs(shoulder.getPosition().y - hip.getPosition().y);
+        float hipToAnkle = Math.abs(hip.getPosition().y - ankle.getPosition().y);
+
+        // Ideal: hip roughly in line between shoulder and ankle
+        return shoulderToHip > 0 && Math.abs((shoulder.getPosition().y + ankle.getPosition().y) / 2 - hip.getPosition().y) < 50;
+    }
+
     public interface ExerciseListener {
         void onRepCountChanged(int currentReps, int target);
         void onPlankTimeUpdated(long seconds, long requiredSeconds);
@@ -60,6 +175,11 @@ public class ExerciseDetector {
     private static final int PLANK_GRACE_MS = 1500; // grace period for short tracking loss (1.5s)
     private static final float ANGLE_TOLERANCE = 15f; // ±15° grace for noisy landmarks
 
+    private boolean leftDown = false;
+    private boolean rightDown = false;
+    private boolean leftCompleted = false;
+    private boolean rightCompleted = false;
+
     private float smoothBodyAngle = 0f;
     private float smoothArmAngle = 0f;
     private float smoothKneeAngle = 0f;
@@ -72,6 +192,7 @@ public class ExerciseDetector {
         this.context = ctx;
         this.difficultyLevel = difficulty == null ? "beginner" : difficulty;
         this.target = Math.max(1, targetReps);
+        audioManager = new AudioManager(context);
         applyDifficultySettings();
     }
 
@@ -124,6 +245,12 @@ public class ExerciseDetector {
     public void processPose(Pose pose, String exercise) {
         if (pose == null || completed) return;
 
+        PoseLandmark ls = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
+        PoseLandmark rs = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER);
+        Log.d("DistanceDebug", "LS=" + (ls != null ? ls.getInFrameLikelihood() : 0) +
+                " RS=" + (rs != null ? rs.getInFrameLikelihood() : 0));
+
+
         // Distance check until user places themself in range
         if (!distanceReady) {
             float d = estimateDistanceMeters(pose);
@@ -131,6 +258,29 @@ public class ExerciseDetector {
                 feedback = "Move into camera frame";
                 if (listener != null) listener.onFeedbackUpdated(feedback);
                 return;
+            }
+            distanceHistory.add(d);
+            if (distanceHistory.size() > DISTANCE_STABLE_FRAMES)
+                distanceHistory.removeFirst();
+
+            if (distanceHistory.size() == DISTANCE_STABLE_FRAMES) {
+                float avg = 0f;
+                for (float val : distanceHistory) avg += val;
+                avg /= DISTANCE_STABLE_FRAMES;
+
+                // Compute max deviation
+                float maxDiff = 0f;
+                for (float val : distanceHistory) {
+                    maxDiff = Math.max(maxDiff, Math.abs(val - avg));
+                }
+
+                if (maxDiff < DISTANCE_TOLERANCE && d >= 1.5f && d <= 2.5f) {
+                    distanceReady = true;
+                    feedback = "Good! Now get into starting position";
+                } else {
+                    distanceReady = false;
+                    feedback = "Hold steady 1.5m–2.5m away";
+                }
             }
             if (d < 1.5f || d > 2.5f) {
                 feedback = "Move between 1.5m–2.5m from camera";
@@ -151,8 +301,12 @@ public class ExerciseDetector {
             case "plank": detectPlank(pose); break;
             case "crunches": detectCrunch(pose); break;
             case "lunges": detectLunge(pose); break;
+            case "jumpingjacks": detectJumpingJack(pose); break;
+            case "treepose": detectTreePose(pose); break;
+            case "situps": detectSitup(pose); break;
             default: detectSquat(pose); break;
         }
+
     }
 
     private void registerRepIfCooldown() {
@@ -161,11 +315,15 @@ public class ExerciseDetector {
         lastRepTime = now;
         currentReps++;
         if (listener != null) listener.onRepCountChanged(currentReps, target);
+        audioManager.playBeep(); // beep each rep
+        audioManager.speakOnce("Rep " + currentReps); // only once per rep
+
         if (currentReps >= target && !completed) {
             completed = true;
             if (listener != null) listener.onExerciseCompleted(currentReps + " reps done.");
         }
     }
+
 
     // ---- Detection helpers that try both sides where appropriate ----
 
@@ -275,22 +433,55 @@ public class ExerciseDetector {
     }
 
     private void detectLunge(Pose pose) {
-        PoseLandmark hip = firstAvailable(pose, PoseLandmark.LEFT_HIP, PoseLandmark.RIGHT_HIP);
-        PoseLandmark knee = firstAvailable(pose, PoseLandmark.LEFT_KNEE, PoseLandmark.RIGHT_KNEE);
-        PoseLandmark ankle = firstAvailable(pose, PoseLandmark.LEFT_ANKLE, PoseLandmark.RIGHT_ANKLE);
-        if (hip == null || knee == null || ankle == null) return;
+        PoseLandmark leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
+        PoseLandmark leftKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE);
+        PoseLandmark leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
 
-        double angle = getAngle(hip, knee, ankle);
-        double down = 140;
-        double up = 150;
-        if (angle < down && !downState) {
-            downState = true;
-            feedback = "Down";
+        PoseLandmark rightHip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP);
+        PoseLandmark rightKnee = pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE);
+        PoseLandmark rightAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE);
+
+        if (leftHip == null || leftKnee == null || leftAnkle == null ||
+                rightHip == null || rightKnee == null || rightAnkle == null) {
+            return;
+        }
+
+        double leftAngle = getAngle(leftHip, leftKnee, leftAnkle);
+        double rightAngle = getAngle(rightHip, rightKnee, rightAnkle);
+
+        double downThreshold = 140;
+        double upThreshold = 155;
+
+        // --- Left leg detection ---
+        if (leftAngle < downThreshold && !leftDown) {
+            leftDown = true;
+            feedback = "Left leg down!";
             if (listener != null) listener.onFeedbackUpdated(feedback);
-        } else if (angle > up && downState) {
-            downState = false;
+        } else if (leftAngle > upThreshold && leftDown) {
+            leftDown = false;
+            leftCompleted = true;
+            feedback = "Left leg up!";
+            if (listener != null) listener.onFeedbackUpdated(feedback);
+        }
+
+        // --- Right leg detection ---
+        if (rightAngle < downThreshold && !rightDown) {
+            rightDown = true;
+            feedback = "Right leg down!";
+            if (listener != null) listener.onFeedbackUpdated(feedback);
+        } else if (rightAngle > upThreshold && rightDown) {
+            rightDown = false;
+            rightCompleted = true;
+            feedback = "Right leg up!";
+            if (listener != null) listener.onFeedbackUpdated(feedback);
+        }
+
+        // --- Count 1 rep only after both sides complete ---
+        if (leftCompleted && rightCompleted) {
+            leftCompleted = false;
+            rightCompleted = false;
             registerRepIfCooldown();
-            feedback = "Nice lunge!";
+            feedback = "Good! One full lunge rep completed!";
             if (listener != null) listener.onFeedbackUpdated(feedback);
         }
     }
@@ -382,6 +573,131 @@ public class ExerciseDetector {
                 listener.onExerciseCompleted("Elbow plank completed! " + secs + "s held.");
         }
     }
+
+    // ---------------------------------------------
+    // NEW EXERCISES
+    // ---------------------------------------------
+
+    private void detectJumpingJack(Pose pose) {
+        PoseLandmark leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
+        PoseLandmark rightWrist = pose.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
+        PoseLandmark leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
+        PoseLandmark rightAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE);
+        PoseLandmark leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
+        PoseLandmark rightShoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER);
+
+        if (leftWrist == null || rightWrist == null || leftAnkle == null || rightAnkle == null ||
+                leftShoulder == null || rightShoulder == null) return;
+
+        // Hands up (above shoulders)
+        boolean armsUp = (leftWrist.getPosition().y < leftShoulder.getPosition().y) &&
+                (rightWrist.getPosition().y < rightShoulder.getPosition().y);
+
+        // Legs apart (ankles far apart horizontally)
+        float legDistance = Math.abs(leftAnkle.getPosition().x - rightAnkle.getPosition().x);
+        boolean legsApart = legDistance > 250f; // Adjust threshold per camera distance
+
+        if (armsUp && legsApart && !downState) {
+            downState = true;
+            feedback = "Up!";
+            if (listener != null) listener.onFeedbackUpdated(feedback);
+        } else if (!armsUp && !legsApart && downState) {
+            downState = false;
+            registerRepIfCooldown();
+            feedback = "Nice jumping jack!";
+            if (listener != null) listener.onFeedbackUpdated(feedback);
+        }
+    }
+
+    private void detectTreePose(Pose pose) {
+        PoseLandmark leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
+        PoseLandmark rightAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE);
+        PoseLandmark leftKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE);
+        PoseLandmark rightKnee = pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE);
+        PoseLandmark leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
+        PoseLandmark rightWrist = pose.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
+
+        if (leftAnkle == null || rightAnkle == null || leftKnee == null || rightKnee == null ||
+                leftWrist == null || rightWrist == null) return;
+
+        // Check if one leg is lifted
+        boolean oneLegUp = Math.abs(leftAnkle.getPosition().y - rightAnkle.getPosition().y) > 100f;
+
+        // Hands together
+        boolean handsJoined = Math.abs(leftWrist.getPosition().x - rightWrist.getPosition().x) < 60f &&
+                Math.abs(leftWrist.getPosition().y - rightWrist.getPosition().y) < 60f;
+
+        long now = System.currentTimeMillis();
+
+        if (oneLegUp && handsJoined) {
+            if (!isPlanking) {
+                isPlanking = true;
+                plankGraceStart = 0;
+                lastPlankTimestamp = now;
+                feedback = "Hold steady in Tree Pose";
+                if (listener != null) listener.onFeedbackUpdated(feedback);
+            } else {
+                long elapsed = now - Math.max(0, lastPlankTimestamp);
+                plankAccumMs += elapsed;
+                lastPlankTimestamp = now;
+            }
+        } else {
+            if (isPlanking) {
+                if (plankGraceStart == 0) {
+                    plankGraceStart = now;
+                } else if (now - plankGraceStart > PLANK_GRACE_MS) {
+                    isPlanking = false;
+                    plankGraceStart = 0;
+                    lastPlankTimestamp = 0;
+                    feedback = "Balance lost!";
+                    if (listener != null) listener.onFeedbackUpdated(feedback);
+                }
+            }
+        }
+
+        long secs = plankAccumMs / 1000L;
+        if (secs != lastReportedPlankSecond) {
+            lastReportedPlankSecond = secs;
+            if (listener != null) listener.onPlankTimeUpdated(secs, target);
+        }
+
+        if (secs >= target && !completed) {
+            completed = true;
+            if (listener != null)
+                listener.onExerciseCompleted("Tree Pose completed! Held for " + secs + "s");
+        }
+    }
+
+    private void detectSitup(Pose pose) {
+        PoseLandmark shoulder = firstAvailable(pose, PoseLandmark.LEFT_SHOULDER, PoseLandmark.RIGHT_SHOULDER);
+        PoseLandmark hip = firstAvailable(pose, PoseLandmark.LEFT_HIP, PoseLandmark.RIGHT_HIP);
+        PoseLandmark knee = firstAvailable(pose, PoseLandmark.LEFT_KNEE, PoseLandmark.RIGHT_KNEE);
+
+        if (shoulder == null || hip == null || knee == null) return;
+
+        // Skip if user standing
+        if (isStanding(pose)) {
+            feedback = "Lie down to start sit-ups!";
+            if (listener != null) listener.onFeedbackUpdated(feedback);
+            return;
+        }
+
+        double torsoAngle = getAngle(shoulder, hip, knee);
+        double upThreshold = 70;   // sitting upright
+        double downThreshold = 120; // lying down
+
+        if (torsoAngle > downThreshold && !downState) {
+            downState = true;
+            feedback = "Down";
+            if (listener != null) listener.onFeedbackUpdated(feedback);
+        } else if (torsoAngle < upThreshold && downState) {
+            downState = false;
+            registerRepIfCooldown();
+            feedback = "Sit-up done!";
+            if (listener != null) listener.onFeedbackUpdated(feedback);
+        }
+    }
+
 
     boolean isStanding(Pose pose) {
         PoseLandmark shoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);

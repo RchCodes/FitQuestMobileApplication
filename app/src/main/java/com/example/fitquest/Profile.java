@@ -11,6 +11,7 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,7 +35,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Profile {
 
@@ -53,6 +56,7 @@ public class Profile {
     private TextView playerIdView;
     private ImageView rankIconView;
     private TextView rankNameView;
+    private ViewGroup badgesContainer;
 
 
     private final CallbackManager facebookCallbackManager = CallbackManager.Factory.create();
@@ -101,6 +105,7 @@ public class Profile {
         playerIdView = popupView.findViewById(R.id.player_id);
         rankIconView = popupView.findViewById(R.id.rank_icon);
         rankNameView = popupView.findViewById(R.id.rank_name);
+    badgesContainer = popupView.findViewById(R.id.badges_container);
         Button bindButton = popupView.findViewById(R.id.bind_button);
         bindButton.setOnClickListener(v -> showBindOptions());
         Button switchButton = popupView.findViewById(R.id.switch_button);
@@ -136,6 +141,34 @@ public class Profile {
         // Rank icon and name
         rankIconView.setImageResource(avatar.getRankDrawableRes());
         rankNameView.setText(avatar.getRankName());
+
+        // Badges: show up to 5 most recent
+        if (badgesContainer != null) {
+            badgesContainer.removeAllViews();
+
+            List<Integer> badges = (avatar != null && avatar.avatarBadges != null) ? avatar.avatarBadges : new ArrayList<>();
+            if (!badges.isEmpty()) {
+                int count = badges.size();
+                int start = Math.max(0, count - 5); // show last 5 badges
+                for (int i = count - 1; i >= start; i--) {
+                    Integer badgeRes = badges.get(i);
+                    if (badgeRes != null) {
+                        ImageView badgeView = new ImageView(context);
+
+                        int size = (int) (48 * context.getResources().getDisplayMetrics().density);
+                        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+                        params.setMargins(4, 4, 4, 4); // optional spacing
+                        badgeView.setLayoutParams(params);
+
+                        badgeView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                        badgeView.setImageResource(badgeRes);
+
+                        badgesContainer.addView(badgeView);
+                    }
+                }
+            }
+        }
+
     }
 
 

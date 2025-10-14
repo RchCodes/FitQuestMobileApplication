@@ -1,5 +1,7 @@
 package com.example.fitquest;
 
+import android.util.Log;
+
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
@@ -44,6 +46,8 @@ public class AvatarModel {
     private int level;
     private int rank;
     private int rankPoints;
+
+    private int questPoints;
     private String playerId;
 
     // Free points
@@ -64,6 +68,8 @@ public class AvatarModel {
     private int stamina = 0;
     private transient ProfileChangeListener listener;
 
+    private transient boolean checkingLevelUp = false;
+
     // --- Inventory ---
     private Set<String> ownedGearIds = new HashSet<>(); // all owned items (by ID)
 
@@ -78,8 +84,14 @@ public class AvatarModel {
 
     private List<BattleHistoryModel> battleHistory = new ArrayList<>();
 
+    // --- Fitness Challenges ---
+    private List<ChallengeModel> fitnessChallenges = new ArrayList<>();
+    private Set<String> completedChallengeIds = new HashSet<>();
+
     private List<String> activeSkillIds;
     private List<String> passiveSkillIds;
+
+    List<Integer> avatarBadges = new ArrayList<>();
 
     // Constructors
     public AvatarModel() {
@@ -217,6 +229,7 @@ public class AvatarModel {
         this.stamina = 0;
 
         initGearSlots();
+        initFitnessChallenges();
     }
 
     private void assignClassPassiveSkills() {
@@ -536,16 +549,11 @@ public class AvatarModel {
     /**
      * Adds XP and returns true if level increased
      */
+    // Cleaned up addXp()
     public boolean addXp(int amount) {
-        if (level >= LevelProgression.getMaxLevel()) {
-            xp = LevelProgression.getMaxXpForLevel(level);
-            return false; // cannot level up further
-        }
-
+        if (amount <= 0) return false;
         xp += amount;
-        int oldLevel = level;
-        checkLevelUp();
-        return level > oldLevel;
+        return checkLevelUp();
     }
 
 
@@ -703,23 +711,34 @@ public class AvatarModel {
     }
 
     // --- Level & Rank logic ---
-    private void checkLevelUp() {
-        int oldLevel = level;
-        while (level < LevelProgression.getMaxLevel() && xp >= LevelProgression.getMaxXpForLevel(level)) {
-            xp -= LevelProgression.getMaxXpForLevel(level);
-            level++;
+    private boolean checkLevelUp() {
+        if (checkingLevelUp) return false;
+        checkingLevelUp = true;
 
-            // Handle skill acquisition for each level gained
-            onLevelUp();
-        }
-        if (level >= LevelProgression.getMaxLevel()) {
-            level = LevelProgression.getMaxLevel();
-            xp = LevelProgression.getMaxXpForLevel(level);
+        boolean leveledUp = false;
+
+        try {
+            int xpRequired;
+            while (level < LevelProgression.getMaxLevel()) {
+                xpRequired = LevelProgression.getMaxXpForLevel(level);
+                if (xp < xpRequired) break;
+
+                xp -= xpRequired;
+                level++;
+                leveledUp = true;
+                onLevelUp();
+            }
+
+            // Clamp XP to valid range
+            int xpCap = LevelProgression.getMaxXpForLevel(level);
+            if (xp > xpCap) xp = xpCap - 1;
+
+        } finally {
+            checkingLevelUp = false;
         }
 
-        updateRank();
-        // single notification for any change done in this method
-        notifyChange();
+        if (leveledUp) notifyChange();
+        return leveledUp;
     }
 
     /**
@@ -805,8 +824,7 @@ public class AvatarModel {
     }
 
     public int getXpNeeded() {
-        if (level >= LevelProgression.getMaxLevel()) return 0;
-        return LevelProgression.getMaxXpForLevel(level) - xp;
+        return Math.max(0, LevelProgression.getMaxXpForLevel(level) - xp);
     }
 
     // --- Utility ---
@@ -816,14 +834,12 @@ public class AvatarModel {
 
     // --- Setters for XP, Level, Rank ---
     public void setXp(int xp) {
-        if (xp < 0) xp = 0;
-        this.xp = xp;
-        checkLevelUp(); // checkLevelUp will call notifyChange()
+        this.xp = Math.max(0, xp);
+        checkLevelUp();
     }
 
     public void setLevel(int level) {
-        this.level = Math.min(level, LevelProgression.getMaxLevel());
-        checkLevelUp();
+        this.level = Math.max(1, Math.min(level, LevelProgression.getMaxLevel()));
     }
 
     public void setRank(int rank) {
@@ -997,7 +1013,10 @@ public class AvatarModel {
     }
 
     public void loadBattleHistoryFromFirebase(final Runnable onLoaded) {
-        if (playerId == null) { if (onLoaded != null) onLoaded.run(); return; }
+        if (playerId == null) {
+            if (onLoaded != null) onLoaded.run();
+            return;
+        }
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference("users").child(playerId).child("battleHistory");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -1010,6 +1029,7 @@ public class AvatarModel {
                 battleHistory = loaded;
                 if (onLoaded != null) onLoaded.run();
             }
+
             @Override
             public void onCancelled(DatabaseError error) {
                 if (onLoaded != null) onLoaded.run();
@@ -1018,10 +1038,12 @@ public class AvatarModel {
     }
 
     private void onLevelUp() {
-        // Called for every new level reached inside checkLevelUp()
         addFreeAttributePoints(5);
+        addFreePhysiquePoints(2);
         acquireSkillsForLevel(level);
-        // Do NOT call notifyChange() here - checkLevelUp() will notify once
+
+        Log.i("AvatarModel", "Level Up! New level: " + level);
+        notifyChange();
     }
 
     public void setPassiveSkills(List<PassiveSkill> passiveSkills) {
@@ -1123,6 +1145,51 @@ public class AvatarModel {
         return unlocked;
     }
 
+    public List<ChallengeModel> getFitnessChallenges() {
+        if (fitnessChallenges == null) fitnessChallenges = new ArrayList<>();
+        return fitnessChallenges;
+    }
+
+    public void setFitnessChallenges(List<ChallengeModel> challenges) {
+        this.fitnessChallenges = challenges != null ? new ArrayList<>(challenges) : new ArrayList<>();
+    }
+
+    public Set<String> getCompletedChallengeIds() {
+        if (completedChallengeIds == null) completedChallengeIds = new HashSet<>();
+        return completedChallengeIds;
+    }
+
+    public void markChallengeCompleted(String challengeId) {
+        if (completedChallengeIds == null) completedChallengeIds = new HashSet<>();
+        if (!completedChallengeIds.contains(challengeId)) {
+            completedChallengeIds.add(challengeId);
+            // optional: also reward XP/coins here if you want instant rewards
+        }
+    }
+    public boolean isChallengeCompleted(String challengeId) {
+        return completedChallengeIds != null && completedChallengeIds.contains(challengeId);
+    }
+
+    public void addChallenge(ChallengeModel challenge) {
+        if (challenge == null) return;
+        fitnessChallenges.add(challenge);
+        notifyChange();
+    }
+
+    public void completeChallenge(String challengeId) {
+        completedChallengeIds.add(challengeId);
+        notifyChange();
+    }
+
+    private void initFitnessChallenges() {
+        if (fitnessChallenges == null || fitnessChallenges.isEmpty()) {
+            this.fitnessChallenges = ChallengeManager.getDefaultChallenges(); // static source
+        }
+        if (completedChallengeIds == null) {
+            this.completedChallengeIds = new HashSet<>();
+        }
+    }
+
     public boolean hasSprite() {
         return bodyStyle != null && !bodyStyle.isEmpty()
                 && outfit != null && !outfit.isEmpty()
@@ -1135,8 +1202,27 @@ public class AvatarModel {
                 && eyesColor != null && !eyesColor.isEmpty()
                 && nose != null && !nose.isEmpty()
                 && lips != null && !lips.isEmpty();
-    
+
     }
+
+    public void addAvatarBadge(int rewardBadge) {
+        if (avatarBadges == null) avatarBadges = new ArrayList<>();
+        if (!avatarBadges.contains(rewardBadge)) {
+            {
+                avatarBadges.add(rewardBadge);
+            }
+        }
+    }
+
+    public void addCompletedChallenge(String challengeId) {
+        if (challengeId != null) completedChallengeIds.add(challengeId);
+    }
+
+    public void setCompletedChallengeIds(Set<String> ids) {
+        completedChallengeIds.clear();
+        if (ids != null) completedChallengeIds.addAll(ids);
+    }
+
 }
 
 

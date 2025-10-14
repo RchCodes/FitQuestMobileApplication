@@ -15,7 +15,8 @@ public class EnemyRepository {
 
     static {
     // Ensure enemy skills/passives are registered before creating any enemies
-    EnemySkillRepository.init();
+        Class<?> ignore = EnemySkillRepository.class;
+        EnemySkillRepository.init();
 
     // SLIME
     enemies.put("slime", new EnemyModel(
@@ -82,4 +83,5 @@ public class EnemyRepository {
         }
         return out;
     }
+
 }

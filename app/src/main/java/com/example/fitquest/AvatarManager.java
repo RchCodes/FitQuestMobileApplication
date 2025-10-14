@@ -177,6 +177,7 @@ public class AvatarManager {
         avatar.updateSkillIds();
         rootMap.put("activeSkillIds", avatar.getActiveSkillIds() != null ? avatar.getActiveSkillIds() : new ArrayList<>());
         rootMap.put("passiveSkillIds", avatar.getPassiveSkillIds() != null ? avatar.getPassiveSkillIds() : new ArrayList<>());
+        rootMap.put("completedChallenges", new ArrayList<>(avatar.getCompletedChallengeIds()));
 
 
         ref.updateChildren(rootMap)
@@ -188,6 +189,10 @@ public class AvatarManager {
                     Log.e(TAG, "Failed to save avatar online", e);
                     if (callback != null) callback.onFailure(e);
                 });
+    }
+
+    public static String getCurrentUserId() {
+        return FirebaseAuth.getInstance().getCurrentUser().getUid();
     }
 
 
@@ -323,6 +328,16 @@ public class AvatarManager {
                     }
                     avatar.setPassiveSkillIds(passiveSkillIds);
 
+                    // --- Load completed challenges ---
+                    DataSnapshot completedChallengesSnap = snapshot.child("completedChallenges");
+                    if (completedChallengesSnap.exists()) {
+                        for (DataSnapshot s : completedChallengesSnap.getChildren()) {
+                            String id = s.getValue(String.class);
+                            if (id != null) {
+                                avatar.addCompletedChallenge(id);
+                            }
+                        }
+                    }
 
                     // After setting all avatar fields, load battle history
                     avatar.loadBattleHistoryFromFirebase(() -> {

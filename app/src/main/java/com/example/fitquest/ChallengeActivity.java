@@ -7,6 +7,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -23,6 +24,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
+
 import com.google.android.material.imageview.ShapeableImageView;
 
 import java.util.ArrayList;
@@ -33,6 +36,13 @@ import java.util.Random;
 
 public class ChallengeActivity extends BaseActivity implements CombatContext.CombatListener {
     // ...existing fields...
+
+    private AlertDialog rewardDialog;
+    private boolean isRewardDialogShown = false;
+    private boolean isCombatEnded = false;
+    private boolean isAnimatingTurn = false;
+    private long lastSaveTime = 0;
+    private static final long SAVE_COOLDOWN = 2000; // 2 seconds
     private boolean waitingForPlayerInput = false;
 
     private static final String TAG = "ChallengeActivity";
@@ -84,10 +94,30 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
         // Read intent extras (LevelSelect sends enemies list + level)
         Intent intent = getIntent();
         if (intent != null) {
+            // --- New preferred way (using enemyIds instead of direct Parcelable list) ---
+            ArrayList<String> enemyIds = intent.getStringArrayListExtra("enemyIds");
+            List<EnemyModel> enemies = new ArrayList<>();
+
+            if (enemyIds != null) {
+                for (String id : enemyIds) {
+                    EnemyModel enemy = EnemyRepository.getEnemy(id);
+                    if (enemy != null) {
+                        enemies.add(enemy.spawn());
+                    }
+                }
+            }
+
+            // Fallback to old direct enemy list (for backward compatibility)
             ArrayList<EnemyModel> list = intent.getParcelableArrayListExtra("enemies");
-            if (list != null) enemyModelsReceived = list;
+            if (list != null && !list.isEmpty()) {
+                enemyModelsReceived = list;
+            } else if (!enemies.isEmpty()) {
+                enemyModelsReceived = enemies;
+            }
+
             levelNumber = intent.getIntExtra("level", 1);
         }
+
 
         skillPopup = new SkillInfoPopup();
 
@@ -263,8 +293,11 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
         if (enemyModelsReceived != null && !enemyModelsReceived.isEmpty()) {
             // Convert supplied EnemyModel list to AvatarModel for Character consumption
             for (EnemyModel e : enemyModelsReceived) {
-                AvatarModel av = convertEnemyToAvatar(e);
-                challengeEnemies.add(av);
+                if (e != null) {
+                    e.loadSkillsFromRepo(); // Ensure skills/passives are loaded!
+                    AvatarModel av = convertEnemyToAvatar(e);
+                    challengeEnemies.add(av);
+                }
             }
         } else {
             // fallback to dynamic generator you had previously
@@ -600,7 +633,10 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
     @Override
     public void onCombatEnded(CombatContext.Result result, Character winner, Character loser) {
         runOnUiThread(() -> {
+            if (isCombatEnded) return; // Prevent duplicate triggers
+            isCombatEnded = true;
             combatActive = false;
+
             if (combatHandler != null) {
                 combatHandler.removeCallbacks(combatTickRunnable);
             }
@@ -611,26 +647,25 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
 
             if (playerWon) {
                 resultMessage = "Victory! You defeated " + loser.getName();
-                // --- Calculate rewards ---
+
+                // --- Rewards are handled ONLY here ---
                 int xpGained = 20 + (levelNumber * 5);
                 int coinsGained = 50 + (levelNumber * 10);
-                List<String> itemsGained = new ArrayList<>(); // populate if granting items
+                List<String> itemsGained = new ArrayList<>();
 
                 boolean leveledUp = playerAvatar.addXp(xpGained);
                 playerAvatar.addCoins(coinsGained);
 
-                // Save progress locally and sync if network available
+                // Save progress locally & remotely
                 ProgressSyncManager.saveProgress(this, playerAvatar, false);
                 if (isNetworkAvailable()) ProgressSyncManager.saveProgress(this, playerAvatar, true);
 
-                // Show rewards dialog first
                 showCombatRewardsDialog(xpGained, coinsGained, itemsGained, () -> {
-                    // After rewards dialog is dismissed, show level-up popup if leveled up
                     if (leveledUp) {
                         QuestRewardManager.showLevelUpPopup(this, playerAvatar.getLevel(), playerAvatar.getRank());
                     }
 
-                    // Move to next enemy if any
+                    // Next enemy or finish
                     currentEnemyIndex++;
                     if (currentEnemyIndex < challengeEnemies.size()) {
                         selectNextEnemy();
@@ -638,24 +673,23 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
                     } else {
                         addCombatLog("Challenge cleared!");
                         Toast.makeText(this, "Challenge cleared!", Toast.LENGTH_LONG).show();
-                        finish();
+                        onLevelCompleted(levelNumber);
                     }
                 });
 
             } else {
                 resultMessage = "Defeat! You were defeated by " + winner.getName();
+
                 int xpGained = 5;
-                playerAvatar.addXp(xpGained);
+                boolean leveledUp = playerAvatar.addXp(xpGained);
+
                 ProgressSyncManager.saveProgress(this, playerAvatar, false);
                 if (isNetworkAvailable()) ProgressSyncManager.saveProgress(this, playerAvatar, true);
 
-                // Show level-up popup if leveled up
-                boolean leveledUp = playerAvatar.getLevel() > 0; // optional: check if xp triggered level-up
                 if (leveledUp) {
                     QuestRewardManager.showLevelUpPopup(this, playerAvatar.getLevel(), playerAvatar.getRank());
                 }
 
-                // Show defeat dialog
                 showPlayerDefeatDialog();
             }
 
@@ -663,36 +697,30 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
         });
     }
 
-
-
-    // This hook is used by CombatContext.endCombat(playerWon)
+    /**
+     * Called by CombatContext.endCombat(playerWon)
+     * This is a lightweight fallback hook — no reward logic here.
+     * It simply routes to onCombatEnded() safely if not already triggered.
+     */
     @Override
     public void onCombatEnd(boolean playerWon) {
         runOnUiThread(() -> {
+            if (isCombatEnded) return; // Prevent duplicate calls
+            isCombatEnded = true;
+
             combatActive = false;
             if (combatHandler != null) combatHandler.removeCallbacks(combatTickRunnable);
+
             addCombatLog("Combat forcibly ended: " + (playerWon ? "PLAYER_WON" : "PLAYER_LOST"));
-            // Mirror onCombatEnded behavior for endCombat path:
-            if (playerWon) {
-                // emulate victory flow
-                AvatarModel playerAvatar = playerCharacter.getAvatar();
-                playerAvatar.addXp(20 + (levelNumber * 5));
-                playerAvatar.addCoins(50 + (levelNumber * 10));
-                ProgressSyncManager.saveProgress(this, playerAvatar, false);
-                if (isNetworkAvailable()) ProgressSyncManager.saveProgress(this, playerAvatar, true);
-                if (currentEnemyIndex + 1 < challengeEnemies.size()) {
-                    currentEnemyIndex++;
-                    selectNextEnemy();
-                    new Handler(Looper.getMainLooper()).postDelayed(this::startCombat, 1500);
-                } else {
-                    addCombatLog("Challenge cleared!");
-                    Toast.makeText(this, "Challenge cleared!", Toast.LENGTH_LONG).show();
-                    finish();
-                }
-            } else {
-                Toast.makeText(this, "You were defeated!", Toast.LENGTH_LONG).show();
-                finish();
-            }
+
+            // Delegate to onCombatEnded() for unified logic
+            CombatContext.Result result = playerWon ?
+                    CombatContext.Result.PLAYER_WON :
+                    CombatContext.Result.ENEMY_WON;
+
+            // Pass dummy winner/loser safely
+            onCombatEnded(result, playerWon ? enemyCharacter : playerCharacter,
+                    playerWon ? playerCharacter : enemyCharacter);
         });
     }
 
@@ -700,8 +728,8 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
     @Override
     public SkillModel onRequestPlayerSkillChoice(List<SkillModel> availableSkills, Character player, Character enemy) {
         runOnUiThread(() -> {
-            waitingForPlayerInput = true;
-            setSkillButtonsEnabled(true);
+            waitingForPlayerInput = false;
+            setSkillButtonsEnabled(false);
         });
         return null; // return null so CombatContext waits for onPlayerChosenSkill
     }
@@ -839,9 +867,14 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
         scaleX.setDuration(1000);
         scaleY.setDuration(1000);
 
+        AnimatorSet flashSet = new AnimatorSet();
+        flashSet.playSequentially(flash);
+
+        AnimatorSet fallFadeScale = new AnimatorSet();
+        fallFadeScale.playTogether(fallBack, scaleX, scaleY, fadeOut);
+
         AnimatorSet deathSet = new AnimatorSet();
-        deathSet.playSequentially(flash);
-        deathSet.playTogether(fallBack, scaleX, scaleY, fadeOut);
+        deathSet.playSequentially(flashSet, fallFadeScale);
         deathSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
@@ -852,6 +885,7 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
             }
         });
         deathSet.start();
+
     }
 
 
@@ -893,6 +927,20 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
         });
     }
 
+    private void onLevelCompleted(int level) {
+        // Update player progress
+        SharedPreferences prefs = getSharedPreferences("PlayerPrefs", Context.MODE_PRIVATE);
+        int currentLevel = prefs.getInt("playerLevel", 1);
+        if (level >= currentLevel) {
+            prefs.edit().putInt("playerLevel", level + 1).apply(); // unlock next level
+        }
+
+        // Return result to LevelSelectActivity
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra("levelCompleted", level);
+        setResult(RESULT_OK, resultIntent);
+        finish();
+    }
 
 
     @Override

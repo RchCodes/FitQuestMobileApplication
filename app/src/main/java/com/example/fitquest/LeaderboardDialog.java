@@ -85,6 +85,7 @@ public class LeaderboardDialog extends DialogFragment {
         currentType = type;
         if (type == LeaderboardType.RANK) {
             loadRankLeaderboard();
+            btnArena.setImageResource(R.drawable.button_lb_arena);
             btnArena.setAlpha(1f);
             btnQuest.setImageResource(R.drawable.button_lb_quest);
             btnQuest.setAlpha(0.5f);
@@ -93,6 +94,7 @@ public class LeaderboardDialog extends DialogFragment {
             btnArena.setAlpha(0.5f);
             btnArena.setImageResource(R.drawable.button_lb_arena2);
             btnQuest.setAlpha(1f);
+            btnQuest.setImageResource(R.drawable.button_lb_quest2);
         }
     }
 

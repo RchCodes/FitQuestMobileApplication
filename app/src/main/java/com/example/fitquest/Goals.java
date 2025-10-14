@@ -21,22 +21,58 @@ public class Goals {
     private final Dialog dialog;
     private final LinearLayout goalsList;
     private final AvatarModel avatar;
+    private final ChallengeManager challengeManager;
 
-    // Define goal IDs mapping to descriptions
-    private static final String[][] GOALS = {
-            {"LEVEL_10", "Reach Level 10"},
-            {"LEVEL_30", "Reach Level 20"},
-            {"LEVEL_50", "Reach Level 30"},
-            {"LEVEL_100", "Reach Level 100"},
-            {"PUSHUP_100", "Complete 100 Push-ups"},
-            {"SQUAT_100", "Complete 100 Squats"},
-            {"DIP_100", "Complete 100 Tricep Dips"},
-            {"STEPS_50000", "Complete 50,000 Steps"},
-            {"STEPS_100000", "Complete 100,000 Steps"}
-    };
+    // --- Base Goals (non-challenge) ---
+    private static final List<BaseGoal> BASE_GOALS = List.of(
+            new BaseGoal("LEVEL_10", "Reach Level 10", R.drawable.badge_level_10),
+            new BaseGoal("LEVEL_25", "Reach Level 25", R.drawable.badge_level_25),
+            new BaseGoal("LEVEL_50", "Reach Level 50", R.drawable.badge_level_50),
+            new BaseGoal("LEVEL_100", "Reach Level 100", R.drawable.badge_level_100),
+
+            // Push-ups
+            new BaseGoal("PUSHUP_100", "Complete 100 Push-ups", R.drawable.badge_pushup_100),
+            new BaseGoal("PUSHUP_200", "Complete 200 Push-ups", R.drawable.badge_pushup_100),
+            new BaseGoal("PUSHUP_500", "Complete 500 Push-ups", R.drawable.badge_pushup_100),
+
+            // Squats
+            new BaseGoal("SQUAT_100", "Complete 100 Squats", R.drawable.badge_squat_100),
+            new BaseGoal("SQUAT_200", "Complete 200 Squats", R.drawable.badge_squat_100),
+            new BaseGoal("SQUAT_500", "Complete 500 Squats", R.drawable.badge_squat_100),
+
+            // Steps
+            new BaseGoal("STEPS_25000", "Complete 25,000 Steps", R.drawable.badge_steps_25000),
+            new BaseGoal("STEPS_50000", "Complete 50,000 Steps", R.drawable.badge_steps_50000),
+            new BaseGoal("STEPS_100000", "Complete 100,000 Steps", R.drawable.badge_steps_100000),
+
+            // Jumping Jacks
+            new BaseGoal("JJ_100", "Complete 100 Jumping Jacks", R.drawable.badge_jumping_jacks_100),
+            new BaseGoal("JJ_500", "Complete 500 Jumping Jacks", R.drawable.badge_jumping_jacks_100),
+            new BaseGoal("JJ_1000", "Complete 1,000 Jumping Jacks", R.drawable.badge_jumping_jacks_100),
+
+            // Tree Pose
+            new BaseGoal("TREE_60", "Hold Tree Pose 60s", R.drawable.badge_tree_pose_60),
+            new BaseGoal("TREE_300", "Hold Tree Pose 300s", R.drawable.badge_tree_pose_60),
+            new BaseGoal("TREE_600", "Hold Tree Pose 600s", R.drawable.badge_tree_pose_60),
+
+            // Sit-ups
+            new BaseGoal("SITUP_100", "Complete 100 Sit-ups", R.drawable.badge_situp_100),
+            new BaseGoal("SITUP_400", "Complete 400 Sit-ups", R.drawable.badge_situp_100),
+            new BaseGoal("SITUP_800", "Complete 800 Sit-ups", R.drawable.badge_situp_100),
+
+            // Lunges
+            new BaseGoal("LUNGE_50", "Complete 50 Lunges", R.drawable.badge_lunges_100),
+            new BaseGoal("LUNGE_200", "Complete 200 Lunges", R.drawable.badge_lunges_100),
+            new BaseGoal("LUNGE_500", "Complete 500 Lunges", R.drawable.badge_lunges_100),
+
+            new BaseGoal("STEPS_25000", "Complete 25,000 Steps", R.drawable.badge_steps_25000),
+            new BaseGoal("STEPS_50000", "Complete 50,000 Steps", R.drawable.badge_steps_50000),
+            new BaseGoal("STEPS_100000", "Complete 100,000 Steps", R.drawable.badge_steps_100000)
+    );
 
     public Goals(Context context, AvatarModel avatar) {
         this.avatar = avatar;
+        this.challengeManager = new ChallengeManager();
 
         // Inflate layout
         LayoutInflater inflater = LayoutInflater.from(context);
@@ -54,22 +90,57 @@ public class Goals {
         populateGoals(context);
     }
 
+    public static void updateGoalProgress(Context context, String goalId) {
+        AvatarModel avatar = AvatarManager.loadAvatarOffline(context);
+        if (avatar == null) return;
+
+        GoalState state = avatar.getGoalProgress().get(goalId);
+        if (state != null && state != GoalState.CLAIMED) {
+            avatar.setGoalState(goalId, GoalState.COMPLETED);
+            AvatarManager.saveAvatarOffline(context, avatar);
+            AvatarManager.saveAvatarOnline(avatar);
+        }
+    }
+
+
+
+
+    /**
+     * Initializes all default goals (base + challenge-linked).
+     */
     private void initDefaultGoals() {
-        for (String[] goal : GOALS) {
-            String id = goal[0];
-            if (!avatar.getGoalProgress().containsKey(id)) {
-                avatar.setGoalState(id, GoalState.PENDING);
+        // Base goals
+        for (BaseGoal goal : BASE_GOALS) {
+            if (!avatar.getGoalProgress().containsKey(goal.getId())) {
+                avatar.setGoalState(goal.getId(), GoalState.PENDING);
+            }
+        }
+
+
+        // Challenge-linked goals
+        for (ChallengeModel challenge : challengeManager.getDefaultChallenges()) {
+            String goalId = challenge.getLinkedGoalId();
+            if (goalId != null && !goalId.isEmpty()) {
+                if (!avatar.getGoalProgress().containsKey(goalId)) {
+                    avatar.setGoalState(goalId, GoalState.PENDING);
+                }
             }
         }
     }
 
+    /**
+     * Displays all goals: base + challenge-based.
+     */
     private void populateGoals(Context context) {
         goalsList.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(context);
 
         // Sort goals: PENDING → COMPLETED → CLAIMED
-        List<Map.Entry<String, GoalState>> sortedGoals = new ArrayList<>(avatar.getGoalProgress().entrySet());
+        List<Map.Entry<String, GoalState>> sortedGoals =
+                new ArrayList<>(avatar.getGoalProgress().entrySet());
         Collections.sort(sortedGoals, Comparator.comparing(e -> e.getValue().ordinal()));
+
+        updateChallengeGoalsProgress();
 
         for (Map.Entry<String, GoalState> entry : sortedGoals) {
             String goalId = entry.getKey();
@@ -82,34 +153,90 @@ public class Goals {
 
             goalDescription.setText(description);
 
-            // Enable claim button only if COMPLETED
             claimButton.setEnabled(state == GoalState.COMPLETED);
             claimButton.setText(state == GoalState.CLAIMED ? "Claimed" : "Claim");
 
             claimButton.setOnClickListener(v -> {
                 if (state != GoalState.COMPLETED) return;
 
-                // Example reward: 50 coins, 20 XP
-                avatar.addCoins(50);
-                avatar.addXp(20);
+                // Prevent duplicate rewards
+                if (state == GoalState.CLAIMED) return;
+
+                // Find the linked challenge (if any)
+                ChallengeModel linkedChallenge = challengeManager.getChallengeByGoalId(goalId);
+
+                if (linkedChallenge != null) {
+                    avatar.addCoins(linkedChallenge.getRewardCoins());
+                    avatar.addAvatarBadge(linkedChallenge.getRewardBadge());
+                } else {
+                    // Base goal: find its badge
+                    int badgeResId = R.drawable.lock;
+                    for (BaseGoal g : BASE_GOALS) {
+                        if (g.getId().equals(goalId)) {
+                            badgeResId = g.getBadgeDrawableResId();
+                            break;
+                        }
+                    }
+                    avatar.addCoins(50);             // default coins
+                    avatar.addAvatarBadge(badgeResId); // reward badge drawable
+                }
+
                 avatar.setGoalState(goalId, GoalState.CLAIMED);
-
+                AvatarManager.saveAvatarOffline(context, avatar);
+                AvatarManager.saveAvatarOnline(avatar);
                 Toast.makeText(context, "Claimed reward for: " + description, Toast.LENGTH_SHORT).show();
-
-                // Refresh UI
                 populateGoals(context);
             });
+
+
 
             goalsList.addView(goalItem);
         }
     }
 
-    private String getGoalDescription(String goalId) {
-        for (String[] g : GOALS) {
-            if (g[0].equals(goalId)) return g[1];
+    private void updateChallengeGoalsProgress() {
+        for (ChallengeModel challenge : challengeManager.getDefaultChallenges()) {
+            String goalId = challenge.getLinkedGoalId();
+            if (goalId == null || goalId.isEmpty()) continue;
+
+            GoalState currentState = avatar.getGoalProgress().get(goalId);
+
+            // Skip if already claimed
+            if (currentState == GoalState.CLAIMED) continue;
+
+            // Check if challenge is completed
+            if (challenge.isCompletedByAvatar(avatar)) {
+                avatar.setGoalState(goalId, GoalState.COMPLETED);
+            } else {
+                // Optional: keep as pending or update dynamically
+                if (currentState == null) {
+                    avatar.setGoalState(goalId, GoalState.PENDING);
+                }
+            }
         }
+    }
+
+
+
+
+    /**
+     * Returns readable goal description from base or challenge list.
+     */
+    private String getGoalDescription(String goalId) {
+        // Base goals
+        for (BaseGoal g : BASE_GOALS) {
+            if (g.getId().equals(goalId)) return g.getDescription();
+        }
+
+        // Challenge goals
+        ChallengeModel challenge = challengeManager.getChallengeByGoalId(goalId);
+        if (challenge != null) {
+            return "🏆 " + challenge.getObjective();
+        }
+
         return goalId;
     }
+
 
     public void show() {
         dialog.show();

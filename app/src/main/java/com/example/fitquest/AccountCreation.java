@@ -110,7 +110,6 @@ public class AccountCreation extends AppCompatActivity {
         });
     }
 
-
     // ─────────────── Password Validation ───────────────
     private boolean isValidPassword(String password) {
         String pattern = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$";

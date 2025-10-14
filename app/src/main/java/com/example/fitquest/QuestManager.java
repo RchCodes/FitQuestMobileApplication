@@ -94,6 +94,9 @@ public class QuestManager {
 
         if (changed) {
             persistAll(ctx);
+            for (QuestModel q : quests) {
+                checkGoalsOnExercise(ctx, q);
+            }
         }
     }
 
@@ -205,7 +208,14 @@ public class QuestManager {
                 new QuestReward(40, 40, 0, 0, 0, 0, 0, 0), QuestCategory.DAILY, 2500, "steps"));
         list.add(new QuestModel("q_daily_quests_5", "Complete 5 Quests", "Complete 5 quests in today",
                 new QuestReward(100, 50, 0, 0, 0, 0, 0, 5), QuestCategory.DAILY, 5, "completion"));
-
+        list.add(new QuestModel("q_daily_jj_20", "Do 20 Jumping Jacks", "Perform 20 jumping jacks in one session",
+                new QuestReward(20,30,1,0,0,0,1,0), QuestCategory.DAILY,20,"jumpingjacks"));
+        list.add(new QuestModel("q_daily_tree_20", "Hold Tree Pose 20s", "Maintain Tree Pose for 20 seconds",
+                new QuestReward(25,30,0,1,0,0,1,0), QuestCategory.DAILY,20,"treepose"));
+        list.add(new QuestModel("q_daily_situp_15", "Complete 15 Sit-ups", "Do 15 sit-ups in one session",
+                new QuestReward(20,30,0,0,1,0,1,0), QuestCategory.DAILY,15,"situps"));
+        list.add(new QuestModel("q_daily_lunge_10", "Do 10 Lunges", "Perform 10 lunges (total) in one session",
+                new QuestReward(20,30,0,1,0,0,1,0), QuestCategory.DAILY,10,"lunges"));
         // Weekly
         list.add(new QuestModel("q_weekly_push_50", "Accumulate 50 Push-ups", "Do 50 pushups this week",
                 new QuestReward(100,200,0,0,0,0,0,3), QuestCategory.WEEKLY,50,"pushups"));
@@ -219,7 +229,14 @@ public class QuestManager {
                 new QuestReward(250, 150, 0, 0, 0, 0, 0, 2), QuestCategory.WEEKLY, 12500, "steps"));
         list.add(new QuestModel("q_weekly_quests_5", "Train 5 Days this week", "Log exercise on 5 separate days",
                 new QuestReward(250, 50, 0, 0, 0, 0, 0, 5), QuestCategory.WEEKLY, 5, "completion"));
-
+        list.add(new QuestModel("q_weekly_jj_100", "Accumulate 100 Jumping Jacks", "Do 100 jumping jacks this week",
+                new QuestReward(80,120,0,0,0,0,0,3), QuestCategory.WEEKLY,100,"jumpingjacks"));
+        list.add(new QuestModel("q_weekly_tree_100", "Hold Tree Pose 100s", "Maintain Tree Pose cumulatively 100 seconds this week",
+                new QuestReward(80,100,0,0,1,0,0,3), QuestCategory.WEEKLY,100,"treepose"));
+        list.add(new QuestModel("q_weekly_situp_100", "Accumulate 100 Sit-ups", "Complete 100 sit-ups this week",
+                new QuestReward(80,120,0,0,1,0,0,3), QuestCategory.WEEKLY,100,"situps"));
+        list.add(new QuestModel("q_weekly_lunge_50", "Accumulate 50 Lunges", "Perform 50 lunges this week",
+                new QuestReward(80,120,0,0,1,0,0,3), QuestCategory.WEEKLY,50,"lunges"));
         // Monthly
         list.add(new QuestModel("q_monthly_20days", "Train 20 Days This Month", "Log exercise on 20 separate days",
                 new QuestReward(300,500,0,0,0,0,0,4), QuestCategory.MONTHLY,20,"completion"));
@@ -233,9 +250,65 @@ public class QuestManager {
                 new QuestReward(60,40,0,0,0,0,0,8), QuestCategory.MONTHLY,200,"crunches"));
         list.add(new QuestModel("q_monthly_steps_50000", "Walk 50,000 Steps", "Accumulate 50,000 this month using your device's step counter",
                 new QuestReward(900, 300, 0, 0, 0, 0, 0, 10), QuestCategory.MONTHLY, 50000, "steps"));
-
+        list.add(new QuestModel("q_monthly_jj_500", "Accumulate 500 Jumping Jacks", "Perform 500 jumping jacks this month",
+                new QuestReward(300,400,0,0,0,0,0,5), QuestCategory.MONTHLY,500,"jumpingjacks"));
+        list.add(new QuestModel("q_monthly_tree_300", "Hold Tree Pose 300s", "Maintain Tree Pose cumulatively 300 seconds this month",
+                new QuestReward(300,350,0,0,1,0,0,5), QuestCategory.MONTHLY,300,"treepose"));
+        list.add(new QuestModel("q_monthly_situp_400", "Accumulate 400 Sit-ups", "Complete 400 sit-ups this month",
+                new QuestReward(300,400,0,0,1,0,0,5), QuestCategory.MONTHLY,400,"situps"));
+        list.add(new QuestModel("q_monthly_lunge_200", "Accumulate 200 Lunges", "Perform 200 lunges this month",
+                new QuestReward(300,400,0,0,1,0,0,5), QuestCategory.MONTHLY,200,"lunges"));
         return list;
     }
+
+    private static void checkGoalsOnExercise(Context ctx, QuestModel quest) {
+        AvatarModel avatar = AvatarManager.loadAvatarOffline(ctx);
+        if (avatar == null) return;
+
+        // Example: Push-up goals
+        int totalPushUps = getTotalProgress("pushups");
+        if (totalPushUps >= 100 && avatar.getGoalState("PUSHUP_100") == GoalState.PENDING) {
+            avatar.setGoalState("PUSHUP_100", GoalState.COMPLETED);
+        }
+
+        int totalSquats = getTotalProgress("squats");
+        if (totalSquats >= 100 && avatar.getGoalState("SQUAT_100") == GoalState.PENDING) {
+            avatar.setGoalState("SQUAT_100", GoalState.COMPLETED);
+        }
+
+        int totalSteps = getTotalProgress("steps");
+        if (totalSteps >= 50000 && avatar.getGoalState("STEPS_50000") == GoalState.PENDING) {
+            avatar.setGoalState("STEPS_50000", GoalState.COMPLETED);
+        }
+
+        // Level goals
+        if (avatar.getLevel() >= 10 && avatar.getGoalState("LEVEL_10") == GoalState.PENDING) {
+            avatar.setGoalState("LEVEL_10", GoalState.COMPLETED);
+        }
+        if (avatar.getLevel() >= 20 && avatar.getGoalState("LEVEL_30") == GoalState.PENDING) {
+            avatar.setGoalState("LEVEL_30", GoalState.COMPLETED);
+        }
+        if (avatar.getLevel() >= 30 && avatar.getGoalState("LEVEL_50") == GoalState.PENDING) {
+            avatar.setGoalState("LEVEL_50", GoalState.COMPLETED);
+        }
+        if (avatar.getLevel() >= 100 && avatar.getGoalState("LEVEL_100") == GoalState.PENDING) {
+            avatar.setGoalState("LEVEL_100", GoalState.COMPLETED);
+        }
+
+        AvatarManager.saveAvatarOffline(ctx, avatar);
+    }
+
+    // Helper: Sum all completed progress for an exercise type
+    private static int getTotalProgress(String exerciseType) {
+        int total = 0;
+        for (QuestModel q : quests) {
+            if (exerciseType.equals(q.getExerciseType())) {
+                total += q.getProgress();
+            }
+        }
+        return total;
+    }
+
 
     // In QuestManager.java
     public static int getIncompleteQuestCount(Context ctx) {
@@ -259,6 +332,10 @@ public class QuestManager {
             prefs.edit().putInt("last_reported_steps", lastReportedDailyTotal).apply();
 
             persistAll(ctx);
+
+            for (QuestModel q : quests) {
+                checkGoalsOnExercise(ctx, q);
+            }
         }
     }
 

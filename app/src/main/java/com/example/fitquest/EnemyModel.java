@@ -2,6 +2,7 @@ package com.example.fitquest;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,25 +78,30 @@ public class EnemyModel implements Parcelable {
         if (skillIds != null) {
             for (String sid : skillIds) {
                 SkillModel s = EnemySkillRepository.getEnemySkillById(sid);
-                if (s == null) s = SkillRepository.getSkillById(sid); // fallback to player skills
+                if (s == null) s = SkillRepository.getSkillById(sid);
                 if (s != null) skills.add(s);
+                else Log.e("EnemyModel", "Failed to load skill: " + sid + " for " + name);
             }
         }
+
         if (passiveIds != null) {
             for (String pid : passiveIds) {
                 PassiveSkill p = EnemySkillRepository.getEnemyPassiveById(pid);
-                if (p == null) p = SkillRepository.getPassiveById(pid); // fallback to player passives
+                if (p == null) p = SkillRepository.getPassiveById(pid);
                 if (p != null) passives.add(p);
+                else Log.e("EnemyModel", "Failed to load passive: " + pid + " for " + name);
             }
         }
     }
+
 
     // --- spawn: return a fresh instance that contains runtime skill/passive objects ---
     public EnemyModel spawn() {
         EnemyModel base = EnemyRepository.getEnemy(id);
         if (base == null) return this;
-        // Create a new instance copying ids (so the new instance will rebuild runtime lists)
-        return new EnemyModel(
+
+        // Create a new instance copying IDs
+        EnemyModel spawned = new EnemyModel(
                 base.id,
                 base.name,
                 base.baseHp,
@@ -106,14 +112,24 @@ public class EnemyModel implements Parcelable {
                 base.passiveIds != null ? new ArrayList<>(base.passiveIds) : null,
                 base.spriteResId
         );
+
+        // Rebuild runtime lists to ensure skills and passives are populated
+        spawned.loadSkillsFromRepo();
+
+        return spawned;
     }
+
 
     // --- Getters ---
     public int getBaseHp() { return baseHp; }
     public int getBaseStr() { return baseStr; }
     public int getBaseAgi() { return baseAgi; }
     public int getBaseEnd() { return baseEnd; }
-    public String getId() { return id; }
+
+    public String getId() {
+        return id;
+    }
+
     public String getName() { return name; }
     public int getSpriteResId() { return spriteResId; }
     public List<SkillModel> getSkills() {
@@ -145,4 +161,6 @@ public class EnemyModel implements Parcelable {
         dest.writeStringList(skillIds);
         dest.writeStringList(passiveIds);
     }
+
+
 }

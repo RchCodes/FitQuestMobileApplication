@@ -9,35 +9,38 @@
     android:padding="16dp">
 
     <!-- Back Button -->
+
     <ImageView
         android:id="@+id/btnBack"
         android:layout_width="70dp"
         android:layout_height="35dp"
-        android:layout_marginTop="16dp"
         android:background="@drawable/button_back"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-
-    <!-- Levels Grid (dynamic buttons) -->
-    <GridLayout
-        android:id="@+id/gridLevels"
+    <ScrollView
+        android:id="@+id/scrollView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/bg_select_grid"
-        android:columnCount="3"
-        android:rowCount="4"
         android:layout_marginTop="-32dp"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:paddingBottom="16dp"
-        android:paddingTop="32dp"
-        android:alignmentMode="alignMargins"
-        android:rowOrderPreserved="false"
+        android:layout_marginBottom="48dp"
+        android:background="@drawable/bg_select_grid"
         app:layout_constraintTop_toBottomOf="@id/tvSelectLevel"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
+        app:layout_constraintEnd_toEndOf="parent">
+        <GridLayout
+            android:id="@+id/gridLevels"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:columnCount="3"
+            android:rowCount="4"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingBottom="16dp"
+            android:paddingTop="32dp"
+            android:alignmentMode="alignMargins"
+            android:rowOrderPreserved="false" />
+    </ScrollView>
 
     <!-- Title Banner -->
     <ImageView
@@ -52,32 +55,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Navigation Buttons -->
-    <LinearLayout
-        android:id="@+id/navigationButtons"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="24dp"
-        app:layout_constraintTop_toBottomOf="@id/gridLevels"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageButton
-            android:id="@+id/btnPrev"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_arrow_left"
-            android:contentDescription="Previous Page" />
-
-        <ImageButton
-            android:id="@+id/btnNext"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_arrow_right"
-            android:contentDescription="Next Page" />
-    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

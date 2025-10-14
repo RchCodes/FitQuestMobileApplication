@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="280dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/dialog_bg"
+    android:gravity="center"
+    android:layout_gravity="center">
+
+    <!-- Challenge number -->
+    <TextView
+        android:id="@+id/tvChallengeNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="4dp" />
+
+    <!-- Challenge title -->
+    <TextView
+        android:id="@+id/tvChallengeTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Beginner's Burn"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Challenge description -->
+    <TextView
+        android:id="@+id/tvChallengeTask"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Perform 10 Squats"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Time limit and reward -->
+    <TextView
+        android:id="@+id/tvChallengeTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Time Limit: 1 minute"
+        android:textSize="14sp"
+        android:textColor="#444444"
+        android:layout_marginBottom="2dp" />
+
+    <TextView
+        android:id="@+id/tvChallengeReward"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rewards: 100 exp"
+        android:textSize="14sp"
+        android:textColor="#444444"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Buttons row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnNotNow"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="NOT NOW"
+            android:backgroundTint="#B71C1C"
+            android:textColor="@android:color/white"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btnDoIt"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="DO IT!"
+            android:backgroundTint="#F9A825"
+            android:textColor="@android:color/black" />
+    </LinearLayout>
+
+</LinearLayout>

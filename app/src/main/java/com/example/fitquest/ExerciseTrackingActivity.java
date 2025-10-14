@@ -71,6 +71,10 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
     private CameraSelector cameraSelector;
     private ExecutorService analysisExecutor;
 
+    private boolean strictMode = false;
+    private String challengeId = null;
+
+
     // Keep last reported plank seconds so we only report deltas
     private long lastReportedPlankSeconds = 0;
 
@@ -89,8 +93,14 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
         circularProgress = findViewById(R.id.circularProgress);
         progressText = findViewById(R.id.progressText);
 
-
         audioManager = new AudioManager(this);
+
+        if (getIntent().hasExtra("STRICT_MODE"))
+            strictMode = getIntent().getBooleanExtra("STRICT_MODE", false);
+
+        if (getIntent().hasExtra("CHALLENGE_ID"))
+            challengeId = getIntent().getStringExtra("CHALLENGE_ID");
+
 
         // Read intent extras
         if (getIntent().hasExtra("EXERCISE_TYPE")) exerciseType = getIntent().getStringExtra("EXERCISE_TYPE");
@@ -107,18 +117,19 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
     }
 
     private void setupUiForExercise() {
-
-        if (exerciseType.equals("plank")) {
-            circularProgress.setMax((int) targetReps); // seconds target
+        if (exerciseType.equals("plank") || exerciseType.equals("treepose")) {
+            circularProgress.setMax((int) targetReps); // seconds
             progressText.setText("0s");
         } else {
             circularProgress.setMax(targetReps);
             progressText.setText("0/" + targetReps);
         }
+
         instructionText.setText("Perform " + targetReps + " " + capitalize(exerciseType));
         feedbackText.setText("Get ready...");
         audioManager.speak("Starting " + exerciseType);
     }
+
 
     private void initializePoseDetector() {
         PoseDetectorOptions options = new PoseDetectorOptions.Builder()
@@ -225,35 +236,23 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
         QuestManager.reportExerciseResult(this, exerciseType, 1);
     }
 
-
     @Override
     public void onPlankTimeUpdated(long seconds, long requiredSeconds) {
         runOnUiThread(() -> {
             circularProgress.setMax((int) requiredSeconds);
-
-            int remaining = (int) (requiredSeconds - seconds);
-
             circularProgress.setProgress((int) seconds, true);
 
-
-            progressText.setText(remaining + "s");
+            long remaining = requiredSeconds - seconds;
+            String label = (exerciseType.equals("treepose")) ? "Hold" : "Remaining";
+            progressText.setText(label + ": " + remaining + "s");
         });
 
-    // report only delta seconds to avoid overshoot
         long delta = seconds - lastReportedPlankSeconds;
         if (delta > 0) {
             QuestManager.reportExerciseResult(this, exerciseType, (int) delta);
             lastReportedPlankSeconds = seconds;
         }
     }
-
-//    private void animateProgress(CircularProgressIndicator progressBar, int from, int to) {
-//        ObjectAnimator animation = ObjectAnimator.ofInt(progressBar, "indicatorProgress", from, to);
-//        animation.setDuration(300);
-//        animation.setInterpolator(new DecelerateInterpolator());
-//        animation.start();
-//    }
-
 
     private String lastFeedback = "";
 
@@ -284,20 +283,6 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
         // Finalize and persist progress, without auto-claim
         QuestManager.reportExerciseResult(this, exerciseType, 0);
 
-        // Auto-apply rewards only for the specific questId if provided and quest became completed
-//        if (questId != null && !questId.isEmpty()) {
-//            for (QuestModel q : QuestManager.getAll(this)) {
-//                if (questId.equals(q.getId()) && q.isCompleted() && !q.isClaimed()) {
-//                    boolean leveled = QuestManager.claimQuest(this, q);
-//                    QuestRewardManager.showRewardPopup(this, q.getReward());
-//                    if (leveled) {
-//                        AvatarModel avatar = AvatarManager.loadAvatarOffline(this);
-//                        if (avatar != null) QuestRewardManager.showLevelUpPopup(this, avatar.getLevel(), avatar.getRank());
-//                    }
-//                    break;
-//                }
-//            }
-//        }
 
         new Handler(Looper.getMainLooper()).postDelayed(this::finish, 5000);
     }

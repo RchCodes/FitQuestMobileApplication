@@ -11,6 +11,7 @@ public class AudioManager {
     private final Context context;
     private TextToSpeech tts;
     private ToneGenerator toneGen; // reusable ToneGenerator
+    private String lastSpoken = "";
 
     public AudioManager(Context context) {
         this.context = context;
@@ -57,6 +58,12 @@ public class AudioManager {
         }
     }
 
+    public void speakOnce(String text) {
+        if (text.equals(lastSpoken)) return;
+        lastSpoken = text;
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null);
+    }
+
     // Play a short beep for each rep
     public void playBeep() {
         if (toneGen != null) {
@@ -71,4 +78,6 @@ public class AudioManager {
             toneGen = null;
         }
     }
+
+
 }
