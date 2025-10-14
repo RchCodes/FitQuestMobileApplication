@@ -84,20 +84,20 @@ public class ArenaActivity extends BaseActivity {
 
     /** Setup button listeners */
     private void setupButtons() {
-        backBtn.setOnClickListener(v -> finish());
+        SoundManager.setOnClickListenerWithSound(backBtn, v -> finish());
 
-        leaderboardButton.setOnClickListener(v -> {
+        SoundManager.setOnClickListenerWithSound(leaderboardButton, v -> {
             LeaderboardDialog dialog = new LeaderboardDialog();
             dialog.show(getSupportFragmentManager(), "LeaderboardDialog");
         });
 
-        battleHistoryButton.setOnClickListener(v -> {
+        SoundManager.setOnClickListenerWithSound(battleHistoryButton, v -> {
             // Pass the AvatarModel so BattleHistoryDialog loads history asynchronously
             BattleHistoryDialog dialog = new BattleHistoryDialog(avatar);
             dialog.show(getSupportFragmentManager(), "BattleHistoryDialog");
         });
 
-        fightButton.setOnClickListener(v ->
+        SoundManager.setOnClickListenerWithSound(fightButton, v ->
                 startActivity(new Intent(this, ArenaCombatActivity.class))
         );
     }

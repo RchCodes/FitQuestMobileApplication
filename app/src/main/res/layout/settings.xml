@@ -117,6 +117,68 @@
         android:textSize="12sp"
         android:layout_marginBottom="4dp" />
 
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"
+        android:layout_marginVertical="12dp" />
+
+    <!-- Testing Section -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Testing Tools"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Add resources for testing purposes"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="12sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Testing Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="8dp">
+
+        <Button
+            android:id="@+id/add_exp_button"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="+100 EXP"
+            android:textSize="12sp"
+            android:background="@android:color/holo_green_light" />
+
+        <Button
+            android:id="@+id/add_coins_button"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="+1000 Coins"
+            android:textSize="12sp"
+            android:background="@android:color/holo_blue_light"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/add_level_button"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="+1 Level"
+            android:textSize="12sp"
+            android:background="@android:color/holo_orange_light" />
+    </LinearLayout>
+
     <!-- Help Buttons -->
     <LinearLayout
         android:layout_width="match_parent"

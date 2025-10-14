@@ -34,6 +34,7 @@ public class SkillInfoPopup {
         TextView cooldown = content.findViewById(R.id.skillCooldown);
         TextView effect = content.findViewById(R.id.skillEffect);
         TextView unlock = content.findViewById(R.id.skillUnlock);
+        TextView physiqueEffects = content.findViewById(R.id.skillPhysiqueEffects);
         TextView passiveDetails = content.findViewById(R.id.passiveDetails);
 
         // populate active fields
@@ -56,6 +57,11 @@ public class SkillInfoPopup {
         effect.setText("Effect: " + (effectsText == null ? "—" : effectsText));
 
         unlock.setText("Level Unlock: " + skill.getLevelUnlock());
+
+        // Show physique effects
+        String physiqueText = getPhysiqueEffects(skill);
+        physiqueEffects.setText("Physique Effects: " + physiqueText);
+        physiqueEffects.setVisibility(View.VISIBLE);
 
         // hide passive-only view
         passiveDetails.setVisibility(View.GONE);
@@ -174,6 +180,42 @@ public class SkillInfoPopup {
         } catch (Exception ignored) {}
         if (sb.length() == 0) sb.append(p.getDescription() == null ? "—" : p.getDescription());
         return sb.toString();
+    }
+
+    private String getPhysiqueEffects(SkillModel skill) {
+        StringBuilder effects = new StringBuilder();
+        
+        // Check for physique effects based on skill type or name
+        String skillName = skill.getName().toLowerCase();
+        String skillType = skill.getType() != null ? skill.getType().name().toLowerCase() : "";
+        
+        // Map skills to physique effects based on common patterns
+        if (skillName.contains("strike") || skillName.contains("punch") || skillName.contains("slash")) {
+            effects.append("+1 Arms");
+        } else if (skillName.contains("kick") || skillName.contains("leap") || skillName.contains("dash")) {
+            effects.append("+1 Legs");
+        } else if (skillName.contains("block") || skillName.contains("guard") || skillName.contains("shield")) {
+            effects.append("+1 Chest");
+        } else if (skillName.contains("bend") || skillName.contains("flex") || skillName.contains("stretch")) {
+            effects.append("+1 Back");
+        } else if (skillName.contains("battle") || skillName.contains("cry") || skillName.contains("roar")) {
+            effects.append("+1 Chest, +1 Arms");
+        } else if (skillName.contains("dodge") || skillName.contains("evade") || skillName.contains("agile")) {
+            effects.append("+1 Legs, +1 Back");
+        } else {
+            // Default physique effects based on skill scaling
+            if (skill.getStrScaling() > 0) effects.append("+1 Arms");
+            if (skill.getEndScaling() > 0) {
+                if (effects.length() > 0) effects.append(", ");
+                effects.append("+1 Chest");
+            }
+            if (skill.getAgiScaling() > 0) {
+                if (effects.length() > 0) effects.append(", ");
+                effects.append("+1 Legs");
+            }
+        }
+        
+        return effects.length() > 0 ? effects.toString() : "None";
     }
 
     public void dismiss() {

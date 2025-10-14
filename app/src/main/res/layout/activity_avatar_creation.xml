@@ -43,6 +43,8 @@
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:singleLine="true"
+        android:maxLength="12"
+        android:hint="Max 12 characters"
         app:layout_constraintTop_toBottomOf="@id/tvUsernameLabel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/guideline_half"

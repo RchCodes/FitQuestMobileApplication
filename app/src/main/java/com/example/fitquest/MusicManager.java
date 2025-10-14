@@ -124,10 +124,9 @@ public class MusicManager {
     }
     
     public static void onActivityPause() {
-        // Don't stop music on pause to maintain continuity
-        // Just pause if needed
+        // Pause music when app goes to background
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-            // Keep playing for better user experience
+            mediaPlayer.pause();
         }
     }
     

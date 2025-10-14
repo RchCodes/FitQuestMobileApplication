@@ -268,7 +268,10 @@ public class CombatContext {
         }
 
         if (best != null) {
+            pushLog(actorName(actor) + " uses " + best.getName() + " on " + actorName(target));
             useSkill(actor, best, target);
+        } else {
+            pushLog(actorName(actor) + " couldn't find a suitable skill.");
         }
     }
 

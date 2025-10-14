@@ -24,13 +24,14 @@
         android:id="@+id/etUser"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:hint="User"
+        android:hint="Username (max 12 chars)"
         android:textColorHint="#808080"
         android:background="@drawable/edittext_bg"
         android:padding="10dp"
         android:layout_below="@id/etEmail"
         android:layout_marginTop="10dp"
         android:inputType="textPersonName"
+        android:maxLength="12"
         android:textColor="@color/black"/>
 
     <!-- Password -->

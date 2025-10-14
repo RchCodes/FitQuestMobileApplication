@@ -97,6 +97,17 @@
         android:textColor="@android:color/white"
         android:textSize="14sp"/>
 
+    <!-- Physique Effects -->
+    <TextView
+        android:id="@+id/skillPhysiqueEffects"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Physique Effects: +2 Arms, +1 Legs"
+        android:textColor="#FFD700"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginTop="4dp"/>
+
     <!-- Passive-only details (hidden for active) -->
     <TextView
         android:id="@+id/passiveDetails"

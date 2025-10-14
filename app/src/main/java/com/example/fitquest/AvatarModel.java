@@ -421,7 +421,11 @@ public class AvatarModel {
     }
 
     public void setUsername(String username) {
-        this.username = username;
+        if (username != null && username.length() > 12) {
+            this.username = username.substring(0, 12); // Truncate to 12 characters
+        } else {
+            this.username = username;
+        }
     }
 
     public String getGender() {

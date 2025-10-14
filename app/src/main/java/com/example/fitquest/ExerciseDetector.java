@@ -32,6 +32,15 @@ public class ExerciseDetector {
             case "squats":
                 return isSquatFormCorrect(pose);
 
+            case "pushups":
+                return isPushupFormCorrect(pose);
+
+            case "crunches":
+                return isCrunchFormCorrect(pose);
+
+            case "lunges":
+                return isLungeFormCorrect(pose);
+
             case "jumpingjacks":
                 return isJumpingJackAligned(pose);
 
@@ -44,6 +53,87 @@ public class ExerciseDetector {
             default:
                 return true; // fallback, assume valid if not defined
         }
+    }
+
+    private boolean isPushupFormCorrect(Pose pose) {
+        PoseLandmark leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
+        PoseLandmark rightShoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER);
+        PoseLandmark leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
+        PoseLandmark rightHip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP);
+        PoseLandmark leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
+        PoseLandmark rightWrist = pose.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
+
+        if (leftShoulder == null || rightShoulder == null || leftHip == null || rightHip == null) {
+            return false;
+        }
+
+        // Check if user is in horizontal position (not standing)
+        if (isStanding(pose)) {
+            return false;
+        }
+
+        // Check if shoulders and hips are roughly aligned horizontally
+        float shoulderY = (leftShoulder.getPosition().y + rightShoulder.getPosition().y) / 2f;
+        float hipY = (leftHip.getPosition().y + rightHip.getPosition().y) / 2f;
+        float shoulderHipDiff = Math.abs(shoulderY - hipY);
+
+        // Shoulders should be above hips (not too far apart vertically)
+        boolean properAlignment = shoulderY < hipY && shoulderHipDiff < 200; // pixels
+
+        // Check if wrists are positioned correctly (below shoulders)
+        boolean wristPosition = true;
+        if (leftWrist != null && rightWrist != null) {
+            float wristY = (leftWrist.getPosition().y + rightWrist.getPosition().y) / 2f;
+            wristPosition = wristY > shoulderY; // wrists should be below shoulders
+        }
+
+        return properAlignment && wristPosition;
+    }
+
+    private boolean isCrunchFormCorrect(Pose pose) {
+        PoseLandmark leftShoulder = pose.getPoseLandmark(PoseLandmark.LEFT_SHOULDER);
+        PoseLandmark rightShoulder = pose.getPoseLandmark(PoseLandmark.RIGHT_SHOULDER);
+        PoseLandmark leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
+        PoseLandmark rightHip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP);
+
+        if (leftShoulder == null || rightShoulder == null || leftHip == null || rightHip == null) {
+            return false;
+        }
+
+        // Check if user is lying down (shoulders and hips roughly at same level)
+        float shoulderY = (leftShoulder.getPosition().y + rightShoulder.getPosition().y) / 2f;
+        float hipY = (leftHip.getPosition().y + rightHip.getPosition().y) / 2f;
+        float shoulderHipDiff = Math.abs(shoulderY - hipY);
+
+        // For crunches, shoulders and hips should be roughly at same level (lying down)
+        return shoulderHipDiff < 100; // pixels tolerance
+    }
+
+    private boolean isLungeFormCorrect(Pose pose) {
+        PoseLandmark leftHip = pose.getPoseLandmark(PoseLandmark.LEFT_HIP);
+        PoseLandmark rightHip = pose.getPoseLandmark(PoseLandmark.RIGHT_HIP);
+        PoseLandmark leftKnee = pose.getPoseLandmark(PoseLandmark.LEFT_KNEE);
+        PoseLandmark rightKnee = pose.getPoseLandmark(PoseLandmark.RIGHT_KNEE);
+        PoseLandmark leftAnkle = pose.getPoseLandmark(PoseLandmark.LEFT_ANKLE);
+        PoseLandmark rightAnkle = pose.getPoseLandmark(PoseLandmark.RIGHT_ANKLE);
+
+        if (leftHip == null || rightHip == null || leftKnee == null || rightKnee == null || 
+            leftAnkle == null || rightAnkle == null) {
+            return false;
+        }
+
+        // Check if user is standing (not lying down)
+        if (!isStanding(pose)) {
+            return false;
+        }
+
+        // Check if one leg is significantly forward (lunge position)
+        double leftHipKneeAnkleAngle = getAngle(leftHip, leftKnee, leftAnkle);
+        double rightHipKneeAnkleAngle = getAngle(rightHip, rightKnee, rightAnkle);
+
+        // In a lunge, one leg should be bent more than the other
+        double angleDiff = Math.abs(leftHipKneeAnkleAngle - rightHipKneeAnkleAngle);
+        return angleDiff > 20; // degrees difference indicates lunge position
     }
 
     private boolean isTreePoseAligned(Pose pose) {
@@ -274,23 +364,24 @@ public class ExerciseDetector {
                     maxDiff = Math.max(maxDiff, Math.abs(val - avg));
                 }
 
-                if (maxDiff < DISTANCE_TOLERANCE && d >= 1.5f && d <= 2.5f) {
+                if (maxDiff < DISTANCE_TOLERANCE && avg >= 1.5f && avg <= 2.5f) {
                     distanceReady = true;
                     feedback = "Good! Now get into starting position";
+                    if (listener != null) listener.onFeedbackUpdated(feedback);
                 } else {
                     distanceReady = false;
                     feedback = "Hold steady 1.5m–2.5m away";
+                    if (listener != null) listener.onFeedbackUpdated(feedback);
                 }
-            }
-            if (d < 1.5f || d > 2.5f) {
-                feedback = "Move between 1.5m–2.5m from camera";
+            } else {
+                // Still collecting distance samples
+                if (d < 1.5f || d > 2.5f) {
+                    feedback = "Move between 1.5m–2.5m from camera";
+                } else {
+                    feedback = "Hold steady...";
+                }
                 if (listener != null) listener.onFeedbackUpdated(feedback);
                 return;
-            } else {
-                distanceReady = true;
-                feedback = "Good! Now get into starting position";
-                if (listener != null) listener.onFeedbackUpdated(feedback);
-                // continue into detection this frame
             }
         }
 

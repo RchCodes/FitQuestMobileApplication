@@ -81,6 +81,10 @@ public class AccountCreation extends AppCompatActivity {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (username.length() > 12) {
+            Toast.makeText(this, "Username must be 12 characters or less", Toast.LENGTH_SHORT).show();
+            return;
+        }
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             Toast.makeText(this, "Invalid email address", Toast.LENGTH_SHORT).show();
             return;

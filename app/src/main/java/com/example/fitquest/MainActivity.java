@@ -186,19 +186,19 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
     }
 
     private void setupButtons() {
-        findViewById(R.id.profile_section).setOnClickListener(v -> {
+        SoundManager.setOnClickListenerWithSound(findViewById(R.id.profile_section), v -> {
             profile = new Profile(this, googleSignInLauncher);
             profile.show();
         });
-        findViewById(R.id.settings_button).setOnClickListener(v -> new Settings(this).show());
-        findViewById(R.id.store_button).setOnClickListener(v -> startActivity(new Intent(this, StoreActivity.class)));
-        findViewById(R.id.quest_button).setOnClickListener(v -> new Quest(this).show());
-        findViewById(R.id.goals_button).setOnClickListener(v -> new Goals(this, avatar).show());
-        findViewById(R.id.gear_button).setOnClickListener(v -> startActivity(new Intent(this, GearActivity.class)));
-        findViewById(R.id.friends_button).setOnClickListener(v -> startActivity(new Intent(this, AvatarOverviewActivity.class)));
-        findViewById(R.id.arena_button).setOnClickListener(v -> startActivity(new Intent(this, ArenaActivity.class)));
-        findViewById(R.id.challenge_button).setOnClickListener(v -> startActivity(new Intent(this, LevelSelectActivity.class)));
-        findViewById(R.id.stats_button).setOnClickListener(v -> new CharacterStats(this, avatar).show());
+        SoundManager.setOnClickListenerWithSound(findViewById(R.id.settings_button), v -> new Settings(this).show());
+        SoundManager.setOnClickListenerWithSound(findViewById(R.id.store_button), v -> startActivity(new Intent(this, StoreActivity.class)));
+        SoundManager.setOnClickListenerWithSound(findViewById(R.id.quest_button), v -> new Quest(this).show());
+        SoundManager.setOnClickListenerWithSound(findViewById(R.id.goals_button), v -> new Goals(this, avatar).show());
+        SoundManager.setOnClickListenerWithSound(findViewById(R.id.gear_button), v -> startActivity(new Intent(this, GearActivity.class)));
+        SoundManager.setOnClickListenerWithSound(findViewById(R.id.friends_button), v -> startActivity(new Intent(this, AvatarOverviewActivity.class)));
+        SoundManager.setOnClickListenerWithSound(findViewById(R.id.arena_button), v -> startActivity(new Intent(this, ArenaActivity.class)));
+        SoundManager.setOnClickListenerWithSound(findViewById(R.id.challenge_button), v -> startActivity(new Intent(this, LevelSelectActivity.class)));
+        SoundManager.setOnClickListenerWithSound(findViewById(R.id.stats_button), v -> new CharacterStats(this, avatar).show());
     }
 
     @Override

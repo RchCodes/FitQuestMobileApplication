@@ -31,8 +31,22 @@ public class ProgressSyncManager {
      * Save avatar progress with intelligent conflict resolution
      */
     public static void saveProgress(Context context, AvatarModel avatar, boolean isOnline) {
+        if (avatar == null) {
+            Log.w(TAG, "Cannot save null avatar");
+            return;
+        }
+        
         SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         long currentTime = System.currentTimeMillis();
+
+        // Always save offline first to ensure we have a local backup
+        try {
+            AvatarManager.saveAvatarOffline(context, avatar);
+            prefs.edit().putLong(KEY_LAST_OFFLINE_SAVE, currentTime).apply();
+            Log.d(TAG, "Avatar saved offline at " + currentTime);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to save avatar offline", e);
+        }
 
         if (isOnline) {
             // Save online and update timestamp only after success callback
@@ -46,15 +60,11 @@ public class ProgressSyncManager {
                 @Override
                 public void onFailure(Exception e) {
                     Log.e(TAG, "Avatar online save failed", e);
-                    // Optionally schedule retry
+                    // Schedule retry for later
+                    scheduleSyncIfNeeded(context);
                 }
             });
-        } else {
-            AvatarManager.saveAvatarOffline(context, avatar);
-            prefs.edit().putLong(KEY_LAST_OFFLINE_SAVE, currentTime).apply();
-            Log.d(TAG, "Avatar saved offline at " + currentTime);
         }
-
 
         // Schedule sync if there's a potential conflict
         scheduleSyncIfNeeded(context);

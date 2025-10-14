@@ -40,6 +40,7 @@ public class Settings {
         setupMusicControls(view);
         setupSoundControls(view);
         setupNotificationControls(view);
+        setupTestingControls(view);
         setupHelpButtons(view);
         setupPendingQuests(view);
     }
@@ -124,6 +125,60 @@ public class Settings {
                 notificationManager.cancelDailyReminder();
 
                 Toast.makeText(context, "All Notifications Disabled", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void setupTestingControls(View view) {
+        Button addExpButton = view.findViewById(R.id.add_exp_button);
+        Button addCoinsButton = view.findViewById(R.id.add_coins_button);
+        Button addLevelButton = view.findViewById(R.id.add_level_button);
+
+        SoundManager.setOnClickListenerWithSound(addExpButton, v -> {
+            AvatarModel avatar = AvatarManager.loadAvatarOffline(context);
+            if (avatar != null) {
+                boolean leveledUp = avatar.addXp(100);
+                AvatarManager.saveAvatarOffline(context, avatar);
+                AvatarManager.saveAvatarOnline(avatar);
+                
+                String message = "Added 100 EXP!";
+                if (leveledUp) {
+                    message += " Level up! You're now level " + avatar.getLevel() + "!";
+                }
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(context, "No avatar found!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        SoundManager.setOnClickListenerWithSound(addCoinsButton, v -> {
+            AvatarModel avatar = AvatarManager.loadAvatarOffline(context);
+            if (avatar != null) {
+                avatar.addCoins(1000);
+                AvatarManager.saveAvatarOffline(context, avatar);
+                AvatarManager.saveAvatarOnline(avatar);
+                Toast.makeText(context, "Added 1000 coins! Total: " + avatar.getCoins(), Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(context, "No avatar found!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        SoundManager.setOnClickListenerWithSound(addLevelButton, v -> {
+            AvatarModel avatar = AvatarManager.loadAvatarOffline(context);
+            if (avatar != null) {
+                int currentLevel = avatar.getLevel();
+                int newLevel = Math.min(currentLevel + 1, 100); // Cap at level 100
+                
+                // Calculate XP needed for the new level
+                int xpForNewLevel = LevelProgression.getMaxXpForLevel(newLevel);
+                avatar.setXp(xpForNewLevel);
+                avatar.setLevel(newLevel);
+                
+                AvatarManager.saveAvatarOffline(context, avatar);
+                AvatarManager.saveAvatarOnline(avatar);
+                Toast.makeText(context, "Level up! You're now level " + newLevel + "!", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(context, "No avatar found!", Toast.LENGTH_SHORT).show();
             }
         });
     }

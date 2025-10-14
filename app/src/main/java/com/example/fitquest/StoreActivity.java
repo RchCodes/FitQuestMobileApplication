@@ -71,6 +71,7 @@ public class StoreActivity extends AppCompatActivity {
 
         // Grid click -> show details + mark selected + preview gear
         gridStore.setOnItemClickListener((parent, view, position, id) -> {
+            SoundManager.playButtonClick();
             GearModel gear = filteredGear.get(position);
             selectedGear = gear;
             showGearDetails(gear);
@@ -79,7 +80,7 @@ public class StoreActivity extends AppCompatActivity {
         });
 
         // Buy button
-        btnBuy.setOnClickListener(v -> {
+        SoundManager.setOnClickListenerWithSound(btnBuy, v -> {
             if (selectedGear == null) {
                 Toast.makeText(this, "Select an item first!", Toast.LENGTH_SHORT).show();
                 return;
@@ -88,33 +89,33 @@ public class StoreActivity extends AppCompatActivity {
         });
 
         // Back
-        btnBack.setOnClickListener(v -> {
+        SoundManager.setOnClickListenerWithSound(btnBack, v -> {
             startActivity(new Intent(StoreActivity.this, MainActivity.class));
             finish();
         });
 
         // Tabs
-        tabAll.setOnClickListener(v -> {
+        SoundManager.setOnClickListenerWithSound(tabAll, v -> {
             clearGearPreview();
             filterAndRefresh("ALL");
         });
-        tabWeapons.setOnClickListener(v -> {
+        SoundManager.setOnClickListenerWithSound(tabWeapons, v -> {
             clearGearPreview();
             filterAndRefresh("WEAPON");
         });
-        tabArmor.setOnClickListener(v -> {
+        SoundManager.setOnClickListenerWithSound(tabArmor, v -> {
             clearGearPreview();
             filterAndRefresh("ARMOR");
         });
-        tabLeggings.setOnClickListener(v -> {
+        SoundManager.setOnClickListenerWithSound(tabLeggings, v -> {
             clearGearPreview();
             filterAndRefresh("PANTS");
         });
-        tabBoots.setOnClickListener(v -> {
+        SoundManager.setOnClickListenerWithSound(tabBoots, v -> {
             clearGearPreview();
             filterAndRefresh("BOOTS");
         });
-        tabNecklace.setOnClickListener(v -> {
+        SoundManager.setOnClickListenerWithSound(tabNecklace, v -> {
             clearGearPreview();
             filterAndRefresh("ACCESSORY");
         });

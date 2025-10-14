@@ -203,7 +203,7 @@ public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHol
 
 
 
-        holder.actionButton.setOnClickListener(v -> {
+        SoundManager.setOnClickListenerWithSound(holder.actionButton, v -> {
             if (isStepQuest) {
                 // Do nothing, tracked automatically
                 return;

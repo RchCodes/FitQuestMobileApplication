@@ -129,69 +129,97 @@ public class Goals {
     }
 
     /**
-     * Displays all goals: base + challenge-based.
+     * Displays all goals: base + challenge-based, with proper separation and hiding completed items.
      */
     private void populateGoals(Context context) {
         goalsList.removeAllViews();
         LayoutInflater inflater = LayoutInflater.from(context);
 
-        // Sort goals: PENDING → COMPLETED → CLAIMED
-        List<Map.Entry<String, GoalState>> sortedGoals =
-                new ArrayList<>(avatar.getGoalProgress().entrySet());
-        Collections.sort(sortedGoals, Comparator.comparing(e -> e.getValue().ordinal()));
-
         updateChallengeGoalsProgress();
 
-        for (Map.Entry<String, GoalState> entry : sortedGoals) {
-            String goalId = entry.getKey();
-            GoalState state = entry.getValue();
-            String description = getGoalDescription(goalId);
+        // Add Base Goals section header
+        addSectionHeader(inflater, "📋 Base Goals");
 
-            View goalItem = inflater.inflate(R.layout.goal_items, goalsList, false);
-            TextView goalDescription = goalItem.findViewById(R.id.goal_description);
-            Button claimButton = goalItem.findViewById(R.id.claim_button);
-
-            goalDescription.setText(description);
-
-            claimButton.setEnabled(state == GoalState.COMPLETED);
-            claimButton.setText(state == GoalState.CLAIMED ? "Claimed" : "Claim");
-
-            claimButton.setOnClickListener(v -> {
-                if (state != GoalState.COMPLETED) return;
-
-                // Prevent duplicate rewards
-                if (state == GoalState.CLAIMED) return;
-
-                // Find the linked challenge (if any)
-                ChallengeModel linkedChallenge = challengeManager.getChallengeByGoalId(goalId);
-
-                if (linkedChallenge != null) {
-                    avatar.addCoins(linkedChallenge.getRewardCoins());
-                    avatar.addAvatarBadge(linkedChallenge.getRewardBadge());
-                } else {
-                    // Base goal: find its badge
-                    int badgeResId = R.drawable.lock;
-                    for (BaseGoal g : BASE_GOALS) {
-                        if (g.getId().equals(goalId)) {
-                            badgeResId = g.getBadgeDrawableResId();
-                            break;
-                        }
-                    }
-                    avatar.addCoins(50);             // default coins
-                    avatar.addAvatarBadge(badgeResId); // reward badge drawable
-                }
-
-                avatar.setGoalState(goalId, GoalState.CLAIMED);
-                AvatarManager.saveAvatarOffline(context, avatar);
-                AvatarManager.saveAvatarOnline(avatar);
-                Toast.makeText(context, "Claimed reward for: " + description, Toast.LENGTH_SHORT).show();
-                populateGoals(context);
-            });
-
-
-
-            goalsList.addView(goalItem);
+        // Display base goals first (only pending and completed, not claimed)
+        for (BaseGoal baseGoal : BASE_GOALS) {
+            String goalId = baseGoal.getId();
+            GoalState state = avatar.getGoalProgress().get(goalId);
+            
+            // Skip if not set or if claimed (hide claimed goals)
+            if (state == null || state == GoalState.CLAIMED) continue;
+            
+            addGoalItem(inflater, goalId, state, baseGoal.getDescription(), false);
         }
+
+        // Add Challenges section header
+        addSectionHeader(inflater, "🏆 Challenges");
+
+        // Display challenge goals (only pending and completed, not claimed)
+        for (ChallengeModel challenge : challengeManager.getDefaultChallenges()) {
+            String goalId = challenge.getLinkedGoalId();
+            if (goalId == null || goalId.isEmpty()) continue;
+            
+            GoalState state = avatar.getGoalProgress().get(goalId);
+            
+            // Skip if not set or if claimed (hide claimed goals)
+            if (state == null || state == GoalState.CLAIMED) continue;
+            
+            addGoalItem(inflater, goalId, state, "🏆 " + challenge.getObjective(), true);
+        }
+    }
+
+    private void addSectionHeader(LayoutInflater inflater, String title) {
+        TextView header = new TextView(inflater.getContext());
+        header.setText(title);
+        header.setTextSize(16);
+        header.setTextColor(android.graphics.Color.parseColor("#2196F3"));
+        header.setPadding(16, 24, 16, 8);
+        goalsList.addView(header);
+    }
+
+    private void addGoalItem(LayoutInflater inflater, String goalId, GoalState state, String description, boolean isChallenge) {
+        View goalItem = inflater.inflate(R.layout.goal_items, goalsList, false);
+        TextView goalDescription = goalItem.findViewById(R.id.goal_description);
+        Button claimButton = goalItem.findViewById(R.id.claim_button);
+
+        goalDescription.setText(description);
+
+        claimButton.setEnabled(state == GoalState.COMPLETED);
+        claimButton.setText(state == GoalState.CLAIMED ? "Claimed" : "Claim");
+
+        SoundManager.setOnClickListenerWithSound(claimButton, v -> {
+            if (state != GoalState.COMPLETED) return;
+
+            // Prevent duplicate rewards
+            if (state == GoalState.CLAIMED) return;
+
+            // Find the linked challenge (if any)
+            ChallengeModel linkedChallenge = challengeManager.getChallengeByGoalId(goalId);
+
+            if (linkedChallenge != null) {
+                avatar.addCoins(linkedChallenge.getRewardCoins());
+                avatar.addAvatarBadge(linkedChallenge.getRewardBadge());
+            } else {
+                // Base goal: find its badge
+                int badgeResId = R.drawable.lock;
+                for (BaseGoal g : BASE_GOALS) {
+                    if (g.getId().equals(goalId)) {
+                        badgeResId = g.getBadgeDrawableResId();
+                        break;
+                    }
+                }
+                avatar.addCoins(50);             // default coins
+                avatar.addAvatarBadge(badgeResId); // reward badge drawable
+            }
+
+            avatar.setGoalState(goalId, GoalState.CLAIMED);
+            AvatarManager.saveAvatarOffline(inflater.getContext(), avatar);
+            AvatarManager.saveAvatarOnline(avatar);
+            Toast.makeText(inflater.getContext(), "Claimed reward for: " + description, Toast.LENGTH_SHORT).show();
+            populateGoals(inflater.getContext());
+        });
+
+        goalsList.addView(goalItem);
     }
 
     private void updateChallengeGoalsProgress() {

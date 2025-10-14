@@ -556,18 +556,38 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
     }
 
     private void useSkill(int skillIndex) {
-        if (!waitingForPlayerInput) return; // ignore clicks outside your turn
+        if (!waitingForPlayerInput) {
+            Log.d(TAG, "Skill clicked but not waiting for player input");
+            return; // ignore clicks outside your turn
+        }
 
         List<SkillModel> availableSkills = getAvailableSkills(playerCharacter);
+        if (availableSkills == null || availableSkills.isEmpty()) {
+            Log.w(TAG, "No available skills for player");
+            return;
+        }
+        
         if (skillIndex < availableSkills.size()) {
             SkillModel chosen = availableSkills.get(skillIndex);
+            Log.d(TAG, "Player chose skill: " + chosen.getName());
+            
             waitingForPlayerInput = false;
             setSkillButtonsEnabled(false);
+            
             if (combatContext != null) {
                 combatContext.onPlayerChosenSkill(chosen);
+                Log.d(TAG, "Skill submitted to CombatContext: " + chosen.getName());
+            } else {
+                Log.e(TAG, "CombatContext is null!");
+                // Re-enable buttons if combat context is null
+                waitingForPlayerInput = true;
+                setSkillButtonsEnabled(true);
+                return;
             }
             // Resume combat tick AFTER notifying CombatContext
             turnWaiting = false;
+        } else {
+            Log.w(TAG, "Invalid skill index: " + skillIndex + ", available skills: " + availableSkills.size());
         }
     }
 

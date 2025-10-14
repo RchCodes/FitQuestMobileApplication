@@ -280,8 +280,10 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
 
             @Override
             public void onFinish() {
-                if (!challengeCompleted)
-                    completeChallenge();
+                if (!challengeCompleted) {
+                    // Timer finished but target not reached - fail the challenge
+                    failChallenge("Time's up! You didn't reach the target.");
+                }
             }
         };
         challengeTimer.start();
@@ -326,13 +328,38 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
     private void failChallenge(String reason) {
         if (challengeCompleted) return;
         challengeCompleted = true;
-        challengeTimer.cancel();
+        
+        try {
+            if (challengeTimer != null) {
+                challengeTimer.cancel();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error canceling timer", e);
+        }
 
-        feedbackText.setText("❌ Failed: " + reason);
-        audioManager.speak("Challenge failed. " + reason);
-        Toast.makeText(this, reason, Toast.LENGTH_LONG).show();
+        try {
+            if (feedbackText != null) {
+                feedbackText.setText("❌ Failed: " + reason);
+            }
+            if (audioManager != null) {
+                audioManager.speak("Challenge failed. " + reason);
+            }
+            Toast.makeText(this, reason, Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing failure UI", e);
+        }
 
-        new Handler(getMainLooper()).postDelayed(this::finish, 4000);
+        try {
+            new Handler(getMainLooper()).postDelayed(() -> {
+                try {
+                    finish();
+                } catch (Exception e) {
+                    Log.e(TAG, "Error finishing activity", e);
+                }
+            }, 4000);
+        } catch (Exception e) {
+            Log.e(TAG, "Error scheduling finish", e);
+        }
     }
 
     private void markChallengeComplete(String challengeId) {

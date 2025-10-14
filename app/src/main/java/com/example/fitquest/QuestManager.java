@@ -2,6 +2,7 @@ package com.example.fitquest;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -83,11 +84,21 @@ public class QuestManager {
             if (q.getExerciseType() != null &&
                     q.getExerciseType().equalsIgnoreCase(exerciseType)) {
 
+                int oldProgress = q.getProgress();
+                boolean wasCompleted = q.isCompleted();
+                
                 q.addProgress(amount);
                 changed = true;
 
+                Log.d("QuestManager", "Quest " + q.getId() + " progress: " + oldProgress + " -> " + q.getProgress() + " (target: " + q.getTarget() + ")");
+
                 if (progressListener != null) {
                     progressListener.onQuestProgressUpdated(q);
+                    
+                    // Check if quest was just completed
+                    if (!wasCompleted && q.isCompleted()) {
+                        progressListener.onQuestCompleted(q, false);
+                    }
                 }
             }
         }
@@ -126,6 +137,9 @@ public class QuestManager {
         if ("q_daily_quests_5".equals(quest.getId())) {
             reportDayTrained(ctx); // Increment weekly/monthly day-count quests
         }
+
+        // Update "Complete 5 quests" quest when any other quest is claimed
+        updateQuestCompletionQuest(ctx);
 
         return leveledUp;
     }
@@ -373,7 +387,7 @@ public class QuestManager {
         ensureLoaded(ctx);
         for (QuestModel q : quests) {
             if (!q.isCompleted() && "completion".equals(q.getExerciseType())) {
-                // Only for weekly/monthly “day count” quests
+                // Only for weekly/monthly "day count" quests
                 if (q.getId().equals("q_weekly_quests_5") || q.getId().equals("q_monthly_20days")) {
                     q.addProgress(1);
                     if (progressListener != null) {
@@ -383,6 +397,47 @@ public class QuestManager {
             }
         }
         persistAll(ctx);
+    }
+
+    /**
+     * Update the "Complete 5 quests" quest progress based on claimed daily quests
+     */
+    private static void updateQuestCompletionQuest(Context ctx) {
+        ensureLoaded(ctx);
+        
+        // Find the "Complete 5 quests" quest
+        QuestModel completionQuest = null;
+        for (QuestModel q : quests) {
+            if ("q_daily_quests_5".equals(q.getId())) {
+                completionQuest = q;
+                break;
+            }
+        }
+        
+        if (completionQuest == null || completionQuest.isCompleted()) {
+            return;
+        }
+        
+        // Count completed daily quests (excluding the completion quest itself)
+        int completedCount = 0;
+        for (QuestModel q : quests) {
+            if (q.getCategory() == QuestCategory.DAILY && 
+                !"q_daily_quests_5".equals(q.getId()) && 
+                q.isCompleted()) {
+                completedCount++;
+            }
+        }
+        
+        // Update progress to match completed count
+        if (completedCount != completionQuest.getProgress()) {
+            completionQuest.setProgress(completedCount);
+            
+            if (progressListener != null) {
+                progressListener.onQuestProgressUpdated(completionQuest);
+            }
+            
+            persistAll(ctx);
+        }
     }
 
 

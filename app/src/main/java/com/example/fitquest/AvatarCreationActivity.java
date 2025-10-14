@@ -219,6 +219,10 @@ public class AvatarCreationActivity extends BaseActivity {
                 Toast.makeText(this, "Please enter a name for your avatar", Toast.LENGTH_SHORT).show();
                 return;
             }
+            if (username.length() > 12) {
+                Toast.makeText(this, "Avatar name must be 12 characters or less", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             // Determine body style, outfit & weapon based on gender & class
             String bodyStyle = isMale ? "body_male" : "body_female";

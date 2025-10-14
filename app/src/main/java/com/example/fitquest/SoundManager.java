@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
+import android.view.View;
 
 public class SoundManager {
     
@@ -57,6 +58,36 @@ public class SoundManager {
     public static void playButtonClick() {
         if (!soundEnabled || soundPool == null) return;
         soundPool.play(buttonClickSoundId, volume / 100f, volume / 100f, 1, 0, 1f);
+    }
+    
+    /**
+     * Add click sound to any View (Button, ImageView, etc.)
+     */
+    public static void addClickSound(View view) {
+        if (view == null) return;
+        
+        view.setOnClickListener(v -> {
+            playButtonClick();
+            // Call the original click listener if it exists
+            if (v.getTag() instanceof View.OnClickListener) {
+                ((View.OnClickListener) v.getTag()).onClick(v);
+            }
+        });
+    }
+    
+    /**
+     * Set click listener with sound for any View
+     */
+    public static void setOnClickListenerWithSound(View view, View.OnClickListener listener) {
+        if (view == null) return;
+        
+        view.setTag(listener); // Store original listener
+        view.setOnClickListener(v -> {
+            playButtonClick();
+            if (listener != null) {
+                listener.onClick(v);
+            }
+        });
     }
     
     public static void playQuestComplete() {
