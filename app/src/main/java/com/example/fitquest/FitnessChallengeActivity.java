@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -65,7 +66,7 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
     private int target;
     private int timeLimit;
 
-    private boolean challengeCompleted = false;
+    private volatile boolean challengeCompleted = false;
     private boolean timerStarted = false;
     private boolean userInPosition = false;
 
@@ -283,22 +284,27 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
                         }
 
                         // Only check form after timer has started
-                        if (strictMode && !exerciseDetector.isInPosition(pose, exerciseType)) {
-                            badFormFrameCount++;
+                        if (timerStarted) {
+                            if (strictMode && !exerciseDetector.isInPosition(pose, exerciseType)) {
+                                badFormFrameCount++;
 
-                            if (badFormFrameCount == 1) {
-                                feedbackText.setText("❌ Keep proper form!");
-                                audioManager.speakOnce("Maintain form!");
+                                // Warn user once when bad form first detected
+                                if (badFormFrameCount == 1) {
+                                    feedbackText.setText("❌ Incorrect position! Fix your posture!");
+                                    audioManager.speakOnce("Incorrect position, fix your form!");
+                                }
+
+                                // End challenge only if bad form persists long enough
+                                if (badFormFrameCount > BAD_FORM_THRESHOLD_FRAMES) {
+                                    failChallenge("Ended due to incorrect position!");
+                                }
+
+                                return; // Stop further processing when bad form
+                            } else {
+                                badFormFrameCount = 0;
                             }
-
-                            if (badFormFrameCount > BAD_FORM_THRESHOLD_FRAMES) {
-                                failChallenge("Lost proper form!");
-                            }
-
-                            return; // skip rep counting
-                        } else {
-                            badFormFrameCount = 0;
                         }
+
 
 
 
@@ -365,19 +371,27 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
     }
 
     private void completeChallenge() {
-        if (challengeCompleted) return; // Prevent double call
+        if (challengeCompleted) return;
         challengeCompleted = true;
 
         if (challengeTimer != null) challengeTimer.cancel();
 
-        feedbackText.setText("🎉 Challenge Completed!");
-        audioManager.speak("Great job! Challenge completed!");
+        runOnUiThread(() -> {
+            feedbackText.setText("🎉 Challenge Completed!");
+            audioManager.speak("Great job! Challenge completed!", () -> {
+                finish();
+            });
+            Toast.makeText(this, "Challenge completed!", Toast.LENGTH_SHORT).show();
+        });
 
-        // Mark completion immediately
         markChallengeComplete(challengeId);
 
-        // End the activity right away
-        finish();
+        // Safety fallback after 5 seconds in case audio callback fails
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (!isFinishing()) {
+                finish();
+            }
+        }, 5000);
     }
 
 
@@ -477,16 +491,20 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
     }
 
     @Override
-    public void onRepCountChanged(int currentReps, int target) {
+    public void onRepCountChanged(int currentReps, int detectedTarget) {
         runOnUiThread(() -> {
             feedbackText.setText("Keep going! " + currentReps + " reps");
             updateProgressBar(currentReps);
         });
         audioManager.playBeep();
 
-        if (currentReps >= target && !challengeCompleted)
+        // Use the challenge's real target value instead of detector's argument
+        if (!challengeCompleted && currentReps >= this.target) {
+            Log.i(TAG, "Target reps reached: " + currentReps + "/" + this.target);
             completeChallenge();
+        }
     }
+
 
 
     @Override
