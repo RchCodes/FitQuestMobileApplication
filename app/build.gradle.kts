@@ -55,6 +55,7 @@ dependencies {
 
     implementation("com.github.bumptech.glide:glide:4.15.1")
     annotationProcessor("com.github.bumptech.glide:compiler:4.15.1")
+    implementation("pl.droidsonroids.gif:android-gif-drawable:1.2.28")
 
 
     // ML Kit Pose Detection
@@ -71,6 +72,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
 
     // Google Fit History API
     implementation("com.google.android.gms:play-services-fitness:21.1.0")

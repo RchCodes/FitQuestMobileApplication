@@ -114,7 +114,7 @@ public class LeaderboardManager {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference rankRef = database.getReference(RANK_LEADERBOARD_PATH);
 
-        rankRef.orderByChild("rankPoints").limitToLast(100).addListenerForSingleValueEvent(new ValueEventListener() {
+        rankRef.orderByChild("rankPoints").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 List<LeaderboardEntry> entries = new ArrayList<>();
@@ -158,6 +158,7 @@ public class LeaderboardManager {
                 entries.sort((a, b) -> Integer.compare(((RankLeaderboardEntry)b).getRankPoints(),
                         ((RankLeaderboardEntry)a).getRankPoints()));
 
+                Log.d(TAG, "Rank leaderboard loaded: " + entries.size() + " entries");
                 callback.onLeaderboardLoaded(entries, "rank");
             }
 
@@ -176,7 +177,7 @@ public class LeaderboardManager {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference questRef = database.getReference(QUEST_LEADERBOARD_PATH);
         
-        questRef.orderByChild("questsCompleted").limitToLast(100).addListenerForSingleValueEvent(new ValueEventListener() {
+        questRef.orderByChild("questsCompleted").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 List<LeaderboardEntry> entries = new ArrayList<>();
@@ -191,6 +192,7 @@ public class LeaderboardManager {
                 // Sort by quests completed (descending)
                 Collections.sort(entries, (a, b) -> Integer.compare(b.getQuestsCompleted(), a.getQuestsCompleted()));
                 
+                Log.d(TAG, "Quest leaderboard loaded: " + entries.size() + " entries");
                 callback.onLeaderboardLoaded(entries, "quest");
             }
             

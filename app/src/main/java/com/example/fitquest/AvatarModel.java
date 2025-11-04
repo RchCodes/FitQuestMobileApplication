@@ -74,7 +74,7 @@ public class AvatarModel {
     private Set<String> ownedGearIds = new HashSet<>(); // all owned items (by ID)
 
     // --- Restricted Gear Slots ---
-    private final Map<GearType, String> equippedGear = new EnumMap<>(GearType.class);
+    private final Map<String, String> equippedGear = new HashMap<>(); // String keys for Firebase compatibility
 
     private Map<String, GoalState> goalProgress = new HashMap<>();
 
@@ -130,7 +130,7 @@ public class AvatarModel {
     // --- Gear Slot Setup ---
     private void initGearSlots() {
         for (GearType type : Arrays.asList(GearType.WEAPON, GearType.ARMOR, GearType.PANTS, GearType.BOOTS, GearType.ACCESSORY)) {
-            equippedGear.put(type, null); // start empty
+            equippedGear.put(type.name(), null); // start empty
         }
     }
 
@@ -578,6 +578,10 @@ public class AvatarModel {
         updateRank();
         notifyChange();
     }
+    
+    public RankSystem.RankInfo getRankInfo() {
+        return RankSystem.getRankInfo(rankPoints);
+    }
 
     public void setRankPoints(int points) {
         this.rankPoints = Math.max(0, points);
@@ -623,6 +627,19 @@ public class AvatarModel {
         return playerId;
     }
 
+    public void setPlayerId(String playerId) {
+        this.playerId = playerId;
+    }
+
+    public int getQuestPoints() {
+        return questPoints;
+    }
+
+    public void setQuestPoints(int questPoints) {
+        this.questPoints = questPoints;
+        notifyChange();
+    }
+
     // --- Free Points ---
     public int getFreePhysiquePoints() {
         return Math.max(0, freePhysiquePoints);
@@ -638,6 +655,16 @@ public class AvatarModel {
 
     public void addFreeAttributePoints(int pts) {
         freeAttributePoints = Math.max(0, freeAttributePoints + pts);
+    }
+
+    public void setFreePhysiquePoints(int value) {
+        freePhysiquePoints = Math.max(0, value);
+        notifyChange();
+    }
+
+    public void setFreeAttributePoints(int value) {
+        freeAttributePoints = Math.max(0, value);
+        notifyChange();
     }
 
     // --- Physique ---
@@ -671,6 +698,26 @@ public class AvatarModel {
 
     public void addBackPoints(int pts) {
         backPoints = Math.max(0, backPoints + pts);
+    }
+
+    public void setArmPoints(int value) {
+        armPoints = Math.max(0, value);
+        notifyChange();
+    }
+
+    public void setLegPoints(int value) {
+        legPoints = Math.max(0, value);
+        notifyChange();
+    }
+
+    public void setChestPoints(int value) {
+        chestPoints = Math.max(0, value);
+        notifyChange();
+    }
+
+    public void setBackPoints(int value) {
+        backPoints = Math.max(0, value);
+        notifyChange();
     }
 
     // --- Attributes ---
@@ -712,6 +759,31 @@ public class AvatarModel {
 
     public void addStamina(int pts) {
         stamina = Math.max(0, stamina + pts);
+    }
+
+    public void setStrength(int value) {
+        strength = Math.max(0, value);
+        notifyChange();
+    }
+
+    public void setEndurance(int value) {
+        endurance = Math.max(0, value);
+        notifyChange();
+    }
+
+    public void setAgility(int value) {
+        agility = Math.max(0, value);
+        notifyChange();
+    }
+
+    public void setFlexibility(int value) {
+        flexibility = Math.max(0, value);
+        notifyChange();
+    }
+
+    public void setStamina(int value) {
+        stamina = Math.max(0, value);
+        notifyChange();
     }
 
     // --- Level & Rank logic ---
@@ -875,18 +947,35 @@ public class AvatarModel {
     }
 
     public void equipGear(GearType slot, String gearId) {
-        if (gearId != null && ownsGear(gearId)) {
-            equippedGear.put(slot, gearId);
+        if (gearId != null && ownsGear(gearId) && slot != null) {
+            equippedGear.put(slot.name(), gearId);
             notifyChange();
         }
     }
 
     public void unequipGear(GearType slot) {
-        equippedGear.remove(slot);
-        notifyChange();
+        if (slot != null) {
+            equippedGear.remove(slot.name());
+            notifyChange();
+        }
     }
 
-    public Map<GearType, String> getEquippedGear() {
+    // Temporary equipping for preview (not saved to database)
+    public void tempEquipGear(GearType slot, String gearId) {
+        if (gearId != null && ownsGear(gearId) && slot != null) {
+            equippedGear.put(slot.name(), gearId);
+            // Don't call notifyChange() for temporary equipping
+        }
+    }
+
+    public void tempUnequipGear(GearType slot) {
+        if (slot != null) {
+            equippedGear.remove(slot.name());
+            // Don't call notifyChange() for temporary unequipping
+        }
+    }
+
+    public Map<String, String> getEquippedGear() {
         return equippedGear;
     }
 
@@ -909,38 +998,41 @@ public class AvatarModel {
     }
 
     public void checkOutfitCompletion() {
-        // Get equipped gear by type
-        String armorId = equippedGear.get(GearType.ARMOR);
-        String pantsId = equippedGear.get(GearType.PANTS);
-        String bootsId = equippedGear.get(GearType.BOOTS);
+        try {
+            // Get equipped gear by type
+            String armorId = equippedGear.get(GearType.ARMOR.name());
+            String pantsId = equippedGear.get(GearType.PANTS.name());
+            String bootsId = equippedGear.get(GearType.BOOTS.name());
 
-        if (armorId == null || pantsId == null || bootsId == null) return;
+            if (armorId == null || pantsId == null || bootsId == null) return;
 
-        GearModel armor = GearRepository.getGearById(armorId);
-        GearModel pants = GearRepository.getGearById(pantsId);
-        GearModel boots = GearRepository.getGearById(bootsId);
+            GearModel armor = GearRepository.getGearById(armorId);
+            GearModel pants = GearRepository.getGearById(pantsId);
+            GearModel boots = GearRepository.getGearById(bootsId);
 
-        // All 3 must exist and share the same setId
-        if (armor != null && pants != null && boots != null) {
-            if (armor.getSetId() != null
-                    && armor.getSetId().equals(pants.getSetId())
-                    && armor.getSetId().equals(boots.getSetId())) {
+            // All 3 must exist and share the same setId
+            if (armor != null && pants != null && boots != null) {
+                if (armor.getSetId() != null
+                        && armor.getSetId().equals(pants.getSetId())
+                        && armor.getSetId().equals(boots.getSetId())) {
 
-                // If the set defines an outfit
-                if (armor.isCompletesOutfit() && pants.isCompletesOutfit() && boots.isCompletesOutfit()) {
-                    // Change avatar outfit sprite (keep the same format you use elsewhere)
-                    this.outfit = "res://" + armor.getOutfitSpriteRes();
-                    notifyChange();
+                    // If the set defines an outfit
+                    if (armor.isCompletesOutfit() && pants.isCompletesOutfit() && boots.isCompletesOutfit()) {
+                        // Change avatar outfit sprite - store the resource ID as string
+                        this.outfit = String.valueOf(armor.getOutfitSpriteRes());
+                        notifyChange();
+                    }
                 }
             }
+        } catch (Exception e) {
+            Log.e("AvatarModel", "Error in checkOutfitCompletion", e);
         }
-
     }
 
     public boolean isEquipped(GearModel gear) {
         if (gear == null || equippedGear == null) return false;
         // get the currently equipped gear ID for this type
-        String equippedId = equippedGear.get(gear.getType());
+        String equippedId = equippedGear.get(gear.getType().name());
         return equippedId != null && equippedId.equals(gear.getId());
     }
 
@@ -1006,22 +1098,31 @@ public class AvatarModel {
         if (battleHistory.size() > 50) {
             battleHistory = new ArrayList<>(battleHistory.subList(0, 50));
         }
+        android.util.Log.d("AvatarModel", "Added battle history entry: " + battleEntry.getLeftName() + " vs " + battleEntry.getRightName() + " (" + battleEntry.getScoreChange() + ")");
         notifyChange();
         saveBattleHistoryToFirebase();
     }
 
     private void saveBattleHistoryToFirebase() {
-        if (playerId == null) return;
+        if (playerId == null) {
+            android.util.Log.w("AvatarModel", "No playerId, cannot save battle history to Firebase");
+            return;
+        }
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference("users").child(playerId).child("battleHistory");
-        ref.setValue(battleHistory);
+        android.util.Log.d("AvatarModel", "Saving " + battleHistory.size() + " battle history entries to Firebase");
+        ref.setValue(battleHistory)
+            .addOnSuccessListener(aVoid -> android.util.Log.d("AvatarModel", "Battle history saved to Firebase successfully"))
+            .addOnFailureListener(e -> android.util.Log.e("AvatarModel", "Failed to save battle history to Firebase", e));
     }
 
     public void loadBattleHistoryFromFirebase(final Runnable onLoaded) {
         if (playerId == null) {
+            android.util.Log.d("AvatarModel", "No playerId, skipping battle history load");
             if (onLoaded != null) onLoaded.run();
             return;
         }
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference("users").child(playerId).child("battleHistory");
+        android.util.Log.d("AvatarModel", "Loading battle history from Firebase for player: " + playerId);
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
@@ -1031,11 +1132,13 @@ public class AvatarModel {
                     if (entry != null) loaded.add(entry);
                 }
                 battleHistory = loaded;
+                android.util.Log.d("AvatarModel", "Loaded " + loaded.size() + " battle history entries");
                 if (onLoaded != null) onLoaded.run();
             }
 
             @Override
             public void onCancelled(DatabaseError error) {
+                android.util.Log.e("AvatarModel", "Failed to load battle history: " + error.getMessage());
                 if (onLoaded != null) onLoaded.run();
             }
         });
@@ -1212,10 +1315,17 @@ public class AvatarModel {
     public void addAvatarBadge(int rewardBadge) {
         if (avatarBadges == null) avatarBadges = new ArrayList<>();
         if (!avatarBadges.contains(rewardBadge)) {
-            {
-                avatarBadges.add(rewardBadge);
-            }
+            avatarBadges.add(rewardBadge);
+            android.util.Log.d("AvatarModel", "Added badge: " + rewardBadge + ", total badges: " + avatarBadges.size());
+            notifyChange(); // Notify UI of badge change
+        } else {
+            android.util.Log.d("AvatarModel", "Badge already exists: " + rewardBadge);
         }
+    }
+
+    public List<Integer> getAvatarBadges() {
+        if (avatarBadges == null) avatarBadges = new ArrayList<>();
+        return new ArrayList<>(avatarBadges);
     }
 
     public void addCompletedChallenge(String challengeId) {

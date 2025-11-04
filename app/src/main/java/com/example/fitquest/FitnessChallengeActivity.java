@@ -66,6 +66,8 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
     private int timeLimit;
 
     private boolean challengeCompleted = false;
+    private boolean timerStarted = false;
+    private boolean userInPosition = false;
 
     private int badFormFrameCount = 0;
     private static final int BAD_FORM_THRESHOLD_FRAMES = 20; // e.g. ~0.7s at 30 FPS
@@ -79,6 +81,10 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
     private static final String[] REQUIRED_PERMISSIONS = new String[]{
             Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO
     };
+    
+    private boolean isTimerBasedExercise(String exerciseType) {
+        return "plank".equalsIgnoreCase(exerciseType) || "treepose".equalsIgnoreCase(exerciseType);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,15 +143,28 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
         // Initialize detector
         exerciseDetector = new ExerciseDetector(this, "challenge", 9999);
         exerciseDetector.setListener(this);
+        exerciseDetector.setChallengeMode(true); // Set challenge mode for stricter thresholds
 
-        instructionText.setText(objective);
-        circularProgress.setMax(target);
+        // Set appropriate instruction text based on exercise type
+        if (isTimerBasedExercise(exerciseType)) {
+            instructionText.setText("Get ready! Position yourself 1.5m-2.5m from camera and get into " + exerciseType + " position. Hold the position for " + target + " seconds!");
+            // For timer-based exercises, set max to 100 for percentage-based progress
+            circularProgress.setMax(100);
+            // Initialize progress text for countdown
+            progressText.setText("⏱ " + target + "s");
+        } else {
+            instructionText.setText("Get ready! Position yourself 1.5m-2.5m from camera and get into " + exerciseType + " position. Complete " + target + " reps!");
+            // For rep-based exercises, set max to target reps
+            circularProgress.setMax(target);
+            // Initialize progress text for reps
+            progressText.setText("0/" + target);
+        }
 
         btnFinishChallenge.setOnClickListener(v -> finish());
 
         setupPermissions();
         initializePoseDetector();
-        startChallengeTimer();
+        // Timer will start only when user is in correct position
     }
 
 
@@ -239,6 +258,31 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
 
                         exerciseDetector.processPose(pose, exerciseType);
 
+                        // Check if user is at correct distance before starting timer
+                        if (!timerStarted) {
+                            if (exerciseDetector.isDistanceReady()) {
+                                if (!userInPosition) {
+                                    userInPosition = true;
+                                    feedbackText.setText("✅ Perfect distance! Get into position...");
+                                    audioManager.speakOnce("Perfect distance! Get into position");
+                                    
+                                    // Start timer after 3 second countdown
+                                    new Handler(getMainLooper()).postDelayed(() -> {
+                                        if (!timerStarted) {
+                                            startChallengeTimer();
+                                            timerStarted = true;
+                                            feedbackText.setText("Challenge started! Keep good form!");
+                                        }
+                                    }, 3000);
+                                }
+                            } else {
+                                userInPosition = false;
+                                feedbackText.setText("📏 Move to 1.5m-2.5m from camera");
+                            }
+                            return; // Don't process reps until timer starts
+                        }
+
+                        // Only check form after timer has started
                         if (strictMode && !exerciseDetector.isInPosition(pose, exerciseType)) {
                             badFormFrameCount++;
 
@@ -267,26 +311,57 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
     }
 
     private void startChallengeTimer() {
-        challengeTimer = new CountDownTimer(timeLimit * 1000L, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                int elapsed = (int) ((timeLimit * 1000L - millisUntilFinished) / 1000L);
-                int remaining = timeLimit - elapsed;
-                timerText.setText("⏱ " + remaining + "s left");
+        // Check if this is a timer-based exercise
+        if (isTimerBasedExercise(exerciseType)) {
+            // For timer-based exercises, just show countdown and start
+            showCountdown(3, () -> {
+                timerStarted = true;
+                feedbackText.setText("Hold the position! Timer will track your progress.");
+                timerText.setText("⏱ Hold for " + target + " seconds");
+                // Initialize progress bar for countdown
+                circularProgress.setProgress(0);
+                progressText.setText("⏱ " + target + "s");
+            });
+        } else {
+            // For rep-based exercises, use the challenge timer
+            showCountdown(3, () -> {
+                challengeTimer = new CountDownTimer(timeLimit * 1000L, 1000) {
+                    @Override
+                    public void onTick(long millisUntilFinished) {
+                        int elapsed = (int) ((timeLimit * 1000L - millisUntilFinished) / 1000L);
+                        int remaining = timeLimit - elapsed;
+                        timerText.setText("⏱ " + remaining + "s left");
 
-                if (remaining <= 10)
-                    audioManager.speak(String.valueOf(remaining));
-            }
+                        if (remaining <= 10)
+                            audioManager.speak(String.valueOf(remaining));
+                    }
 
-            @Override
-            public void onFinish() {
-                if (!challengeCompleted) {
-                    // Timer finished but target not reached - fail the challenge
-                    failChallenge("Time's up! You didn't reach the target.");
-                }
-            }
-        };
-        challengeTimer.start();
+                    @Override
+                    public void onFinish() {
+                        if (!challengeCompleted) {
+                            // Timer finished but target not reached - fail the challenge
+                            failChallenge("Time's up! You didn't reach the target.");
+                        }
+                    }
+                };
+                challengeTimer.start();
+                timerStarted = true;
+            });
+        }
+    }
+    
+    private void showCountdown(int seconds, Runnable onComplete) {
+        if (seconds <= 0) {
+            onComplete.run();
+            return;
+        }
+        
+        timerText.setText("⏱ Starting in " + seconds + "...");
+        audioManager.speak(String.valueOf(seconds));
+        
+        new Handler(getMainLooper()).postDelayed(() -> {
+            showCountdown(seconds - 1, onComplete);
+        }, 1000);
     }
 
     private void completeChallenge() {
@@ -298,29 +373,24 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
         feedbackText.setText("🎉 Challenge Completed!");
         audioManager.speak("Great job! Challenge completed!");
 
+        // Mark completion immediately
         markChallengeComplete(challengeId);
 
-        new Handler(getMainLooper()).postDelayed(this::finish, 5000);
+        // End the activity right away
+        finish();
     }
 
 
+
     private void updateProgressBar(int repCount) {
-        String currentStr = progressText.getText() != null ? progressText.getText().toString() : "0";
-
-        int current = 0;
-        if (!currentStr.isEmpty()) {
-            try {
-                current = Integer.parseInt(currentStr);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                current = 0;
-            }
+        if (isTimerBasedExercise(exerciseType)) {
+            // For timer-based exercises, don't update here - let onPlankTimeUpdated handle it
+            return;
         }
-
-        current = repCount; // or whatever logic you use
-
-        progressText.setText(String.valueOf(current)+ "/" + target);
-        circularProgress.setProgress(current);
+        
+        // For rep-based exercises
+        progressText.setText(String.valueOf(repCount) + "/" + target);
+        circularProgress.setProgress(repCount);
     }
 
 
@@ -367,6 +437,13 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
             // Mark challenge as completed in local storage
             ChallengeManager.markCompleted(this, challengeId);
 
+            // Mark challenge as completed in avatar
+            AvatarModel avatar = AvatarManager.loadAvatarOffline(this);
+            if (avatar != null) {
+                avatar.markChallengeCompleted(challengeId);
+                AvatarManager.saveAvatarOffline(this, avatar);
+            }
+
             // Update linked goal if any
             ChallengeModel challenge = ChallengeManager.getById(this, challengeId);
             if (challenge != null && challenge.getLinkedGoalId() != null) {
@@ -386,12 +463,13 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
                     .child(challengeId);
             ref.setValue(true);
 
-
             // Auto-claim reward if not already claimed
-            AvatarModel avatar = AvatarManager.loadAvatarOffline(this);
             if (challenge != null && avatar != null && !challenge.isClaimed()) {
                 ChallengeManager.claimReward(this, avatar, challengeId);
                 AvatarManager.saveAvatarOnline(avatar);
+                
+                // Notify that a challenge was completed for real-time updates
+                Log.i(TAG, "Challenge completed and reward claimed: " + challenge.getName());
             }
         } catch (Exception e) {
             Log.e(TAG, "Failed to mark challenge complete", e);
@@ -413,6 +491,29 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
 
     @Override
     public void onPlankTimeUpdated(long seconds, long requiredSeconds) {
+        runOnUiThread(() -> {
+            // For timer-based exercises, show countdown and progress bar
+            long remaining = requiredSeconds - seconds;
+            
+            // Update progress bar (countdown from full to empty)
+            int progress = (int) ((requiredSeconds - remaining) * 100 / requiredSeconds);
+            circularProgress.setProgress(progress);
+            
+            // Show countdown timer instead of rep counter
+            progressText.setText("⏱ " + remaining + "s");
+            
+            // Update feedback
+            if (remaining > 0) {
+                feedbackText.setText("Hold steady! " + remaining + "s remaining");
+            } else {
+                feedbackText.setText("🎉 Time's up! Great job!");
+            }
+        });
+        
+        // Check if target time reached
+        if (seconds >= requiredSeconds && !challengeCompleted) {
+            completeChallenge();
+        }
     }
 
     @Override
@@ -464,8 +565,10 @@ public class FitnessChallengeActivity extends AppCompatActivity implements Exerc
             for (int r : grantResults)
                 if (r != PackageManager.PERMISSION_GRANTED) grantedAll = false;
 
-            if (grantedAll) startCamera();
-            else {
+            if (grantedAll) {
+                permissionLayout.setVisibility(View.GONE);
+                startCamera();
+            } else {
                 Toast.makeText(this, "Permissions required", Toast.LENGTH_SHORT).show();
                 finish();
             }

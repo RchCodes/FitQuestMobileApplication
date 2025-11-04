@@ -180,12 +180,20 @@ public class AvatarOverviewActivity extends BaseActivity {
         //tvAP.setText("AP: " + avatar.getAp());
 
         int currentLevel = avatar.getLevel();
-        int xpForNextLevel = LevelProgression.getMaxXpForLevel(currentLevel);
-        int currentXp = Math.min(avatar.getXp(), xpForNextLevel);
-
-        expBar.setMax(xpForNextLevel);
-        expBar.setProgress(currentXp);
-        expTextOverlay.setText(currentXp + "/" + xpForNextLevel);
+        int maxLevel = LevelProgression.getMaxLevel();
+        
+        if (currentLevel >= maxLevel) {
+            // User is at max level
+            expBar.setMax(100);
+            expBar.setProgress(100);
+            expTextOverlay.setText("MAX LEVEL");
+        } else {
+            int xpForNextLevel = LevelProgression.getMaxXpForLevel(currentLevel);
+            int currentXp = Math.min(avatar.getXp(), xpForNextLevel);
+            expBar.setMax(xpForNextLevel);
+            expBar.setProgress(currentXp);
+            expTextOverlay.setText(currentXp + "/" + xpForNextLevel);
+        }
 
 
         // Physique

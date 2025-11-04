@@ -177,37 +177,45 @@ public class AvatarCreationActivity extends BaseActivity {
         btnHairLeft.setOnClickListener(v -> {
             currentHairIndex = (currentHairIndex - 1 + 4) % 4;
             updateHair();
+            Toast.makeText(this, "Hair changed to style #" + (currentHairIndex + 1), Toast.LENGTH_SHORT).show();
         });
         btnHairRight.setOnClickListener(v -> {
             currentHairIndex = (currentHairIndex + 1) % 4;
             updateHair();
+            Toast.makeText(this, "Hair changed to style #" + (currentHairIndex + 1), Toast.LENGTH_SHORT).show();
         });
 
         btnEyesLeft.setOnClickListener(v -> {
             currentEyesIndex = (currentEyesIndex - 1 + 5) % 5;
             updateEyes();
+            Toast.makeText(this, "Eyes changed to style #" + (currentEyesIndex + 1), Toast.LENGTH_SHORT).show();
         });
         btnEyesRight.setOnClickListener(v -> {
             currentEyesIndex = (currentEyesIndex + 1) % 5;
             updateEyes();
+            Toast.makeText(this, "Eyes changed to style #" + (currentEyesIndex + 1), Toast.LENGTH_SHORT).show();
         });
 
         btnNoseLeft.setOnClickListener(v -> {
             currentNoseIndex = (currentNoseIndex - 1 + 8) % 8;
             updateNose();
+            Toast.makeText(this, "Nose changed to style #" + (currentNoseIndex + 1), Toast.LENGTH_SHORT).show();
         });
         btnNoseRight.setOnClickListener(v -> {
             currentNoseIndex = (currentNoseIndex + 1) % 8;
             updateNose();
+            Toast.makeText(this, "Nose changed to style #" + (currentNoseIndex + 1), Toast.LENGTH_SHORT).show();
         });
 
         btnLipsLeft.setOnClickListener(v -> {
             currentLipsIndex = (currentLipsIndex - 1 + 8) % 8;
             updateLips();
+            Toast.makeText(this, "Lips changed to style #" + (currentLipsIndex + 1), Toast.LENGTH_SHORT).show();
         });
         btnLipsRight.setOnClickListener(v -> {
             currentLipsIndex = (currentLipsIndex + 1) % 8;
             updateLips();
+            Toast.makeText(this, "Lips changed to style #" + (currentLipsIndex + 1), Toast.LENGTH_SHORT).show();
         });
 
         // Inside AvatarCreationActivity.java
@@ -293,14 +301,17 @@ public class AvatarCreationActivity extends BaseActivity {
         btnWarrior.setOnClickListener(v -> {
             currentClassIndex = 0;
             updateOutfit();
+            Toast.makeText(this, "Selected class: Warrior", Toast.LENGTH_SHORT).show();
         });
         btnRogue.setOnClickListener(v -> {
             currentClassIndex = 1;
             updateOutfit();
+            Toast.makeText(this, "Selected class: Rogue", Toast.LENGTH_SHORT).show();
         });
         btnTank.setOnClickListener(v -> {
             currentClassIndex = 2;
             updateOutfit();
+            Toast.makeText(this, "Selected class: Tank", Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -310,14 +321,17 @@ public class AvatarCreationActivity extends BaseActivity {
             updateBody();
             updateHair();
             updateOutfit();
+            Toast.makeText(this, "Gender set to Male", Toast.LENGTH_SHORT).show();
         });
         btnFemale.setOnClickListener(v -> {
             isMale = false;
             updateBody();
             updateHair();
             updateOutfit();
+            Toast.makeText(this, "Gender set to Female", Toast.LENGTH_SHORT).show();
         });
     }
+
 
     private void updateHair() {
         tvHair.setText("Hair #" + (currentHairIndex + 1));

@@ -5,6 +5,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <pl.droidsonroids.gif.GifImageView
+        android:id="@+id/exerciseIntroGif"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerInside"
+        android:visibility="gone"
+        android:background="#CC000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:elevation="10dp" />
+
     <!-- Camera Preview -->
     <androidx.camera.view.PreviewView
         android:id="@+id/previewView"

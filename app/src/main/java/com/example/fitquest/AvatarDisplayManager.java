@@ -57,8 +57,8 @@ public class AvatarDisplayManager {
         // Outfit
         setLayerDrawable(ivOutfit, avatar.getOutfit(), null);
 
-        // Weapon
-        setLayerDrawable(ivWeapon, avatar.getWeapon(), null);
+        // Weapon - get from equipped gear
+        updateWeaponFromEquippedGear();
 
         // Hair Outline
         setLayerDrawable(ivHairOutline, avatar.getHairOutline(), null);
@@ -218,6 +218,114 @@ public class AvatarDisplayManager {
         
         if (weaponSpriteRes != 0) {
             ivWeapon.setImageResource(weaponSpriteRes);
+        }
+    }
+    
+    /**
+     * Auto-equip gear and update avatar display
+     */
+    public void autoEquipGear(GearModel gear) {
+        if (gear == null || avatar == null) return;
+        
+        try {
+            // Equip the gear
+            avatar.equipGear(gear.getType(), gear.getId());
+            
+            // Update visual display based on gear type
+            switch (gear.getType()) {
+                case WEAPON:
+                    updateWeaponDisplay(gear);
+                    break;
+                case ARMOR:
+                case PANTS:
+                case BOOTS:
+                    // Update outfit if it completes a set
+                    avatar.checkOutfitCompletion();
+                    refreshDisplay();
+                    break;
+                case ACCESSORY:
+                    // Accessories might not have visual representation
+                    break;
+            }
+            
+            // Save changes
+            saveAvatar();
+        } catch (Exception e) {
+            Log.e("AvatarDisplayManager", "Error auto-equipping gear: " + gear.getName(), e);
+        }
+    }
+    
+    /**
+     * Update weapon display based on equipped weapon
+     */
+    private void updateWeaponDisplay(GearModel weapon) {
+        if (weapon == null) return;
+        
+        String gender = avatar.getGender();
+        int weaponSpriteRes;
+        
+        if ("male".equalsIgnoreCase(gender)) {
+            weaponSpriteRes = weapon.getMaleSpriteRes();
+        } else {
+            weaponSpriteRes = weapon.getFemaleSpriteRes();
+        }
+        
+        if (weaponSpriteRes != 0) {
+            // Update the weapon sprite resource name in avatar
+            String weaponResName = context.getResources().getResourceEntryName(weaponSpriteRes);
+            avatar.setWeapon(weaponResName);
+            
+            // Update the display
+            ivWeapon.setImageResource(weaponSpriteRes);
+        }
+    }
+    
+    /**
+     * Update weapon display from currently equipped weapon gear
+     */
+    private void updateWeaponFromEquippedGear() {
+        if (avatar == null) return;
+        
+        try {
+            // Get equipped weapon gear ID
+            String weaponGearId = avatar.getEquippedGear().get(GearType.WEAPON.name());
+            
+            if (weaponGearId != null) {
+                // Get the gear model
+                GearModel weaponGear = GearRepository.getGearById(weaponGearId);
+                
+                if (weaponGear != null) {
+                    // Get appropriate sprite based on gender
+                    String gender = avatar.getGender();
+                    int weaponSpriteRes;
+                    
+                    if ("male".equalsIgnoreCase(gender)) {
+                        weaponSpriteRes = weaponGear.getMaleSpriteRes();
+                    } else {
+                        weaponSpriteRes = weaponGear.getFemaleSpriteRes();
+                    }
+                    
+                    if (weaponSpriteRes != 0) {
+                        // Update the weapon sprite resource name in avatar
+                        String weaponResName = context.getResources().getResourceEntryName(weaponSpriteRes);
+                        avatar.setWeapon(weaponResName);
+                        
+                        // Update the display
+                        ivWeapon.setImageResource(weaponSpriteRes);
+                        return;
+                    }
+                }
+            }
+            
+            // No weapon equipped or weapon not found - clear weapon display
+            ivWeapon.setImageDrawable(null);
+            avatar.setWeapon(null);
+            
+        } catch (Exception e) {
+            Log.e("AvatarDisplayManager", "Error updating weapon from equipped gear", e);
+            // Fallback to clearing weapon
+            ivWeapon.setImageDrawable(null);
+            avatar.setWeapon(null);
         }
     }
 }

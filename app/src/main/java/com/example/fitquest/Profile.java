@@ -128,12 +128,20 @@ public class Profile {
 
         // EXP Bar
         int currentXp = avatar.getXp();
-        int xpForNextLevel = LevelProgression.getMaxXpForLevel(avatar.getLevel());
-        expBar.setMax(xpForNextLevel);
-        expBar.setProgress(currentXp);
-
-        // Progress text
-        progressText.setText(currentXp + "/" + xpForNextLevel);
+        int currentLevel = avatar.getLevel();
+        int maxLevel = LevelProgression.getMaxLevel();
+        
+        if (currentLevel >= maxLevel) {
+            // User is at max level
+            expBar.setMax(100);
+            expBar.setProgress(100);
+            progressText.setText("MAX LEVEL");
+        } else {
+            int xpForNextLevel = LevelProgression.getMaxXpForLevel(currentLevel);
+            expBar.setMax(xpForNextLevel);
+            expBar.setProgress(currentXp);
+            progressText.setText(currentXp + "/" + xpForNextLevel);
+        }
 
         // Player ID
         playerIdView.setText("ID: " + avatar.getPlayerId());
@@ -146,13 +154,20 @@ public class Profile {
         if (badgesContainer != null) {
             badgesContainer.removeAllViews();
 
-            List<Integer> badges = (avatar != null && avatar.avatarBadges != null) ? avatar.avatarBadges : new ArrayList<>();
+            List<Integer> badges = (avatar != null) ? avatar.getAvatarBadges() : new ArrayList<>();
+            
+            // Debug logging
+            android.util.Log.d("Profile", "Avatar badges count: " + badges.size());
+            for (int i = 0; i < badges.size(); i++) {
+                android.util.Log.d("Profile", "Badge " + i + ": " + badges.get(i));
+            }
+            
             if (!badges.isEmpty()) {
                 int count = badges.size();
                 int start = Math.max(0, count - 5); // show last 5 badges
                 for (int i = count - 1; i >= start; i--) {
                     Integer badgeRes = badges.get(i);
-                    if (badgeRes != null) {
+                    if (badgeRes != null && badgeRes != 0) {
                         ImageView badgeView = new ImageView(context);
 
                         int size = (int) (48 * context.getResources().getDisplayMetrics().density);
@@ -161,16 +176,32 @@ public class Profile {
                         badgeView.setLayoutParams(params);
 
                         badgeView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                        badgeView.setImageResource(badgeRes);
-
-                        badgesContainer.addView(badgeView);
+                        
+                        try {
+                            badgeView.setImageResource(badgeRes);
+                            badgesContainer.addView(badgeView);
+                            android.util.Log.d("Profile", "Added badge: " + badgeRes);
+                        } catch (Exception e) {
+                            android.util.Log.e("Profile", "Failed to load badge resource: " + badgeRes, e);
+                        }
                     }
                 }
+            } else {
+                // Show placeholder when no badges
+                TextView noBadgesText = new TextView(context);
+                noBadgesText.setText("No badges yet");
+                noBadgesText.setTextColor(android.graphics.Color.GRAY);
+                noBadgesText.setTextSize(12);
+                noBadgesText.setGravity(android.view.Gravity.CENTER);
+                badgesContainer.addView(noBadgesText);
             }
         }
 
     }
 
+    public void refreshProfile() {
+        populateProfileData();
+    }
 
     private void switchAccount() {
         new AlertDialog.Builder(context)

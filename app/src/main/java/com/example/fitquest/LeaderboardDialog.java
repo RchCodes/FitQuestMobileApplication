@@ -100,9 +100,15 @@ public class LeaderboardDialog extends DialogFragment {
 
     /** Load rank leaderboard from Firebase */
     private void loadRankLeaderboard() {
+        // Show loading state
+        leaderboardEntries.clear();
+        adapter.notifyDataSetChanged();
+        
         LeaderboardManager.loadRankLeaderboard(new LeaderboardManager.LeaderboardCallback() {
             @Override
             public void onLeaderboardLoaded(List<LeaderboardEntry> entries, String type) {
+                if (getActivity() == null) return; // Activity destroyed
+                
                 leaderboardEntries.clear();
                 for (LeaderboardEntry entry : entries) {
                     if (entry instanceof RankLeaderboardEntry) {
@@ -118,15 +124,22 @@ public class LeaderboardDialog extends DialogFragment {
             @Override
             public void onError(String message) {
                 Log.e(TAG, "Rank leaderboard load error: " + message);
+                // Could show error message to user here
             }
         });
     }
 
     /** Load quest leaderboard from Firebase */
     private void loadQuestLeaderboard() {
+        // Show loading state
+        leaderboardEntries.clear();
+        adapter.notifyDataSetChanged();
+        
         LeaderboardManager.loadQuestLeaderboard(new LeaderboardManager.LeaderboardCallback() {
             @Override
             public void onLeaderboardLoaded(List<LeaderboardEntry> entries, String type) {
+                if (getActivity() == null) return; // Activity destroyed
+                
                 leaderboardEntries.clear();
                 for (LeaderboardEntry entry : entries) {
                     // Map QuestLeaderboardEntry → RankLeaderboardEntry for adapter compatibility
@@ -152,6 +165,7 @@ public class LeaderboardDialog extends DialogFragment {
             @Override
             public void onError(String message) {
                 Log.e(TAG, "Quest leaderboard load error: " + message);
+                // Could show error message to user here
             }
         });
     }

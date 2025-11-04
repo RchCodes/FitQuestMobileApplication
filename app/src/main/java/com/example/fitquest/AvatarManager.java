@@ -147,6 +147,26 @@ public class AvatarManager {
         rootMap.put("xp", avatar.getXp());
         rootMap.put("level", avatar.getLevel());
         rootMap.put("rank", avatar.getRank());
+        rootMap.put("rankPoints", avatar.getRankPoints());
+        rootMap.put("questPoints", avatar.getQuestPoints());
+        rootMap.put("playerId", avatar.getPlayerId());
+        
+        // Stats
+        rootMap.put("strength", avatar.getStrength());
+        rootMap.put("endurance", avatar.getEndurance());
+        rootMap.put("agility", avatar.getAgility());
+        rootMap.put("flexibility", avatar.getFlexibility());
+        rootMap.put("stamina", avatar.getStamina());
+        
+        // Physique stats
+        rootMap.put("armPoints", avatar.getArmPoints());
+        rootMap.put("legPoints", avatar.getLegPoints());
+        rootMap.put("chestPoints", avatar.getChestPoints());
+        rootMap.put("backPoints", avatar.getBackPoints());
+        
+        // Free points
+        rootMap.put("freePhysiquePoints", avatar.getFreePhysiquePoints());
+        rootMap.put("freeAttributePoints", avatar.getFreeAttributePoints());
 
         // Avatar appearance (nested map)
         Map<String, Object> avatarMap = new HashMap<>();
@@ -173,11 +193,16 @@ public class AvatarManager {
 
         // Collections/skills
         rootMap.put("ownedGear", new ArrayList<>(avatar.getOwnedGear()));
+        rootMap.put("equippedGear", avatar.getEquippedGear());
         // ensure ID lists are up to date
         avatar.updateSkillIds();
         rootMap.put("activeSkillIds", avatar.getActiveSkillIds() != null ? avatar.getActiveSkillIds() : new ArrayList<>());
         rootMap.put("passiveSkillIds", avatar.getPassiveSkillIds() != null ? avatar.getPassiveSkillIds() : new ArrayList<>());
         rootMap.put("completedChallenges", new ArrayList<>(avatar.getCompletedChallengeIds()));
+        
+        // Goals and badges
+        rootMap.put("goalProgress", avatar.getGoalProgress());
+        rootMap.put("avatarBadges", avatar.getAvatarBadges());
 
 
         ref.updateChildren(rootMap)
@@ -274,11 +299,51 @@ public class AvatarManager {
                     Long xp = snapshot.child("xp").getValue(Long.class);
                     Long level = snapshot.child("level").getValue(Long.class);
                     Long rank = snapshot.child("rank").getValue(Long.class);
+                    Long rankPoints = snapshot.child("rankPoints").getValue(Long.class);
 
                     avatar.setCoins(coins != null ? coins.intValue() : 0);
                     avatar.setXp(xp != null ? xp.intValue() : 0);
                     avatar.setLevel(level != null ? level.intValue() : 1);
                     avatar.setRank(rank != null ? rank.intValue() : 0);
+                    avatar.setRankPoints(rankPoints != null ? rankPoints.intValue() : 0);
+                    
+                    // Load quest points and player ID
+                    Long questPoints = snapshot.child("questPoints").getValue(Long.class);
+                    String playerId = snapshot.child("playerId").getValue(String.class);
+                    
+                    avatar.setQuestPoints(questPoints != null ? questPoints.intValue() : 0);
+                    avatar.setPlayerId(playerId);
+                    
+                    // Load attributes
+                    Long strength = snapshot.child("strength").getValue(Long.class);
+                    Long endurance = snapshot.child("endurance").getValue(Long.class);
+                    Long agility = snapshot.child("agility").getValue(Long.class);
+                    Long flexibility = snapshot.child("flexibility").getValue(Long.class);
+                    Long stamina = snapshot.child("stamina").getValue(Long.class);
+                    
+                    avatar.setStrength(strength != null ? strength.intValue() : 0);
+                    avatar.setEndurance(endurance != null ? endurance.intValue() : 0);
+                    avatar.setAgility(agility != null ? agility.intValue() : 0);
+                    avatar.setFlexibility(flexibility != null ? flexibility.intValue() : 0);
+                    avatar.setStamina(stamina != null ? stamina.intValue() : 0);
+                    
+                    // Load physique stats
+                    Long armPoints = snapshot.child("armPoints").getValue(Long.class);
+                    Long legPoints = snapshot.child("legPoints").getValue(Long.class);
+                    Long chestPoints = snapshot.child("chestPoints").getValue(Long.class);
+                    Long backPoints = snapshot.child("backPoints").getValue(Long.class);
+                    
+                    avatar.setArmPoints(armPoints != null ? armPoints.intValue() : 0);
+                    avatar.setLegPoints(legPoints != null ? legPoints.intValue() : 0);
+                    avatar.setChestPoints(chestPoints != null ? chestPoints.intValue() : 0);
+                    avatar.setBackPoints(backPoints != null ? backPoints.intValue() : 0);
+                    
+                    // Load free points
+                    Long freePhysiquePoints = snapshot.child("freePhysiquePoints").getValue(Long.class);
+                    Long freeAttributePoints = snapshot.child("freeAttributePoints").getValue(Long.class);
+                    
+                    avatar.setFreePhysiquePoints(freePhysiquePoints != null ? freePhysiquePoints.intValue() : 1);
+                    avatar.setFreeAttributePoints(freeAttributePoints != null ? freeAttributePoints.intValue() : 1);
 
                     // Load active skill IDs
                     // --- read active skill ids (support both "activeSkillIds" and old "activeSkills") ---
@@ -327,6 +392,61 @@ public class AvatarManager {
                         }
                     }
                     avatar.setPassiveSkillIds(passiveSkillIds);
+
+                    // --- Load owned gear ---
+                    DataSnapshot ownedGearSnap = snapshot.child("ownedGear");
+                    if (ownedGearSnap.exists()) {
+                        for (DataSnapshot s : ownedGearSnap.getChildren()) {
+                            String gearId = s.getValue(String.class);
+                            if (gearId != null) {
+                                avatar.addGear(gearId);
+                            }
+                        }
+                    }
+                    
+                    // --- Load equipped gear ---
+                    DataSnapshot equippedGearSnap = snapshot.child("equippedGear");
+                    if (equippedGearSnap.exists()) {
+                        for (DataSnapshot s : equippedGearSnap.getChildren()) {
+                            String gearId = s.getValue(String.class);
+                            if (gearId != null) {
+                                try {
+                                    GearType gearType = GearType.valueOf(s.getKey().toUpperCase());
+                                    avatar.equipGear(gearType, gearId);
+                                } catch (IllegalArgumentException e) {
+                                    Log.w(TAG, "Unknown gear type: " + s.getKey());
+                                }
+                            }
+                        }
+                    }
+                    
+                    // --- Load goal progress ---
+                    DataSnapshot goalProgressSnap = snapshot.child("goalProgress");
+                    if (goalProgressSnap.exists()) {
+                        for (DataSnapshot s : goalProgressSnap.getChildren()) {
+                            String goalId = s.getKey();
+                            String stateStr = s.getValue(String.class);
+                            if (goalId != null && stateStr != null) {
+                                try {
+                                    GoalState state = GoalState.valueOf(stateStr);
+                                    avatar.setGoalState(goalId, state);
+                                } catch (IllegalArgumentException e) {
+                                    Log.w(TAG, "Unknown goal state: " + stateStr);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // --- Load avatar badges ---
+                    DataSnapshot avatarBadgesSnap = snapshot.child("avatarBadges");
+                    if (avatarBadgesSnap.exists()) {
+                        for (DataSnapshot s : avatarBadgesSnap.getChildren()) {
+                            Long badgeId = s.getValue(Long.class);
+                            if (badgeId != null) {
+                                avatar.addAvatarBadge(badgeId.intValue());
+                            }
+                        }
+                    }
 
                     // --- Load completed challenges ---
                     DataSnapshot completedChallengesSnap = snapshot.child("completedChallenges");

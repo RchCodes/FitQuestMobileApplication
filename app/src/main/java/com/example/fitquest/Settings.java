@@ -184,28 +184,13 @@ public class Settings {
     }
 
     private void setupHelpButtons(View view) {
-        Button helpBtn = view.findViewById(R.id.help_button);
-        Button contactBtn = view.findViewById(R.id.contact_button);
-        Button faqBtn = view.findViewById(R.id.faq_button);
+        // Fully disabled help, contact, and FAQ buttons - commented out
+        // Button helpBtn = view.findViewById(R.id.help_button);
+        // Button contactBtn = view.findViewById(R.id.contact_button);
+        // Button faqBtn = view.findViewById(R.id.faq_button);
 
-        helpBtn.setOnClickListener(v ->
-                Toast.makeText(context, "Help documentation coming soon!", Toast.LENGTH_SHORT).show());
-
-        contactBtn.setOnClickListener(v -> {
-            Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-            emailIntent.setData(Uri.parse("mailto:support@fitquest.com"));
-            emailIntent.putExtra(Intent.EXTRA_SUBJECT, "FitQuest Support");
-            emailIntent.putExtra(Intent.EXTRA_TEXT, "Hello FitQuest Support,\n\n");
-
-            if (emailIntent.resolveActivity(context.getPackageManager()) != null) {
-                context.startActivity(emailIntent);
-            } else {
-                Toast.makeText(context, "No email app found", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        faqBtn.setOnClickListener(v ->
-                Toast.makeText(context, "FAQ page coming soon!", Toast.LENGTH_SHORT).show());
+        // Help, contact, and FAQ buttons are completely disabled and not initialized
+        // They are set to GONE in the layout or commented out here
     }
 
     private void setupPendingQuests(View view) {

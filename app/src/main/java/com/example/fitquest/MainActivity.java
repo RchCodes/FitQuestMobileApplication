@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -45,6 +47,12 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
     private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1001;
 
     private ActivityResultLauncher<Intent> googleSignInLauncher;
+    private Handler refreshHandler = new Handler(Looper.getMainLooper());
+    private Runnable refreshRunnable;
+
+    private Handler idleHandler = new Handler(Looper.getMainLooper());
+    private Runnable idleRunnable;
+    private boolean isIdleAnimating = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +67,7 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         setupButtons();
         initGoogleFit();
         MusicManager.start(this);
+        startPeriodicRefresh();
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
                 "step_quest_update",
@@ -92,6 +101,7 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
                 findViewById(R.id.noseLayer),
                 findViewById(R.id.lipsLayer)
         );
+
     }
 
     private void setupLaunchers() {
@@ -131,6 +141,9 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
                         loadProfileInfo();               // refresh all profile UI
                     });
 
+                    // Add idle animation for the avatar once it's loaded
+                    startAvatarIdleAnimation();
+                    startEyeBlinkAnimation();
 
                     // Save progress using sync manager
                     ProgressSyncManager.saveProgress(MainActivity.this, avatar, false); // Save offline first
@@ -177,12 +190,20 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         rankIcon.setImageResource(avatar.getRankDrawableRes());
 
         int currentLevel = avatar.getLevel();
-        int xpForNextLevel = LevelProgression.getMaxXpForLevel(currentLevel);
-        int currentXp = Math.min(avatar.getXp(), xpForNextLevel);
-
-        expBar.setMax(xpForNextLevel);
-        expBar.setProgress(currentXp);
-        expText.setText(currentXp + "/" + xpForNextLevel);
+        int maxLevel = LevelProgression.getMaxLevel();
+        
+        if (currentLevel >= maxLevel) {
+            // User is at max level
+            expBar.setMax(100);
+            expBar.setProgress(100);
+            expText.setText("MAX LEVEL");
+        } else {
+            int xpForNextLevel = LevelProgression.getMaxXpForLevel(currentLevel);
+            int currentXp = Math.min(avatar.getXp(), xpForNextLevel);
+            expBar.setMax(xpForNextLevel);
+            expBar.setProgress(currentXp);
+            expText.setText(currentXp + "/" + xpForNextLevel);
+        }
     }
 
     private void setupButtons() {
@@ -193,7 +214,11 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         SoundManager.setOnClickListenerWithSound(findViewById(R.id.settings_button), v -> new Settings(this).show());
         SoundManager.setOnClickListenerWithSound(findViewById(R.id.store_button), v -> startActivity(new Intent(this, StoreActivity.class)));
         SoundManager.setOnClickListenerWithSound(findViewById(R.id.quest_button), v -> new Quest(this).show());
-        SoundManager.setOnClickListenerWithSound(findViewById(R.id.goals_button), v -> new Goals(this, avatar).show());
+        SoundManager.setOnClickListenerWithSound(findViewById(R.id.goals_button), v -> {
+            Goals goalsDialog = new Goals(this, avatar);
+            goalsDialog.refreshGoals(this); // Refresh with latest data
+            goalsDialog.show();
+        });
         SoundManager.setOnClickListenerWithSound(findViewById(R.id.gear_button), v -> startActivity(new Intent(this, GearActivity.class)));
         SoundManager.setOnClickListenerWithSound(findViewById(R.id.friends_button), v -> startActivity(new Intent(this, AvatarOverviewActivity.class)));
         SoundManager.setOnClickListenerWithSound(findViewById(R.id.arena_button), v -> startActivity(new Intent(this, ArenaActivity.class)));
@@ -206,6 +231,7 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         super.onResume();
         QuestManager.setQuestProgressListener(this);
         MusicManager.onActivityResume(this);
+        if (avatar != null) startAvatarIdleAnimation();
 
         QuestManager.resetDailyStepCounterIfNeeded(this);
         
@@ -250,6 +276,8 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
 
         QuestManager.setQuestProgressListener(null);
         MusicManager.onActivityPause();
+        stopAvatarIdleAnimation();
+
     }
 
     // ------------------ GOOGLE FIT ------------------
@@ -395,4 +423,133 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
     public void refreshProfile() {
         loadProfileInfo();
     }
+
+    private void startPeriodicRefresh() {
+        refreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                // Refresh avatar data from storage
+                if (avatar != null) {
+                    AvatarModel updatedAvatar = AvatarManager.loadAvatarOffline(MainActivity.this);
+                    if (updatedAvatar != null) {
+                        avatar = updatedAvatar;
+                        loadProfileInfo();
+                    }
+                }
+                
+                // Schedule next refresh in 2 seconds
+                refreshHandler.postDelayed(this, 2000);
+            }
+        };
+        refreshHandler.post(refreshRunnable);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (refreshHandler != null && refreshRunnable != null) {
+            refreshHandler.removeCallbacks(refreshRunnable);
+        }
+    }
+
+    private void startAvatarIdleAnimation() {
+        if (isIdleAnimating) return;
+        isIdleAnimating = true;
+
+        // Collect all non-face avatar parts
+        ImageView[] animatedLayers = new ImageView[]{
+                findViewById(R.id.baseBodyLayer),
+                findViewById(R.id.outfitLayer),
+                findViewById(R.id.weaponLayer),
+                findViewById(R.id.hairOutlineLayer),
+                findViewById(R.id.hairFillLayer)
+        };
+
+        // Use same target Y for all parts so entire body moves together
+        idleRunnable = new Runnable() {
+            boolean goingUp = true;
+
+            @Override
+            public void run() {
+                float targetShift = goingUp ? -6f : 6f;
+
+                for (ImageView layer : animatedLayers) {
+                    if (layer != null) {
+                        // animate smoothly, same shift for all
+                        layer.animate()
+                                .translationY(targetShift)
+                                .setDuration(1000)
+                                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                                .start();
+                    }
+                }
+
+                goingUp = !goingUp;
+                idleHandler.postDelayed(this, 1000);
+            }
+        };
+
+        idleHandler.post(idleRunnable);
+    }
+
+    private void stopAvatarIdleAnimation() {
+        isIdleAnimating = false;
+        if (idleHandler != null && idleRunnable != null) {
+            idleHandler.removeCallbacks(idleRunnable);
+        }
+
+        int[] layerIds = {
+                R.id.baseBodyLayer,
+                R.id.outfitLayer,
+                R.id.weaponLayer,
+                R.id.hairOutlineLayer,
+                R.id.hairFillLayer
+        };
+
+        for (int id : layerIds) {
+            ImageView layer = findViewById(id);
+            if (layer != null) {
+                layer.animate().translationY(0).setDuration(300).start();
+            }
+        }
+    }
+
+    private void startEyeBlinkAnimation() {
+        ImageView eyesFill = findViewById(R.id.eyesFillLayer);
+        ImageView eyesOutline = findViewById(R.id.eyesOutlineLayer);
+
+        if (eyesFill == null || eyesOutline == null) return;
+
+        // Make sure scaling happens in place (no movement)
+        eyesFill.post(() -> {
+            eyesFill.setPivotX(eyesFill.getWidth() / 2f);
+            eyesFill.setPivotY(eyesFill.getHeight() / 2f);
+        });
+        eyesOutline.post(() -> {
+            eyesOutline.setPivotX(eyesOutline.getWidth() / 2f);
+            eyesOutline.setPivotY(eyesOutline.getHeight() / 2f);
+        });
+
+        Handler blinkHandler = new Handler(Looper.getMainLooper());
+        Runnable blinkRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (eyesFill != null && eyesOutline != null) {
+                    // Blink close
+                    eyesFill.animate().scaleY(0.1f).alpha(0.8f).setDuration(120).start();
+                    eyesOutline.animate().scaleY(0.1f).alpha(0.8f).setDuration(120)
+                            .withEndAction(() -> {
+                                // Blink open
+                                eyesFill.animate().scaleY(1f).alpha(1f).setDuration(150).start();
+                                eyesOutline.animate().scaleY(1f).alpha(1f).setDuration(150).start();
+                            }).start();
+                }
+
+                blinkHandler.postDelayed(this, 4000 + (long) (Math.random() * 2000));
+            }
+        };
+
+        blinkHandler.postDelayed(blinkRunnable, 3000);
+    }
+
 }

@@ -140,6 +140,9 @@ public class QuestManager {
 
         // Update "Complete 5 quests" quest when any other quest is claimed
         updateQuestCompletionQuest(ctx);
+        
+        // Update quest leaderboard
+        LeaderboardManager.updateQuestLeaderboard(ctx, quest.getId(), quest);
 
         return leveledUp;
     }
@@ -211,25 +214,25 @@ public class QuestManager {
 
         // Daily
         list.add(new QuestModel("q_daily_push_10", "Complete 10 Push-ups", "Complete 10 pushups in one session",
-                new QuestReward(50,50,1,0,0,0,1,0), QuestCategory.DAILY,10,"pushups"));
+                new QuestReward(100,50,1,0,0,0,1,0), QuestCategory.DAILY,10,"pushups"));
         list.add(new QuestModel("q_daily_squat_10", "Execute 10 Squats", "Do 10 squats in one session",
-                new QuestReward(15,40,0,1,0,0,1,0), QuestCategory.DAILY,10,"squats"));
+                new QuestReward(50,40,0,1,0,0,1,0), QuestCategory.DAILY,10,"squats"));
         list.add(new QuestModel("q_daily_plank_20", "Hold Plank 20 Seconds", "Maintain a plank for 20 seconds",
-                new QuestReward(25,50,0,0,1,1,1,1), QuestCategory.DAILY,20,"plank"));
+                new QuestReward(50,50,0,0,1,1,1,1), QuestCategory.DAILY,20,"plank"));
         list.add(new QuestModel("q_daily_crunches_10", "Do 10 Crunches", "Complete 10 crunches in one session",
-                new QuestReward(15,40,0,0,1,1,1,0), QuestCategory.DAILY,10,"crunches"));
+                new QuestReward(30,40,0,0,1,1,1,0), QuestCategory.DAILY,10,"crunches"));
         list.add(new QuestModel("q_daily_steps_2500", "Walk 2,500 Steps", "Accumulate 2,500 steps today using your device's step counter",
-                new QuestReward(40, 40, 0, 0, 0, 0, 0, 0), QuestCategory.DAILY, 2500, "steps"));
+                new QuestReward(80, 40, 0, 0, 0, 0, 0, 0), QuestCategory.DAILY, 2500, "steps"));
         list.add(new QuestModel("q_daily_quests_5", "Complete 5 Quests", "Complete 5 quests in today",
                 new QuestReward(100, 50, 0, 0, 0, 0, 0, 5), QuestCategory.DAILY, 5, "completion"));
         list.add(new QuestModel("q_daily_jj_20", "Do 20 Jumping Jacks", "Perform 20 jumping jacks in one session",
-                new QuestReward(20,30,1,0,0,0,1,0), QuestCategory.DAILY,20,"jumpingjacks"));
+                new QuestReward(40,30,1,0,0,0,1,0), QuestCategory.DAILY,20,"jumpingjacks"));
         list.add(new QuestModel("q_daily_tree_20", "Hold Tree Pose 20s", "Maintain Tree Pose for 20 seconds",
-                new QuestReward(25,30,0,1,0,0,1,0), QuestCategory.DAILY,20,"treepose"));
-        list.add(new QuestModel("q_daily_situp_15", "Complete 15 Sit-ups", "Do 15 sit-ups in one session",
-                new QuestReward(20,30,0,0,1,0,1,0), QuestCategory.DAILY,15,"situps"));
+                new QuestReward(50,30,0,1,0,0,1,0), QuestCategory.DAILY,20,"treepose"));
+        list.add(new QuestModel("q_daily_situp_10", "Complete 10 Sit-ups", "Do 10 sit-ups in one session",
+                new QuestReward(40,30,0,0,1,0,1,0), QuestCategory.DAILY,10,"situps"));
         list.add(new QuestModel("q_daily_lunge_10", "Do 10 Lunges", "Perform 10 lunges (total) in one session",
-                new QuestReward(20,30,0,1,0,0,1,0), QuestCategory.DAILY,10,"lunges"));
+                new QuestReward(40,30,0,1,0,0,1,0), QuestCategory.DAILY,10,"lunges"));
         // Weekly
         list.add(new QuestModel("q_weekly_push_50", "Accumulate 50 Push-ups", "Do 50 pushups this week",
                 new QuestReward(100,200,0,0,0,0,0,3), QuestCategory.WEEKLY,50,"pushups"));
@@ -247,8 +250,8 @@ public class QuestManager {
                 new QuestReward(80,120,0,0,0,0,0,3), QuestCategory.WEEKLY,100,"jumpingjacks"));
         list.add(new QuestModel("q_weekly_tree_100", "Hold Tree Pose 100s", "Maintain Tree Pose cumulatively 100 seconds this week",
                 new QuestReward(80,100,0,0,1,0,0,3), QuestCategory.WEEKLY,100,"treepose"));
-        list.add(new QuestModel("q_weekly_situp_100", "Accumulate 100 Sit-ups", "Complete 100 sit-ups this week",
-                new QuestReward(80,120,0,0,1,0,0,3), QuestCategory.WEEKLY,100,"situps"));
+        list.add(new QuestModel("q_weekly_situp_70", "Accumulate 70 Sit-ups", "Complete 70 sit-ups this week",
+                new QuestReward(80,120,0,0,1,0,0,3), QuestCategory.WEEKLY,70,"situps"));
         list.add(new QuestModel("q_weekly_lunge_50", "Accumulate 50 Lunges", "Perform 50 lunges this week",
                 new QuestReward(80,120,0,0,1,0,0,3), QuestCategory.WEEKLY,50,"lunges"));
         // Monthly
@@ -268,8 +271,8 @@ public class QuestManager {
                 new QuestReward(300,400,0,0,0,0,0,5), QuestCategory.MONTHLY,500,"jumpingjacks"));
         list.add(new QuestModel("q_monthly_tree_300", "Hold Tree Pose 300s", "Maintain Tree Pose cumulatively 300 seconds this month",
                 new QuestReward(300,350,0,0,1,0,0,5), QuestCategory.MONTHLY,300,"treepose"));
-        list.add(new QuestModel("q_monthly_situp_400", "Accumulate 400 Sit-ups", "Complete 400 sit-ups this month",
-                new QuestReward(300,400,0,0,1,0,0,5), QuestCategory.MONTHLY,400,"situps"));
+        list.add(new QuestModel("q_monthly_situp_280", "Accumulate 280 Sit-ups", "Complete 280 sit-ups this month",
+                new QuestReward(300,400,0,0,1,0,0,5), QuestCategory.MONTHLY,280,"situps"));
         list.add(new QuestModel("q_monthly_lunge_200", "Accumulate 200 Lunges", "Perform 200 lunges this month",
                 new QuestReward(300,400,0,0,1,0,0,5), QuestCategory.MONTHLY,200,"lunges"));
         return list;

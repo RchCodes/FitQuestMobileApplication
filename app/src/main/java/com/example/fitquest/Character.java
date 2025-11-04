@@ -77,7 +77,7 @@ public class Character {
         int baseHp = avatar.getEndurance() * 10;
         baseHp += avatar.getChestPoints() * 10;
         // Include gear boosts
-        for (Map.Entry<GearType, String> entry : avatar.getEquippedGear().entrySet()) {
+        for (Map.Entry<String, String> entry : avatar.getEquippedGear().entrySet()) {
             GearModel gear = GearRepository.getGearById(entry.getValue());
             if (gear != null && gear.getStatBoosts() != null) {
                 Float hpBoost = gear.getStatBoosts().get("HP");
@@ -129,7 +129,7 @@ public class Character {
 
     private int applyGearStatBoosts(String stat, int baseValue) {
         int modified = baseValue;
-        for (Map.Entry<GearType, String> entry : avatar.getEquippedGear().entrySet()) {
+        for (Map.Entry<String, String> entry : avatar.getEquippedGear().entrySet()) {
             GearModel gear = GearRepository.getGearById(entry.getValue());
             if (gear != null && gear.getStatBoosts() != null) {
                 Float boost = gear.getStatBoosts().get(stat);

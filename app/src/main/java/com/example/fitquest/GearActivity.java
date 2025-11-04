@@ -12,7 +12,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -36,6 +38,10 @@ public class GearActivity extends AppCompatActivity {
     private GearAdapter gearAdapter;
     private GearModel selectedGear;
     private GearType currentFilter = null; // null = ALL
+    
+    // Temporary equipping state
+    private boolean isPreviewMode = false;
+    private Map<String, String> originalEquippedGear = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +83,7 @@ public class GearActivity extends AppCompatActivity {
         gridGear.setAdapter(gearAdapter);
 
         // --- handlers ---
-        btnBack.setOnClickListener(v -> finish());
+        // Back button handler is set later with cancel functionality
 
         tabAll.setOnClickListener(v -> applyFilter(null));
         tabWeapon.setOnClickListener(v -> applyFilter(GearType.WEAPON));
@@ -87,51 +93,107 @@ public class GearActivity extends AppCompatActivity {
         tabAccessory.setOnClickListener(v -> applyFilter(GearType.ACCESSORY));
 
         btnEquip.setOnClickListener(v -> {
-            if (selectedGear == null) {
-                Toast.makeText(this, "Select gear to equip.", Toast.LENGTH_SHORT).show();
-                return;
+            try {
+                if (selectedGear == null) {
+                    Toast.makeText(this, "Select gear to equip.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                if (avatar == null) {
+                    Toast.makeText(this, "Avatar not loaded.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                boolean currentlyEquipped = avatar.isEquipped(selectedGear);
+
+                if (currentlyEquipped) {
+                    // Unequip temporarily
+                    avatar.tempUnequipGear(selectedGear.getType());
+                    Toast.makeText(this, "Unequipped " + selectedGear.getName() + " (Preview)", Toast.LENGTH_SHORT).show();
+                } else {
+                    // Equip temporarily for preview
+                    if (!isPreviewMode) {
+                        // Save original state when entering preview mode
+                        originalEquippedGear.clear();
+                        originalEquippedGear.putAll(avatar.getEquippedGear());
+                        isPreviewMode = true;
+                    }
+                    avatar.tempEquipGear(selectedGear.getType(), selectedGear.getId());
+                    Toast.makeText(this, "Equipped " + selectedGear.getName() + " (Preview)", Toast.LENGTH_SHORT).show();
+                }
+
+                // Update avatar display with temporary gear and preview weapon sprites
+                avatarHelper.loadAvatar(avatar);
+                if (selectedGear.getType() == GearType.WEAPON) {
+                    avatarHelper.previewGear(selectedGear);
+                }
+                gearAdapter.updateData(filteredGear); // refresh highlighting
+                updateEquipButtonText();
+            } catch (Exception e) {
+                android.util.Log.e("GearActivity", "Error in equip/unequip", e);
+                Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
-
-            boolean currentlyEquipped = avatar.isEquipped(selectedGear);
-
-            if (currentlyEquipped) {
-                // Unequip
-                avatar.unequipGear(selectedGear.getType());
-                Toast.makeText(this, "Unequipped " + selectedGear.getName(), Toast.LENGTH_SHORT).show();
-            } else {
-                // Equip
-                avatar.equipGear(selectedGear.getType(), selectedGear.getId());
-                Toast.makeText(this, "Equipped " + selectedGear.getName(), Toast.LENGTH_SHORT).show();
-            }
-
-            avatar.checkOutfitCompletion();
-            AvatarManager.saveAvatarOffline(this, avatar);
-            AvatarManager.saveAvatarOnline(avatar); // Also save online
-            avatarHelper.loadAvatar(avatar);
-
-            gearAdapter.updateData(filteredGear); // refresh highlighting
-
-            updateEquipButtonText();
         });
 
         btnSave.setOnClickListener(v -> {
-            AvatarManager.saveAvatarOffline(this, avatar);
-            AvatarManager.saveAvatarOnline(avatar); // Also save online
-            Toast.makeText(this, "Saved.", Toast.LENGTH_SHORT).show();
+            try {
+                if (isPreviewMode) {
+                    // Save the temporary changes permanently
+                    avatar.checkOutfitCompletion();
+                    
+                    // Apply weapon sprite if a weapon is equipped
+                    if (selectedGear != null && selectedGear.getType() == GearType.WEAPON) {
+                        avatarHelper.autoEquipGear(selectedGear);
+                    } else {
+                        AvatarManager.saveAvatarOffline(this, avatar);
+                        AvatarManager.saveAvatarOnline(avatar);
+                    }
+                    
+                    Toast.makeText(this, "Gear saved permanently!", Toast.LENGTH_SHORT).show();
+                    isPreviewMode = false;
+                    originalEquippedGear.clear();
+                } else {
+                    // No changes to save
+                    Toast.makeText(this, "No changes to save.", Toast.LENGTH_SHORT).show();
+                }
+                finish();
+            } catch (Exception e) {
+                android.util.Log.e("GearActivity", "Error saving gear", e);
+                Toast.makeText(this, "Error saving: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Add cancel functionality to back button
+        btnBack.setOnClickListener(v -> {
+            if (isPreviewMode) {
+                // Revert to original state
+                avatar.getEquippedGear().clear();
+                avatar.getEquippedGear().putAll(originalEquippedGear);
+                avatarHelper.loadAvatar(avatar);
+                isPreviewMode = false;
+                originalEquippedGear.clear();
+                Toast.makeText(this, "Changes reverted.", Toast.LENGTH_SHORT).show();
+            }
             finish();
         });
     }
 
     private void updateEquipButtonText() {
-        if (selectedGear == null) {
-            btnEquip.setText("Equip");
+        try {
+            if (selectedGear == null) {
+                btnEquip.setText("Equip");
+                btnEquip.setEnabled(false);
+            } else if (avatar != null && avatar.isEquipped(selectedGear)) {
+                btnEquip.setText("Unequip (Preview)");
+                btnEquip.setEnabled(true);
+            } else {
+                btnEquip.setText("Equip (Preview)");
+                btnEquip.setEnabled(true);
+            }
+        } catch (Exception e) {
+            android.util.Log.e("GearActivity", "Error in updateEquipButtonText", e);
+            btnEquip.setText("Error");
             btnEquip.setEnabled(false);
-        } else if (avatar.isEquipped(selectedGear)) {
-            btnEquip.setText("Unequip");
-            btnEquip.setEnabled(true);
-        } else {
-            btnEquip.setText("Equip");
-            btnEquip.setEnabled(true);
         }
     }
 
@@ -165,15 +227,30 @@ public class GearActivity extends AppCompatActivity {
 
     private void loadOwnedGear() {
         ownedGearList.clear();
-        if (avatar == null) return;
+        if (avatar == null) {
+            android.util.Log.d("GearActivity", "Avatar is null, cannot load owned gear");
+            return;
+        }
 
         Set<String> ownedIds = avatar.getOwnedGear();
-        if (ownedIds == null || ownedIds.isEmpty()) return;
+        android.util.Log.d("GearActivity", "Loading owned gear, count: " + (ownedIds != null ? ownedIds.size() : 0));
+        
+        if (ownedIds == null || ownedIds.isEmpty()) {
+            android.util.Log.d("GearActivity", "No owned gear found");
+            return;
+        }
 
         for (String id : ownedIds) {
             GearModel g = GearRepository.getGearById(id);
-            if (g != null) ownedGearList.add(g);
+            if (g != null) {
+                ownedGearList.add(g);
+                android.util.Log.d("GearActivity", "Loaded gear: " + g.getName() + " (ID: " + id + ")");
+            } else {
+                android.util.Log.w("GearActivity", "Could not find gear with ID: " + id);
+            }
         }
+        
+        android.util.Log.d("GearActivity", "Total owned gear loaded: " + ownedGearList.size());
     }
 
     private void applyFilter(GearType type) {
@@ -195,10 +272,15 @@ public class GearActivity extends AppCompatActivity {
     }
 
     private void onGearClicked(GearModel gear) {
-        selectedGear = gear;
-        gearAdapter.setSelectedGear(gear);
-        showDetails(gear);
-        updateEquipButtonText();
+        try {
+            selectedGear = gear;
+            gearAdapter.setSelectedGear(gear);
+            showDetails(gear);
+            updateEquipButtonText();
+        } catch (Exception e) {
+            android.util.Log.e("GearActivity", "Error in onGearClicked", e);
+            Toast.makeText(this, "Error selecting gear: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showDetails(GearModel gear) {

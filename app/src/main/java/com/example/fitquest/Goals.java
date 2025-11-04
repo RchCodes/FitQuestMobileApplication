@@ -2,6 +2,7 @@ package com.example.fitquest;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
@@ -20,12 +21,13 @@ public class Goals {
 
     private final Dialog dialog;
     private final LinearLayout goalsList;
-    private final AvatarModel avatar;
+    private AvatarModel avatar;
     private final ChallengeManager challengeManager;
 
     // --- Base Goals (non-challenge) ---
     private static final List<BaseGoal> BASE_GOALS = List.of(
             new BaseGoal("LEVEL_10", "Reach Level 10", R.drawable.badge_level_10),
+            new BaseGoal("LEVEL_15", "Reach Level 15", R.drawable.badge_level_10),
             new BaseGoal("LEVEL_25", "Reach Level 25", R.drawable.badge_level_25),
             new BaseGoal("LEVEL_50", "Reach Level 50", R.drawable.badge_level_50),
             new BaseGoal("LEVEL_100", "Reach Level 100", R.drawable.badge_level_100),
@@ -63,11 +65,7 @@ public class Goals {
             // Lunges
             new BaseGoal("LUNGE_50", "Complete 50 Lunges", R.drawable.badge_lunges_100),
             new BaseGoal("LUNGE_200", "Complete 200 Lunges", R.drawable.badge_lunges_100),
-            new BaseGoal("LUNGE_500", "Complete 500 Lunges", R.drawable.badge_lunges_100),
-
-            new BaseGoal("STEPS_25000", "Complete 25,000 Steps", R.drawable.badge_steps_25000),
-            new BaseGoal("STEPS_50000", "Complete 50,000 Steps", R.drawable.badge_steps_50000),
-            new BaseGoal("STEPS_100000", "Complete 100,000 Steps", R.drawable.badge_steps_100000)
+            new BaseGoal("LUNGE_500", "Complete 500 Lunges", R.drawable.badge_lunges_100)
     );
 
     public Goals(Context context, AvatarModel avatar) {
@@ -88,6 +86,16 @@ public class Goals {
 
         initDefaultGoals();
         populateGoals(context);
+    }
+    
+    public void refreshGoals(Context context) {
+        // Reload avatar to get latest data
+        AvatarModel latestAvatar = AvatarManager.loadAvatarOffline(context);
+        if (latestAvatar != null) {
+            // Update the avatar reference
+            this.avatar = latestAvatar;
+            populateGoals(context);
+        }
     }
 
     public static void updateGoalProgress(Context context, String goalId) {
@@ -199,6 +207,7 @@ public class Goals {
             if (linkedChallenge != null) {
                 avatar.addCoins(linkedChallenge.getRewardCoins());
                 avatar.addAvatarBadge(linkedChallenge.getRewardBadge());
+                android.util.Log.d("Goals", "Added challenge badge: " + linkedChallenge.getRewardBadge() + " for " + linkedChallenge.getName());
             } else {
                 // Base goal: find its badge
                 int badgeResId = R.drawable.lock;
@@ -210,19 +219,32 @@ public class Goals {
                 }
                 avatar.addCoins(50);             // default coins
                 avatar.addAvatarBadge(badgeResId); // reward badge drawable
+                android.util.Log.d("Goals", "Added base goal badge: " + badgeResId + " for " + goalId);
             }
 
             avatar.setGoalState(goalId, GoalState.CLAIMED);
             AvatarManager.saveAvatarOffline(inflater.getContext(), avatar);
             AvatarManager.saveAvatarOnline(avatar);
-            Toast.makeText(inflater.getContext(), "Claimed reward for: " + description, Toast.LENGTH_SHORT).show();
+            
+            // Show success message with badge info
+            String badgeInfo = " + Badge earned!";
+            Toast.makeText(inflater.getContext(), "Claimed reward for: " + description + badgeInfo, Toast.LENGTH_LONG).show();
+            
             populateGoals(inflater.getContext());
+            
+            // Refresh profile if it's open
+            if (inflater.getContext() instanceof MainActivity) {
+                ((MainActivity) inflater.getContext()).refreshProfile();
+            }
         });
 
         goalsList.addView(goalItem);
     }
 
     private void updateChallengeGoalsProgress() {
+        // Update level goals first
+        updateLevelGoals();
+        
         for (ChallengeModel challenge : challengeManager.getDefaultChallenges()) {
             String goalId = challenge.getLinkedGoalId();
             if (goalId == null || goalId.isEmpty()) continue;
@@ -233,10 +255,46 @@ public class Goals {
             if (currentState == GoalState.CLAIMED) continue;
 
             // Check if challenge is completed
-            if (challenge.isCompletedByAvatar(avatar)) {
+            boolean isCompleted = challenge.isCompletedByAvatar(avatar);
+            Log.d("Goals", "Challenge " + challenge.getName() + " completed: " + isCompleted);
+            
+            if (isCompleted) {
                 avatar.setGoalState(goalId, GoalState.COMPLETED);
+                Log.d("Goals", "Set goal " + goalId + " to COMPLETED");
             } else {
                 // Optional: keep as pending or update dynamically
+                if (currentState == null) {
+                    avatar.setGoalState(goalId, GoalState.PENDING);
+                    Log.d("Goals", "Set goal " + goalId + " to PENDING");
+                }
+            }
+        }
+    }
+    
+    private void updateLevelGoals() {
+        int currentLevel = avatar.getLevel();
+        
+        // Check level goals
+        String[] levelGoals = {"LEVEL_10", "LEVEL_15", "LEVEL_25", "LEVEL_50", "LEVEL_100"};
+        int[] levelRequirements = {10, 15, 25, 50, 100};
+        
+        for (int i = 0; i < levelGoals.length; i++) {
+            String goalId = levelGoals[i];
+            int requiredLevel = levelRequirements[i];
+            
+            GoalState currentState = avatar.getGoalProgress().get(goalId);
+            
+            // Skip if already claimed
+            if (currentState == GoalState.CLAIMED) continue;
+            
+            // Check if level requirement is met
+            if (currentLevel >= requiredLevel) {
+                if (currentState != GoalState.COMPLETED) {
+                    avatar.setGoalState(goalId, GoalState.COMPLETED);
+                    Log.d("Goals", "Level goal " + goalId + " completed at level " + currentLevel);
+                }
+            } else {
+                // Set to pending if not set
                 if (currentState == null) {
                     avatar.setGoalState(goalId, GoalState.PENDING);
                 }

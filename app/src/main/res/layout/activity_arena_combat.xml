@@ -374,6 +374,50 @@
             android:clipToPadding="false" />
     </FrameLayout>
 
+    <!-- Arena Info Header -->
+    <LinearLayout
+        android:id="@+id/arenaInfoHeader"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/bg_player_battle_info"
+        android:padding="8dp"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btnSettings"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:id="@+id/tvPlayerRank"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Iron IV"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/tvPlayerLP"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 LP"
+            android:textColor="@android:color/white"
+            android:textSize="10sp"
+            android:layout_marginEnd="16dp" />
+
+        <TextView
+            android:id="@+id/tvBattleCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Battles: 0/10"
+            android:textColor="@android:color/white"
+            android:textSize="10sp" />
+    </LinearLayout>
+
     <ImageButton
         android:id="@+id/btnSettings"
         android:layout_width="40dp"
@@ -383,6 +427,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_margin="8dp" />
+
+    <Button
+        android:id="@+id/backBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Back to Main Menu"
+        android:background="@drawable/bg_skill_button"
+        android:textColor="@android:color/white"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_margin="16dp" />
 
     <ScrollView
         android:id="@+id/combat_log_scroll"

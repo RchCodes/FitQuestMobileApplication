@@ -3,9 +3,11 @@ package com.example.fitquest;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -15,7 +17,8 @@ public class ArenaActivity extends BaseActivity {
     private TextView playerName, playerLevel;
     private ImageView rankIcon;
     private TextView rankLabel;
-    private ImageButton backBtn, fightButton, leaderboardButton, battleHistoryButton;
+    private ImageButton backBtn, fightButton;
+    // private ImageButton leaderboardButton, battleHistoryButton; // Disabled features
 
     // Avatar helper
     private AvatarDisplayManager avatarHelper;
@@ -35,8 +38,8 @@ public class ArenaActivity extends BaseActivity {
         // Bind buttons
         backBtn = findViewById(R.id.back_button);
         fightButton = findViewById(R.id.start_combat);
-        leaderboardButton = findViewById(R.id.leaderboards);
-        battleHistoryButton = findViewById(R.id.battle_history);
+        // leaderboardButton = findViewById(R.id.leaderboards); // Disabled feature
+        // battleHistoryButton = findViewById(R.id.battle_history); // Disabled feature
 
         // Initialize avatar helper with all layers
         avatarHelper = new AvatarDisplayManager(
@@ -86,16 +89,8 @@ public class ArenaActivity extends BaseActivity {
     private void setupButtons() {
         SoundManager.setOnClickListenerWithSound(backBtn, v -> finish());
 
-        SoundManager.setOnClickListenerWithSound(leaderboardButton, v -> {
-            LeaderboardDialog dialog = new LeaderboardDialog();
-            dialog.show(getSupportFragmentManager(), "LeaderboardDialog");
-        });
-
-        SoundManager.setOnClickListenerWithSound(battleHistoryButton, v -> {
-            // Pass the AvatarModel so BattleHistoryDialog loads history asynchronously
-            BattleHistoryDialog dialog = new BattleHistoryDialog(avatar);
-            dialog.show(getSupportFragmentManager(), "BattleHistoryDialog");
-        });
+        // Leaderboard and battle history buttons are commented out and disabled
+        // leaderboardButton and battleHistoryButton are not initialized
 
         SoundManager.setOnClickListenerWithSound(fightButton, v ->
                 startActivity(new Intent(this, ArenaCombatActivity.class))

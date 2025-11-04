@@ -1,6 +1,7 @@
 package com.example.fitquest;
 
 import android.content.Context;
+import android.graphics.PorterDuff;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -80,10 +81,16 @@ public class StoreAdapter extends BaseAdapter {
             holder.itemIcon.setImageResource(R.drawable.ic_store_weapon); // fallback
         }
 
-        // price formatted
-        holder.itemPrice.setText(" " + formatCoins(gear.getPrice()));
-
-        holder.itemFrame.clearColorFilter();
+        // Check if owned and show different UI
+        boolean isOwned = avatar != null && avatar.ownsGear(gear.getId());
+        
+        if (isOwned) {
+            holder.itemPrice.setText(" OWNED");
+            holder.itemFrame.setColorFilter(0xFF4CAF50, PorterDuff.Mode.SRC_ATOP); // Green for owned
+        } else {
+            holder.itemPrice.setText(" " + formatCoins(gear.getPrice()));
+            holder.itemFrame.clearColorFilter();
+        }
 
         return convertView;
     }

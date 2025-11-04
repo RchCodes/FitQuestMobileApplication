@@ -50,6 +50,9 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
     private TextView playerHpText, enemyHpText, playerNameText, enemyNameText;
     private LinearLayout playerStatusEffects, enemyStatusEffects;
     private TextView combatLog;
+    
+    // Arena Info UI
+    private TextView tvPlayerRank, tvPlayerLP, tvBattleCount;
 
     // Avatar display managers (fields so we can update when avatars change)
     private AvatarDisplayManager playerDisplay;
@@ -82,6 +85,7 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
     private PauseDialog pauseDialog;
 
     private ImageView btnPause;
+    private Button backBtn;
 
 
     @Override
@@ -93,9 +97,21 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
         initAvatarDisplays();         // prepare AvatarDisplayManager instances (they'll load when avatars are available)
         setupCombatHandler();
         loadPlayerCharacter();
+        
+        // Check daily battle limit
+        if (!DailyBattleManager.canBattleToday(this)) {
+            showBattleLimitDialog();
+            return;
+        }
+        
         loadAIGhosts();               // this will select next enemy and start combat when ready
+        updateArenaInfo();            // Update rank and battle count display
 
-        MusicManager.start(this);
+        // Start battle BGM instead of regular BGM
+        MusicManager.startBattleBGM(this);
+        
+        // Initialize sound effects
+        SoundManager.initialize(this);
     }
 
     private List<SkillModel> getPlayerSkills() {
@@ -120,6 +136,11 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
         // These may be missing depending on layout — keep findViewById but guard usage
         playerStatusEffects = findViewById(R.id.playerStatusEffects);
         enemyStatusEffects = findViewById(R.id.enemyStatusEffects);
+        
+        // Arena info UI
+        tvPlayerRank = findViewById(R.id.tvPlayerRank);
+        tvPlayerLP = findViewById(R.id.tvPlayerLP);
+        tvBattleCount = findViewById(R.id.tvBattleCount);
 
         skillButtons = new Button[5];
 
@@ -162,6 +183,7 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
 
         combatLog = findViewById(R.id.combat_log);
         btnPause = findViewById(R.id.btnSettings);
+        backBtn = findViewById(R.id.backBtn);
 
         // Setup skill button listeners (guard nulls)
         for (int i = 0; i < skillButtons.length; i++) {
@@ -418,31 +440,62 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
         aiAvatar.setLevel(playerAvatar.getLevel() + random.nextInt(3) - 1); // ±1 level
         aiAvatar.setPlayerClass(playerAvatar.getPlayerClass());
 
-        // Match stats with some variation
-        aiAvatar.addStrength(playerAvatar.getStrength() + random.nextInt(5) - 2);
-        aiAvatar.addEndurance(playerAvatar.getEndurance() + random.nextInt(5) - 2);
-        aiAvatar.addAgility(playerAvatar.getAgility() + random.nextInt(5) - 2);
-        aiAvatar.addFlexibility(playerAvatar.getFlexibility() + random.nextInt(5) - 2);
-        aiAvatar.addStamina(playerAvatar.getStamina() + random.nextInt(5) - 2);
+        // Scale difficulty based on player rank
+        int playerRank = playerAvatar.getRank();
+        double difficultyMultiplier = getDifficultyMultiplier(playerRank);
+        
+        // Match stats with rank-based scaling
+        int baseStr = playerAvatar.getStrength();
+        int baseEnd = playerAvatar.getEndurance();
+        int baseAgi = playerAvatar.getAgility();
+        int baseFlex = playerAvatar.getFlexibility();
+        int baseStam = playerAvatar.getStamina();
+        
+        // Apply difficulty multiplier and add variation
+        int strVariation = random.nextInt(7) - 1; // -1 to +5 (slightly favor AI)
+        int endVariation = random.nextInt(7) - 1;
+        int agiVariation = random.nextInt(7) - 1;
+        int flexVariation = random.nextInt(7) - 1;
+        int stamVariation = random.nextInt(7) - 1;
+
+        aiAvatar.setStrength(Math.max(1, (int)((baseStr + strVariation) * difficultyMultiplier)));
+        aiAvatar.setEndurance(Math.max(1, (int)((baseEnd + endVariation) * difficultyMultiplier)));
+        aiAvatar.setAgility(Math.max(1, (int)((baseAgi + agiVariation) * difficultyMultiplier)));
+        aiAvatar.setFlexibility(Math.max(1, (int)((baseFlex + flexVariation) * difficultyMultiplier)));
+        aiAvatar.setStamina(Math.max(1, (int)((baseStam + stamVariation) * difficultyMultiplier)));
+
+        // Set AI rank similar to player rank
+        aiAvatar.setRankPoints(playerAvatar.getRankPoints() + random.nextInt(50) - 25);
 
         // Add some basic gear
         addBasicGearToAI(aiAvatar);
 
         return aiAvatar;
     }
+    
+    private double getDifficultyMultiplier(int rank) {
+        switch (rank) {
+            case 0: return 1.0;  // Novice - Same difficulty (mirror match)
+            case 1: return 1.05; // Veteran - Slightly harder
+            case 2: return 1.1;  // Elite - Harder
+            case 3: return 1.15; // Hero - Much harder
+            case 4: return 1.2;  // Legendary - Very hard
+            default: return 1.0;
+        }
+    }
 
     private AvatarModel createDefaultAIAvatar(int index) {
         AvatarModel aiAvatar = new AvatarModel();
         aiAvatar.setUsername("AI Warrior " + index);
-        aiAvatar.setLevel(random.nextInt(5) + 1);
+        aiAvatar.setLevel(random.nextInt(3) + 1); // Lower level range: 1-3 instead of 1-5
         aiAvatar.setPlayerClass("warrior");
 
-        // Random stats
-        aiAvatar.addStrength(random.nextInt(10) + 5);
-        aiAvatar.addEndurance(random.nextInt(10) + 5);
-        aiAvatar.addAgility(random.nextInt(10) + 5);
-        aiAvatar.addFlexibility(random.nextInt(10) + 5);
-        aiAvatar.addStamina(random.nextInt(10) + 5);
+        // Reduced random stats to make AI more balanced
+        aiAvatar.addStrength(random.nextInt(5) + 3); // 3-7 instead of 5-14
+        aiAvatar.addEndurance(random.nextInt(5) + 3);
+        aiAvatar.addAgility(random.nextInt(5) + 3);
+        aiAvatar.addFlexibility(random.nextInt(5) + 3);
+        aiAvatar.addStamina(random.nextInt(5) + 3);
 
         addBasicGearToAI(aiAvatar);
 
@@ -647,6 +700,7 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
     private void updateSkillButtons() {
         if (playerCharacter == null) return;
 
+        List<SkillModel> allSkills = playerCharacter.getActiveSkills();
         List<SkillModel> availableSkills = getAvailableSkills(playerCharacter);
 
         for (int i = 0; i < skillButtons.length; i++) {
@@ -655,22 +709,54 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
 
             ShapeableImageView iconView = skillIcons[i];
 
-            if (i < availableSkills.size()) {
-                SkillModel skill = availableSkills.get(i);
+            if (i < allSkills.size()) {
+                SkillModel skill = allSkills.get(i);
+                boolean isAvailable = availableSkills.contains(skill);
+                boolean isOnCooldown = skill.isOnCooldown();
+                boolean hasEnoughAB = skill.getAbCost() <= playerCharacter.getActionBar();
+                boolean isUnlocked = skill.getLevelUnlock() <= playerCharacter.getAvatar().getLevel();
 
-                // Set skill name and enable button
-                button.setText(skill.getName());
-                button.setEnabled(true);
+                // Set skill name and cooldown info
+                String buttonText = skill.getName();
+                if (isOnCooldown) {
+                    buttonText += " (CD: " + skill.getCurrentCooldown() + ")";
+                } else if (!hasEnoughAB) {
+                    buttonText += " (Need " + skill.getAbCost() + " AB)";
+                } else if (!isUnlocked) {
+                    buttonText += " (Lvl " + skill.getLevelUnlock() + ")";
+                }
+                button.setText(buttonText);
+
+                // Enable/disable button based on availability
+                button.setEnabled(isAvailable && waitingForPlayerInput);
                 button.setVisibility(View.VISIBLE);
+
+                // Set button appearance based on state
+                if (isOnCooldown) {
+                    button.setAlpha(0.5f); // Dimmed for cooldown
+                    button.setBackgroundColor(0xFF666666); // Gray background
+                } else if (!hasEnoughAB) {
+                    button.setAlpha(0.7f); // Slightly dimmed for insufficient AB
+                    button.setBackgroundColor(0xFF444444); // Darker gray
+                } else if (!isUnlocked) {
+                    button.setAlpha(0.6f); // Dimmed for locked
+                    button.setBackgroundColor(0xFF333333); // Very dark gray
+                } else {
+                    button.setAlpha(1.0f); // Full opacity for available
+                    button.setBackgroundColor(0xFF4CAF50); // Green for available
+                }
 
                 // --- Dynamic skill icon loading ---
                 if (iconView != null) {
                     if (skill.getIconRes() != 0) {
                         iconView.setImageResource(skill.getIconRes());
                         iconView.setVisibility(View.VISIBLE);
+                        // Apply same alpha as button
+                        iconView.setAlpha(button.getAlpha());
                     } else {
                         iconView.setImageResource(R.drawable.lock_2); // fallback icon
                         iconView.setVisibility(View.VISIBLE);
+                        iconView.setAlpha(button.getAlpha());
                     }
                 }
 
@@ -745,13 +831,20 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
 
     @Override
     public void onSkillUsed(Character user, SkillModel skill, Character target, String logEntry) {
-        runOnUiThread(() -> addCombatLog(logEntry));
+        runOnUiThread(() -> {
+            // Don't add to log here - it's already handled by onLog() method
+            // addCombatLog(logEntry);
+        });
     }
 
     @Override
     public void onDamageApplied(Character attacker, Character defender, int amount, String logEntry) {
         runOnUiThread(() -> {
-            addCombatLog(logEntry);
+            // Don't add to log here - it's already handled by onLog() method
+            // addCombatLog(logEntry);
+            
+            // Play hit SFX when damage is applied
+            SoundManager.playCombatHit();
 
             if (defender == playerCharacter) {
                 updateHealthBar(playerHpBar, playerHpText, playerCharacter);
@@ -776,7 +869,10 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
 
     @Override
     public void onStatusApplied(Character target, StatusEffect effect, String logEntry) {
-        runOnUiThread(() -> addCombatLog(logEntry));
+        runOnUiThread(() -> {
+            // Don't add to log here - it's already handled by onLog() method
+            // addCombatLog(logEntry);
+        });
     }
 
     @Override
@@ -802,8 +898,14 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
                 boolean leveledUp = playerAvatar.addXp(50);
                 playerAvatar.addCoins(100);
 
-                int rankPointsEarned = 10 + (playerAvatar.getLevel() / 2);
-                playerAvatar.addRankPoints(rankPointsEarned);
+                // Use rank points system
+                int enemyRP = enemyCharacter.getAvatar().getRankPoints();
+                int playerRP = playerAvatar.getRankPoints();
+                int rankPointsGained = RankSystem.calculateRPGain(true, playerRP, enemyRP);
+                playerAvatar.addRankPoints(rankPointsGained);
+                
+                // Record battle
+                DailyBattleManager.recordBattle(this);
 
                 BattleHistoryModel battleEntry = new BattleHistoryModel(
                         playerAvatar.getUsername(),
@@ -812,7 +914,7 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
                         loser.getName(),
                         loser.getLevel(),
                         R.drawable.rank_novice,
-                        rankPointsEarned
+                        rankPointsGained
                 );
                 playerAvatar.addBattleHistory(battleEntry);
 
@@ -827,21 +929,30 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
                     QuestRewardManager.showLevelUpPopup(this, playerAvatar.getLevel(), playerAvatar.getRank());
                 }
 
-                // Next enemy
-                if (currentGhostIndex < aiGhosts.size()) {
-                    selectNextEnemy();
-                    new Handler(Looper.getMainLooper()).postDelayed(() -> startCombat(), 3000);
-                } else {
-                    addCombatLog("All enemies defeated! Arena complete!");
+                // Arena battle complete - no automatic next battle
+                addCombatLog("Arena battle complete! Return to main menu to start a new battle.");
+                addCombatLog("Rank points gained: +" + rankPointsGained);
+                
+                // Update arena info display
+                updateArenaInfo();
+                
+                // Show return to main menu button
+                if (backBtn != null) {
+                    backBtn.setVisibility(View.VISIBLE);
+                    backBtn.setEnabled(true);
                 }
             } else {
                 resultMessage = "Defeat! You were defeated by " + winner.getName();
                 boolean leveledUp = playerAvatar.addXp(10);
 
-                int rankPointsLost = Math.min(5, playerAvatar.getRankPoints() / 10);
-                if (rankPointsLost > 0) {
-                    playerAvatar.setRankPoints(playerAvatar.getRankPoints() - rankPointsLost);
-                }
+                // Use rank points system for losses
+                int enemyRP = enemyCharacter.getAvatar().getRankPoints();
+                int playerRP = playerAvatar.getRankPoints();
+                int rankPointsLost = Math.abs(RankSystem.calculateRPGain(false, playerRP, enemyRP));
+                playerAvatar.addRankPoints(-rankPointsLost);
+                
+                // Record battle
+                DailyBattleManager.recordBattle(this);
 
                 BattleHistoryModel battleEntry = new BattleHistoryModel(
                         playerAvatar.getUsername(),
@@ -862,10 +973,25 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
                 if (leveledUp) {
                     QuestRewardManager.showLevelUpPopup(this, playerAvatar.getLevel(), playerAvatar.getRank());
                 }
+                
+                // Show rank points loss in combat log
+                addCombatLog("Rank points lost: " + rankPointsLost);
+                
+                // Update arena info display
+                updateArenaInfo();
+                
+                // Show return to main menu button on defeat
+                if (backBtn != null) {
+                    backBtn.setVisibility(View.VISIBLE);
+                    backBtn.setEnabled(true);
+                }
             }
 
             addCombatLog(resultMessage);
             Toast.makeText(this, resultMessage, Toast.LENGTH_LONG).show();
+            
+            // Stop battle BGM when combat ends
+            MusicManager.stopBattleBGM();
         });
     }
 
@@ -1082,17 +1208,50 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
                 .setCancelable(false)
                 .show();
     }
+    
+    private void showBattleLimitDialog() {
+        int remainingBattles = DailyBattleManager.getRemainingBattles(this);
+        int hoursUntilReset = DailyBattleManager.getHoursUntilReset();
+        
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Daily Battle Limit Reached")
+                .setMessage("You have used all 10 daily battles.\n\n" +
+                           "Battles reset in " + hoursUntilReset + " hours.")
+                .setPositiveButton("OK", (dialog, which) -> finish())
+                .setCancelable(false)
+                .show();
+    }
+    
+    private void updateArenaInfo() {
+        if (playerCharacter == null) return;
+        
+        AvatarModel avatar = playerCharacter.getAvatar();
+        RankSystem.RankInfo rankInfo = avatar.getRankInfo();
+        
+        if (tvPlayerRank != null) {
+            tvPlayerRank.setText(rankInfo.displayName);
+        }
+        
+        if (tvPlayerLP != null) {
+            tvPlayerLP.setText(rankInfo.rpInTier + " RP");
+        }
+        
+        if (tvBattleCount != null) {
+            int battlesToday = DailyBattleManager.getBattlesToday(this);
+            tvBattleCount.setText("Battles: " + battlesToday + "/10");
+        }
+    }
 
     @Override
     protected void onPause() {
         super.onPause();
-        MusicManager.pause();
+        MusicManager.pauseBattleBGM();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        MusicManager.resume();
+        MusicManager.resumeBattleBGM();
     }
 
 
@@ -1104,17 +1263,20 @@ public class ArenaCombatActivity extends BaseActivity implements CombatContext.C
         if (combatHandler != null) {
             combatHandler.removeCallbacks(combatTickRunnable);
         }
+        
+        // Stop battle BGM when activity is destroyed
+        MusicManager.stopBattleBGM();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        MusicManager.start(this);
+        MusicManager.startBattleBGM(this);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        MusicManager.pause();
+        MusicManager.pauseBattleBGM();
     }
 }

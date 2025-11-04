@@ -31,7 +31,7 @@ public class StoreActivity extends AppCompatActivity {
     private String currentFilter = "ALL"; // "ALL", "WEAPON", "ARMOR", "PANTS", "BOOTS", "ACCESSORY"
     
     // Store temporary gear preview
-    private Map<GearType, String> originalEquippedGear;
+    private Map<String, String> originalEquippedGear;
     private boolean isPreviewMode = false;
 
     @Override
@@ -173,8 +173,8 @@ public class StoreActivity extends AppCompatActivity {
         String playerClass = avatar != null ? avatar.getPlayerClass() : "UNIVERSAL";
         for (GearModel gear : allGear) {
             if (gear == null) continue;
-            // hide already owned
-            if (avatar != null && avatar.ownsGear(gear.getId())) continue;
+            // Don't hide already owned items - let user see what they own
+            // if (avatar != null && avatar.ownsGear(gear.getId())) continue;
             // class restriction
             if (gear.getClassRestriction() != null &&
                     !gear.getClassRestriction().equalsIgnoreCase("UNIVERSAL") &&
@@ -206,6 +206,12 @@ public class StoreActivity extends AppCompatActivity {
     private void showPurchaseDialog(GearModel gear) {
         if (gear == null || avatar == null) return;
 
+        // Check if already owned
+        if (avatar.ownsGear(gear.getId())) {
+            Toast.makeText(this, "You already own this item!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         // Check affordability first
         if (avatar.getCoins() < gear.getPrice()) {
             Toast.makeText(this, "Not enough coins!", Toast.LENGTH_SHORT).show();
@@ -220,11 +226,23 @@ public class StoreActivity extends AppCompatActivity {
                     avatar.setCoins(avatar.getCoins() - gear.getPrice());
                     // Add gear to avatar inventory
                     avatar.addGear(gear.getId());
-                    // Save avatar
+                    
+                    // Log before saving
+                    android.util.Log.d("StoreActivity", "Before save - Gear purchased: " + gear.getName() + ", ID: " + gear.getId());
+                    android.util.Log.d("StoreActivity", "Before save - Avatar owned gear count: " + avatar.getOwnedGear().size());
+                    
+                    // Save avatar both offline and online
                     AvatarManager.saveAvatarOffline(StoreActivity.this, avatar);
+                    AvatarManager.saveAvatarOnline(avatar);
+                    
+                    // Log after saving
+                    android.util.Log.d("StoreActivity", "After save - Avatar owned gear count: " + avatar.getOwnedGear().size());
+                    
                     // Refresh UI
                     refreshCoinsText();
                     filterAndRefresh(currentFilter);
+                    // Update store adapter
+                    storeAdapter.notifyDataSetChanged();
                     Toast.makeText(StoreActivity.this, "Purchased " + gear.getName() + "!", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())

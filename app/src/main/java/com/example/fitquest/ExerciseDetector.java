@@ -17,8 +17,8 @@ public class ExerciseDetector {
 
     // Track last few distance readings
     private final Deque<Float> distanceHistory = new ArrayDeque<>();
-    private static final int DISTANCE_STABLE_FRAMES = 5; // about 0.2s at 30fps
-    private static final float DISTANCE_TOLERANCE = 0.15f; // ±15cm variation allowed
+    private static final int DISTANCE_STABLE_FRAMES = 3; // about 0.1s at 30fps
+    private static final float DISTANCE_TOLERANCE = 0.25f; // ±25cm variation allowed
 
     private AudioManager audioManager;
 
@@ -77,8 +77,11 @@ public class ExerciseDetector {
         float hipY = (leftHip.getPosition().y + rightHip.getPosition().y) / 2f;
         float shoulderHipDiff = Math.abs(shoulderY - hipY);
 
+        // Different thresholds for challenges vs quests
+        float alignmentThreshold = isChallengeMode ? 200 : 300; // More lenient for quests
+        
         // Shoulders should be above hips (not too far apart vertically)
-        boolean properAlignment = shoulderY < hipY && shoulderHipDiff < 200; // pixels
+        boolean properAlignment = shoulderY < hipY && shoulderHipDiff < alignmentThreshold; // pixels
 
         // Check if wrists are positioned correctly (below shoulders)
         boolean wristPosition = true;
@@ -105,8 +108,11 @@ public class ExerciseDetector {
         float hipY = (leftHip.getPosition().y + rightHip.getPosition().y) / 2f;
         float shoulderHipDiff = Math.abs(shoulderY - hipY);
 
+        // Different thresholds for challenges vs quests
+        float crunchThreshold = isChallengeMode ? 100 : 150; // More lenient for quests
+        
         // For crunches, shoulders and hips should be roughly at same level (lying down)
-        return shoulderHipDiff < 100; // pixels tolerance
+        return shoulderHipDiff < crunchThreshold; // pixels tolerance
     }
 
     private boolean isLungeFormCorrect(Pose pose) {
@@ -131,9 +137,12 @@ public class ExerciseDetector {
         double leftHipKneeAnkleAngle = getAngle(leftHip, leftKnee, leftAnkle);
         double rightHipKneeAnkleAngle = getAngle(rightHip, rightKnee, rightAnkle);
 
+        // Different thresholds for challenges vs quests
+        double lungeThreshold = isChallengeMode ? 20 : 15; // More lenient for quests
+        
         // In a lunge, one leg should be bent more than the other
         double angleDiff = Math.abs(leftHipKneeAnkleAngle - rightHipKneeAnkleAngle);
-        return angleDiff > 20; // degrees difference indicates lunge position
+        return angleDiff > lungeThreshold; // degrees difference indicates lunge position
     }
 
     private boolean isTreePoseAligned(Pose pose) {
@@ -277,6 +286,9 @@ public class ExerciseDetector {
 
     private String feedback = "Ready";
     private boolean distanceReady = false;
+    private long exerciseStartTime = 0;
+    private static final long GRACE_PERIOD_MS = 5000; // 5 seconds grace period
+    private boolean isChallengeMode = false; // true for challenges, false for quests
 
     public ExerciseDetector(Context ctx, String difficulty, int targetReps) {
         this.context = ctx;
@@ -287,12 +299,21 @@ public class ExerciseDetector {
     }
 
     public void setListener(ExerciseListener l) { this.listener = l; }
+    
+    public void setChallengeMode(boolean isChallenge) { 
+        this.isChallengeMode = isChallenge; 
+    }
+    
+    public boolean isDistanceReady() {
+        return distanceReady;
+    }
 
     public void updateExercise(String exercise, String difficulty, int targetReps) {
         this.exerciseType = exercise;
         this.difficultyLevel = difficulty;
         this.target = Math.max(1, targetReps);
         resetExercise();
+        exerciseStartTime = 0; // Reset grace period
         applyDifficultySettings();
     }
 
@@ -366,11 +387,17 @@ public class ExerciseDetector {
 
                 if (maxDiff < DISTANCE_TOLERANCE && avg >= 1.5f && avg <= 2.5f) {
                     distanceReady = true;
-                    feedback = "Good! Now get into starting position";
+                    feedback = "✅ Perfect distance! Now get into " + exerciseType + " position";
                     if (listener != null) listener.onFeedbackUpdated(feedback);
                 } else {
                     distanceReady = false;
-                    feedback = "Hold steady 1.5m–2.5m away";
+                    if (avg < 1.5f) {
+                        feedback = "📏 Move back - you're too close (need 1.5m-2.5m)";
+                    } else if (avg > 2.5f) {
+                        feedback = "📏 Move closer - you're too far (need 1.5m-2.5m)";
+                    } else {
+                        feedback = "📏 Hold steady at 1.5m–2.5m from camera";
+                    }
                     if (listener != null) listener.onFeedbackUpdated(feedback);
                 }
             } else {
@@ -383,6 +410,25 @@ public class ExerciseDetector {
                 if (listener != null) listener.onFeedbackUpdated(feedback);
                 return;
             }
+        }
+
+        // Initialize exercise start time if not set
+        if (exerciseStartTime == 0) {
+            exerciseStartTime = System.currentTimeMillis();
+            feedback = "🏃 Get into " + exerciseType + " position...";
+            if (listener != null) listener.onFeedbackUpdated(feedback);
+            return;
+        }
+
+        // Check if we're still in grace period
+        long currentTime = System.currentTimeMillis();
+        long timeSinceStart = currentTime - exerciseStartTime;
+        
+        if (timeSinceStart < GRACE_PERIOD_MS) {
+            long remainingGrace = (GRACE_PERIOD_MS - timeSinceStart) / 1000;
+            feedback = "⏳ Get ready... " + remainingGrace + "s";
+            if (listener != null) listener.onFeedbackUpdated(feedback);
+            return;
         }
 
         // choose exercise

@@ -258,6 +258,11 @@ public class QuestAdapter extends RecyclerView.Adapter<QuestAdapter.QuestViewHol
                     new QuestRewardManager().showLevelUpPopup(context, avatar.getLevel(), avatar.getRank());
                 }
 
+                // Notify MainActivity to refresh UI
+                if (context instanceof MainActivity) {
+                    ((MainActivity) context).refreshProfile();
+                }
+
                 // Refresh item
                 notifyItemChanged(position);
             }

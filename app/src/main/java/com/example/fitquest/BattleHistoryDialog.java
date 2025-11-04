@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class BattleHistoryDialog extends DialogFragment {
@@ -37,14 +38,29 @@ public class BattleHistoryDialog extends DialogFragment {
         RecyclerView recyclerView = view.findViewById(R.id.recyclerBattleHistory);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        List<BattleHistoryModel> historyList = avatar != null ? avatar.getBattleHistory() : null;
-
-        BattleHistoryAdapter adapter = new BattleHistoryAdapter(historyList);
-        recyclerView.setAdapter(adapter);
-
-        // Animate RecyclerView items
-        recyclerView.setAlpha(0f);
-        recyclerView.animate().alpha(1f).setDuration(400).start();
+        // Load battle history asynchronously from Firebase
+        if (avatar != null) {
+            // Show loading state initially
+            BattleHistoryAdapter loadingAdapter = new BattleHistoryAdapter(new ArrayList<>());
+            recyclerView.setAdapter(loadingAdapter);
+            
+            avatar.loadBattleHistoryFromFirebase(() -> {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        List<BattleHistoryModel> historyList = avatar.getBattleHistory();
+                        BattleHistoryAdapter adapter = new BattleHistoryAdapter(historyList);
+                        recyclerView.setAdapter(adapter);
+                        
+                        // Animate RecyclerView items
+                        recyclerView.setAlpha(0f);
+                        recyclerView.animate().alpha(1f).setDuration(400).start();
+                    });
+                }
+            });
+        } else {
+            BattleHistoryAdapter adapter = new BattleHistoryAdapter(null);
+            recyclerView.setAdapter(adapter);
+        }
 
         // Swipe-to-dismiss
         GestureDetectorCompat gestureDetector = new GestureDetectorCompat(getContext(),

@@ -311,38 +311,40 @@ public class CombatContext {
      */
     public void useSkill(Character user, SkillModel skill, Character target) {
         if (skill == null || user == null || target == null) return;
+        if (!target.isAlive()) return;
+
         if (!user.canUseSkill(skill)) {
             pushLog(userName(user) + " tried to use " + skill.getName() + " but couldn't.");
             return;
         }
 
-        // Deduct AB & set cooldown
+        // Deduct AB safely
         int prevAb = user.getActionBar();
         int cost = skill.getAbCost();
-        // Cap cost to AB
         if (cost > prevAb) cost = prevAb;
-        // Reduce AB by cost (SkillModel.resetCooldown later)
-        user.increaseActionBar(-cost); // use negative amount to subtract (helper method must allow; if not adjust)
-        // Reset cooldown on skill instance
+        user.setActionBar(Math.max(0, prevAb - cost));
+
+        // Reset cooldown ONCE
         skill.resetCooldown();
 
-        // Log & notify
-        String usageLog = String.format(Locale.US, "%s uses %s on %s", userName(user), skill.getName(), userName(target));
+        // Log usage
+        String usageLog = String.format(Locale.US, "%s uses %s on %s",
+                userName(user), skill.getName(), userName(target));
         pushLog(usageLog);
-        if (listener != null) listener.onSkillUsed(user, skill, target, usageLog);
+        if (listener != null)
+            listener.onSkillUsed(user, skill, target, usageLog);
 
-        // Execute skill logic (skill.execute should call CombatContext helpers for damage/status application)
+        // Execute the skill’s effect
         skill.execute(user, target, this);
 
-        // After execution check for immediate kills & call onKill hooks
+        // Check if target died and handle victory
         if (!target.isAlive()) {
-            // user killed target
             pushLog(userName(user) + " has defeated " + userName(target) + "!");
             user.onKill(target, this);
-            // if in ARENA mode, we might want to record result or push ghost data
-            finalizeCombat(user, target);
+            finalizeCombat(user, target); // finalizeCombat should call listener.onCombatEnded() only
         }
     }
+
 
     /** Apply damage via central path so shields/counters/passives/gear can intervene. */
     public void applyDamage(Character attacker, Character defender, int rawDamage, @Nullable SkillModel sourceSkill) {

@@ -330,10 +330,10 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
         av.setLevel(estimatedLevel);
         av.setPlayerClass("enemy");
 
-        // Map stats roughly from EnemyModel base stats
-        av.addStrength(enemy.getBaseStr());
-        av.addEndurance(enemy.getBaseEnd());
-        av.addAgility(enemy.getBaseAgi());
+        // Map stats roughly from EnemyModel base stats with reduction for balance
+        av.addStrength((int)(enemy.getBaseStr() * 0.8)); // Reduce by 20%
+        av.addEndurance((int)(enemy.getBaseEnd() * 0.8));
+        av.addAgility((int)(enemy.getBaseAgi() * 0.8));
         // add reasonable defaults for other stats if methods exist
         av.addFlexibility(2);
         av.addStamina(5 + enemy.getBaseHp() / 50);
@@ -350,12 +350,20 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
         enemyAvatar.setUsername(getEnemyName(enemyIndex, enemyLevel));
         enemyAvatar.setPlayerClass(getRandomClass());
 
-        int baseStat = 5 + enemyLevel * 3;
-        enemyAvatar.addStrength(baseStat + random.nextInt(3));
-        enemyAvatar.addEndurance(baseStat + random.nextInt(3));
-        enemyAvatar.addAgility(baseStat + random.nextInt(3));
-        enemyAvatar.addFlexibility(baseStat + random.nextInt(3));
-        enemyAvatar.addStamina(baseStat + random.nextInt(3));
+        // Reduced base stats to make enemies more balanced
+        int baseStat = 3 + enemyLevel * 2; // Reduced from 5 + level * 3 to 3 + level * 2
+        enemyAvatar.addStrength(baseStat + random.nextInt(2)); // ±1 instead of ±2
+        enemyAvatar.addEndurance(baseStat + random.nextInt(2));
+        enemyAvatar.addAgility(baseStat + random.nextInt(2));
+        enemyAvatar.addFlexibility(baseStat + random.nextInt(2));
+        enemyAvatar.addStamina(baseStat + random.nextInt(2));
+
+        // Further reduce AI stats by 15% to make them more fair
+        enemyAvatar.addStrength(-(int)(enemyAvatar.getStrength() * 0.15));
+        enemyAvatar.addEndurance(-(int)(enemyAvatar.getEndurance() * 0.15));
+        enemyAvatar.addAgility(-(int)(enemyAvatar.getAgility() * 0.15));
+        enemyAvatar.addFlexibility(-(int)(enemyAvatar.getFlexibility() * 0.15));
+        enemyAvatar.addStamina(-(int)(enemyAvatar.getStamina() * 0.15));
 
         addGearToEnemy(enemyAvatar, enemyLevel);
 
@@ -483,25 +491,60 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
     private void updateSkillButtons() {
         if (playerCharacter == null) return;
 
-        List<SkillModel> skills = getAvailableSkills(playerCharacter);
+        List<SkillModel> allSkills = playerCharacter.getActiveSkills();
+        List<SkillModel> availableSkills = getAvailableSkills(playerCharacter);
+
         for (int i = 0; i < skillButtons.length; i++) {
             Button btn = skillButtons[i];
             if (btn == null) continue;
 
-            if (i < skills.size()) {
-                SkillModel s = skills.get(i);
-                btn.setText(s.getName());
-                btn.setEnabled(true);
+            if (i < allSkills.size()) {
+                SkillModel skill = allSkills.get(i);
+                boolean isAvailable = availableSkills.contains(skill);
+                boolean isOnCooldown = skill.isOnCooldown();
+                boolean hasEnoughAB = skill.getAbCost() <= playerCharacter.getActionBar();
+                boolean isUnlocked = skill.getLevelUnlock() <= playerCharacter.getAvatar().getLevel();
+
+                // Set skill name and cooldown info
+                String buttonText = skill.getName();
+                if (isOnCooldown) {
+                    buttonText += " (CD: " + skill.getCurrentCooldown() + ")";
+                } else if (!hasEnoughAB) {
+                    buttonText += " (Need " + skill.getAbCost() + " AB)";
+                } else if (!isUnlocked) {
+                    buttonText += " (Lvl " + skill.getLevelUnlock() + ")";
+                }
+                btn.setText(buttonText);
+
+                // Enable/disable button based on availability
+                btn.setEnabled(isAvailable && waitingForPlayerInput);
                 btn.setVisibility(View.VISIBLE);
+
+                // Set button appearance based on state
+                if (isOnCooldown) {
+                    btn.setAlpha(0.5f); // Dimmed for cooldown
+                    btn.setBackgroundColor(0xFF666666); // Gray background
+                } else if (!hasEnoughAB) {
+                    btn.setAlpha(0.7f); // Slightly dimmed for insufficient AB
+                    btn.setBackgroundColor(0xFF444444); // Darker gray
+                } else if (!isUnlocked) {
+                    btn.setAlpha(0.6f); // Dimmed for locked
+                    btn.setBackgroundColor(0xFF333333); // Very dark gray
+                } else {
+                    btn.setAlpha(1.0f); // Full opacity for available
+                    btn.setBackgroundColor(0xFF4CAF50); // Green for available
+                }
 
                 // update icon if available
                 if (skillImages != null && i < skillImages.length && skillImages[i] != null) {
-                    if (s.getIconRes() != 0) {
-                        skillImages[i].setImageResource(s.getIconRes());
+                    if (skill.getIconRes() != 0) {
+                        skillImages[i].setImageResource(skill.getIconRes());
                         skillImages[i].setVisibility(View.VISIBLE);
+                        skillImages[i].setAlpha(btn.getAlpha());
                     } else {
                         skillImages[i].setImageResource(R.drawable.lock_2);
                         skillImages[i].setVisibility(View.VISIBLE);
+                        skillImages[i].setAlpha(btn.getAlpha());
                     }
                 }
             } else {
@@ -588,13 +631,17 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
 
     @Override
     public void onSkillUsed(Character user, SkillModel skill, Character target, String logEntry) {
-        runOnUiThread(() -> addCombatLog(logEntry));
+        runOnUiThread(() -> {
+            // Don't add to log here - it's already handled by onLog() method
+            // addCombatLog(logEntry);
+        });
     }
 
     @Override
     public void onDamageApplied(Character attacker, Character defender, int amount, String logEntry) {
         runOnUiThread(() -> {
-            addCombatLog(logEntry);
+            // Don't add to log here - it's already handled by onLog() method
+            // addCombatLog(logEntry);
 
             if (defender == playerCharacter) {
                 updateHealthBar(playerHpBar, playerHpText, playerCharacter);
@@ -618,7 +665,10 @@ public class ChallengeActivity extends BaseActivity implements CombatContext.Com
 
     @Override
     public void onStatusApplied(Character target, StatusEffect effect, String logEntry) {
-        runOnUiThread(() -> addCombatLog(logEntry));
+        runOnUiThread(() -> {
+            // Don't add to log here - it's already handled by onLog() method
+            // addCombatLog(logEntry);
+        });
     }
 
     @Override

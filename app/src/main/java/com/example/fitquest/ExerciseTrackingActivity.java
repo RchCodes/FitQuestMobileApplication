@@ -39,6 +39,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import pl.droidsonroids.gif.GifImageView;
+
 public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDetector.ExerciseListener {
 
     private static final String TAG = "ExerciseTrackingAct";
@@ -110,9 +112,11 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
 
         exerciseDetector = new ExerciseDetector(this, difficultyLevel, targetReps);
         exerciseDetector.setListener(this);
+        exerciseDetector.setChallengeMode(false); // Set quest mode for easier thresholds
 
         initializePoseDetector();
-        setupPermissions();
+        //setupPermissions();
+        showExerciseIntroGif();
         setupUiForExercise();
     }
 
@@ -125,7 +129,11 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
             progressText.setText("0/" + targetReps);
         }
 
-        instructionText.setText("Perform " + targetReps + " " + capitalize(exerciseType));
+        if (exerciseType.equals("plank") || exerciseType.equals("treepose")) {
+            instructionText.setText("Hold " + capitalize(exerciseType) + " for " + targetReps + " seconds");
+        } else {
+            instructionText.setText("Perform " + targetReps + " " + capitalize(exerciseType));
+        }
         feedbackText.setText("Get ready...");
         audioManager.speak("Starting " + exerciseType);
     }
@@ -327,4 +335,60 @@ public class ExerciseTrackingActivity extends BaseActivity implements ExerciseDe
         if (exerciseDetector != null) exerciseDetector.destroy();
         if (audioManager != null) audioManager.destroy();
     }
+
+    private void showExerciseIntroGif() {
+        GifImageView introGif = findViewById(R.id.exerciseIntroGif);
+
+        int gifRes;
+        switch (exerciseType.toLowerCase()) {
+            case "crunches":
+                gifRes = R.drawable.crunches_intro;
+                break;
+            case "plank":
+                gifRes = R.drawable.plank_intro;
+                break;
+            case "pushups":
+            case "push_ups": // handle both naming styles
+                gifRes = R.drawable.pushups_intro;
+                break;
+            case "treepose":
+            case "tree_pose":
+                gifRes = R.drawable.treepose_intro;
+                break;
+            case "lunge":
+            case "lunges":
+                gifRes = R.drawable.lunge_intro;
+                break;
+            case "jumpingjacks":
+            case "jumping_jacks":
+                gifRes = R.drawable.jumpingjacks_intro;
+                break;
+            case "situps":
+            case "sit_ups":
+                gifRes = R.drawable.situps_intro;
+                break;
+            default:
+                gifRes = R.drawable.squats_intro; // default fallback
+        }
+
+        introGif.setImageResource(gifRes);
+        introGif.setVisibility(View.VISIBLE);
+
+        // Allow user to skip manually
+        introGif.setOnClickListener(v -> finishIntroGif(introGif));
+
+        // Auto-hide after 4 seconds
+        new Handler(Looper.getMainLooper()).postDelayed(() -> finishIntroGif(introGif), 4000);
+    }
+
+    private void finishIntroGif(GifImageView introGif) {
+        if (introGif.getVisibility() != View.VISIBLE) return;
+
+        introGif.setVisibility(View.GONE);
+        introGif.setImageDrawable(null); // release GIF memory
+
+        // ✅ Start camera + pose tracking after GIF
+        setupPermissions();
+    }
+
 }

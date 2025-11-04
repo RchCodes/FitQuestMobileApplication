@@ -7,6 +7,7 @@ import android.media.MediaPlayer;
 public class MusicManager {
 
     private static MediaPlayer mediaPlayer;
+    private static MediaPlayer battlePlayer;
     private static int volume = 50; // 0-100
     private static boolean musicEnabled = true;
     private static boolean isInitialized = false;
@@ -128,10 +129,69 @@ public class MusicManager {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
         }
+        if (battlePlayer != null && battlePlayer.isPlaying()) {
+            battlePlayer.pause();
+        }
     }
     
     public static void onActivityDestroy() {
         // Only stop if explicitly called or app is closing
         // This allows music to persist across activities
+    }
+    
+    // Battle BGM methods
+    public static void startBattleBGM(Context context) {
+        initialize(context);
+        
+        if (!musicEnabled) return;
+        
+        // Stop regular BGM
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+        }
+        
+        if (battlePlayer != null) {
+            if (battlePlayer.isPlaying()) return; // Already playing
+            stopBattleBGM(); // Stop and recreate if needed
+        }
+        
+        try {
+            battlePlayer = MediaPlayer.create(context, R.raw.battle_bgm);
+            if (battlePlayer != null) {
+                battlePlayer.setLooping(true);
+                battlePlayer.setVolume(volume / 100f, volume / 100f);
+                battlePlayer.start();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public static void stopBattleBGM() {
+        if (battlePlayer != null) {
+            try {
+                battlePlayer.stop();
+                battlePlayer.release();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            battlePlayer = null;
+        }
+    }
+    
+    public static void resumeBattleBGM() {
+        if (battlePlayer != null && !battlePlayer.isPlaying()) {
+            battlePlayer.start();
+        }
+    }
+    
+    public static void pauseBattleBGM() {
+        if (battlePlayer != null && battlePlayer.isPlaying()) {
+            battlePlayer.pause();
+        }
+    }
+    
+    public static boolean isBattleBGMPlaying() {
+        return battlePlayer != null && battlePlayer.isPlaying();
     }
 }
