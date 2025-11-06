@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StoreActivity extends AppCompatActivity {
+public class StoreActivity extends BaseActivity {
 
     private AvatarModel avatar;
     private AvatarDisplayManager avatarHelper;

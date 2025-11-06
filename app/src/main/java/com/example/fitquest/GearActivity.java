@@ -20,7 +20,7 @@ import java.util.Set;
 /**
  * GearActivity - shows owned gear (no price) and allows equipping.
  */
-public class GearActivity extends AppCompatActivity {
+public class GearActivity extends BaseActivity {
 
     private AvatarModel avatar;
     private AvatarDisplayManager avatarHelper;

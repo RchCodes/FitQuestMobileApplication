@@ -1,7 +1,10 @@
 package com.example.fitquest;
 
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class BaseActivity extends AppCompatActivity {
@@ -30,4 +33,26 @@ public class BaseActivity extends AppCompatActivity {
                         | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
         );
     }
+
+    private void attachClickSoundToAll(View root) {
+        if (root.isClickable()) {
+            root.setOnClickListener(v -> {
+                // Play sound
+                MediaPlayer mp = MediaPlayer.create(this, R.raw.button_click);
+                mp.setOnCompletionListener(MediaPlayer::release);
+                mp.start();
+
+                // Trigger existing click actions if any (use tag-based or separate setup)
+                v.performClick();
+            });
+        }
+
+        if (root instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) root;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                attachClickSoundToAll(group.getChildAt(i));
+            }
+        }
+    }
+
 }

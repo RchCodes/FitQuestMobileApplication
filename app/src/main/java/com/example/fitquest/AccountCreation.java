@@ -32,7 +32,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.Arrays;
 
-public class AccountCreation extends AppCompatActivity {
+public class AccountCreation extends BaseActivity {
 
     private EditText etEmail, etUsername, etPassword, etConfirmPassword;
     private Button btnSignUp;
@@ -188,4 +188,19 @@ public class AccountCreation extends AppCompatActivity {
             }
         }
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Pause or stop the music when the app is not visible
+        MusicManager.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Resume the music only when this activity is visible again
+        MusicManager.resume();
+    }
+
 }

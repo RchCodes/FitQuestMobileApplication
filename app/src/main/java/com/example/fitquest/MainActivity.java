@@ -465,27 +465,35 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
                 findViewById(R.id.hairFillLayer)
         };
 
-        // Use same target Y for all parts so entire body moves together
+        // Set pivot near bottom so scale stretches upward (like breathing)
+        for (ImageView layer : animatedLayers) {
+            if (layer != null) {
+                layer.post(() -> {
+                    layer.setPivotX(layer.getWidth() / 2f);
+                    layer.setPivotY(layer.getHeight() * 0.85f); // pivot near bottom
+                });
+            }
+        }
+
         idleRunnable = new Runnable() {
-            boolean goingUp = true;
+            boolean expanding = true;
 
             @Override
             public void run() {
-                float targetShift = goingUp ? -6f : 6f;
+                float targetScale = expanding ? 1.01f : 1.0f; // subtle stretch
 
                 for (ImageView layer : animatedLayers) {
                     if (layer != null) {
-                        // animate smoothly, same shift for all
                         layer.animate()
-                                .translationY(targetShift)
-                                .setDuration(1000)
+                                .scaleY(targetScale)
+                                .setDuration(2000)
                                 .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
                                 .start();
                     }
                 }
 
-                goingUp = !goingUp;
-                idleHandler.postDelayed(this, 1000);
+                expanding = !expanding;
+                idleHandler.postDelayed(this, 2000);
             }
         };
 
@@ -509,47 +517,65 @@ public class MainActivity extends BaseActivity implements QuestManager.QuestProg
         for (int id : layerIds) {
             ImageView layer = findViewById(id);
             if (layer != null) {
-                layer.animate().translationY(0).setDuration(300).start();
+                layer.animate().scaleY(1f).setDuration(300).start();
             }
         }
     }
 
     private void startEyeBlinkAnimation() {
+        if (avatarHelper == null) return;
+
         ImageView eyesFill = findViewById(R.id.eyesFillLayer);
         ImageView eyesOutline = findViewById(R.id.eyesOutlineLayer);
-
         if (eyesFill == null || eyesOutline == null) return;
 
-        // Make sure scaling happens in place (no movement)
-        eyesFill.post(() -> {
-            eyesFill.setPivotX(eyesFill.getWidth() / 2f);
-            eyesFill.setPivotY(eyesFill.getHeight() / 2f);
-        });
-        eyesOutline.post(() -> {
-            eyesOutline.setPivotX(eyesOutline.getWidth() / 2f);
-            eyesOutline.setPivotY(eyesOutline.getHeight() / 2f);
-        });
+        // Save the original resource names for the avatar’s eyes
+        AvatarModel avatar = avatarHelper.getAvatar();
+        String originalFill = avatar != null ? avatar.getEyesFill() : null;
+        String originalOutline = avatar != null ? avatar.getEyesOutline() : null;
 
         Handler blinkHandler = new Handler(Looper.getMainLooper());
+
         Runnable blinkRunnable = new Runnable() {
             @Override
             public void run() {
                 if (eyesFill != null && eyesOutline != null) {
-                    // Blink close
-                    eyesFill.animate().scaleY(0.1f).alpha(0.8f).setDuration(120).start();
-                    eyesOutline.animate().scaleY(0.1f).alpha(0.8f).setDuration(120)
-                            .withEndAction(() -> {
-                                // Blink open
-                                eyesFill.animate().scaleY(1f).alpha(1f).setDuration(150).start();
-                                eyesOutline.animate().scaleY(1f).alpha(1f).setDuration(150).start();
-                            }).start();
+                    try {
+                        // Step 1: eyes partially closed
+                        eyesFill.setImageResource(R.drawable.eyes_close);
+                        eyesOutline.setImageResource(R.drawable.eyes_close);
+
+                        eyesFill.postDelayed(() -> {
+                            // Step 2: fully closed
+                            eyesFill.setImageResource(R.drawable.eyes_close2);
+                            eyesOutline.setImageResource(R.drawable.eyes_close2);
+                        }, 80);
+
+                        eyesFill.postDelayed(() -> {
+                            // Step 3: restore original avatar eyes safely
+                            if (avatarHelper != null) {
+                                Context ctx = eyesFill.getContext();
+                                if (originalFill != null && !originalFill.isEmpty()) {
+                                    int resIdFill = ctx.getResources().getIdentifier(originalFill, "drawable", ctx.getPackageName());
+                                    if (resIdFill != 0) eyesFill.setImageResource(resIdFill);
+                                }
+                                if (originalOutline != null && !originalOutline.isEmpty()) {
+                                    int resIdOutline = ctx.getResources().getIdentifier(originalOutline, "drawable", ctx.getPackageName());
+                                    if (resIdOutline != 0) eyesOutline.setImageResource(resIdOutline);
+                                }
+                            }
+                        }, 180);
+
+                    } catch (Exception e) {
+                        Log.e("AvatarBlink", "Error in blink animation", e);
+                    }
                 }
 
-                blinkHandler.postDelayed(this, 4000 + (long) (Math.random() * 2000));
+                // Schedule next blink randomly between 4–6 seconds
+                blinkHandler.postDelayed(this, 4000 + (long)(Math.random() * 2000));
             }
         };
 
         blinkHandler.postDelayed(blinkRunnable, 3000);
     }
-
 }

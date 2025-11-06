@@ -468,4 +468,19 @@ public class AvatarCreationActivity extends BaseActivity {
         return "lips_" + (index + 1);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Pause or stop the music when the app is not visible
+        MusicManager.pause();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Resume the music only when this activity is visible again
+        MusicManager.resume();
+    }
+
+
 }
