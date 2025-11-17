@@ -1,6 +1,6 @@
 FitQuest Mobile Application  
 Copyright (c) 2025  
-Wellverse HealthTech & FitQuest Development Team  
+FitQuest Development Team  
 All Rights Reserved.
 
 1. Purpose  
