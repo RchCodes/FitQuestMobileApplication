@@ -37,9 +37,9 @@ use, modification, or distribution of this project.
 
 6. Intellectual Property  
 All source code, designs, documentation, game assets, and research content in
-this repository are intellectual property of Wellverse HealthTech & FitQuest
+this repository are intellectual property of FitQuest
 Development Team unless otherwise stated.
 
 7. Contact  
 For inquiries, permissions, or collaboration, contact:  
-wellversehealthtech@gmail.com
+fitquest.25@gmail.com
